@@ -4,10 +4,13 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StrConverter {
 
-  private final Map<String, Class<?>> usingClasses = new HashMap<String, Class<?>>();
+  private final Map<String, Class<?>> usingClasses = new HashMap<>();
+
+  private final Map<String, FieldAcceptor> fieldAcceptors = new ConcurrentHashMap<>();
 
   public void marshall(Object object, Writer writer) {
 
