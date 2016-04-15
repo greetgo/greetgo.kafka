@@ -20,12 +20,8 @@ allprojects {
 subprojects {
   compileJava.options.debugOptions.debugLevel = "source,lines,vars"
   compileTestJava.options.debugOptions.debugLevel = "source,lines,vars"
-  compileJava {
-    options.encoding = "UTF-8"
-  }
-  compileTestJava {
-    options.encoding = "UTF-8"
-  }
+  compileJava.options.encoding = "UTF-8"
+  compileTestJava.options.encoding = "UTF-8"
 
   project.eclipse.classpath.file.whenMerged { cp ->
     if (project.hasProperty("sourceCompatibility")) {
@@ -46,12 +42,6 @@ subprojects {
 
   dependencies {
     ext.greetgoConfVersion = '0.0.12'
-    ext.depinjectVersion = '0.1.2'
-    ext.greetgoDbVersion = '0.0.1'
-    ext.greetgoMvcVersion = "0.0.1"
-    ext.greetgoSchedulingVersion = "0.0.1"
-    ext.greetgoEmailVersion = "0.0.9"
-    ext.jettyVersion = '9.3.8.RC0'
 
     testCompile 'org.testng:testng:6.5.1'
     testCompile 'org.easytesting:fest-assert-core:2.0M10'
