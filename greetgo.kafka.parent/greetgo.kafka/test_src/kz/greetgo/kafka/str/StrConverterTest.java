@@ -27,7 +27,11 @@ public class StrConverterTest {
     client.surname = "Привем";
     client.name = "Капитал";
 
+    //
+    //
     converter.marshall(client, stringWriter);
+    //
+    //
 
     String str = stringWriter.toString();
     System.out.println(str);
@@ -42,7 +46,12 @@ public class StrConverterTest {
     StrConverter converter = new StrConverter();
     converter.useClass("ClientAsd", Client.class);
 
+    //
+    //
     Object o = converter.unMarshall(stringReader);
+    //
+    //
+
     assertThat(o).isNotNull();
     assertThat(o).isInstanceOf(Client.class);
 
