@@ -2,6 +2,7 @@ package kz.greetgo.kafka.producer;
 
 import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.HasId;
+import kz.greetgo.kafka.core.Head;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -30,6 +31,7 @@ public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
   protected StrConverter createStrConverter() {
     StrConverterXml strConverter = new StrConverterXml();
     strConverter.useClass(Box.class, Box.class.getSimpleName());
+    strConverter.useClass(Head.class, Head.class.getSimpleName());
     prepareStrConverter(strConverter);
     return strConverter;
   }
@@ -78,9 +80,10 @@ public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
         if (producer == null) throw new RuntimeException("Sender already closed");
 
         Box box = new Box();
-        box.a = author();
-        box.n = System.nanoTime();
-        box.t = new Date();
+        box.head = new Head();
+        box.head.a = author();
+        box.head.n = System.nanoTime();
+        box.head.t = new Date();
         box.body = object;
 
         String value = strConverter().toStr(box);

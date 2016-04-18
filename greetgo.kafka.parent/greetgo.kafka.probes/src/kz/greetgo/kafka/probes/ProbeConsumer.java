@@ -13,7 +13,7 @@ public class ProbeConsumer {
   public static void main(String[] args) throws Exception {
     final Properties props = new Properties();
     props.put("bootstrap.servers", "localhost:9092");
-    props.put("group.id", "group-001");
+    props.put("group.id", "group-003");
     props.put("enable.auto.commit", "false");
     props.put("auto.commit.interval.ms", "1000");
     props.put("session.timeout.ms", "30000");
@@ -29,7 +29,7 @@ public class ProbeConsumer {
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
           System.out.println("Consumer has been started");
 
-          consumer.subscribe(Arrays.asList("new-test"));
+          consumer.subscribe(Arrays.asList("client"));
           while (running[0]) {
             ConsumerRecords<String, String> records = consumer.poll(1000);
             for (ConsumerRecord<String, String> record : records) {

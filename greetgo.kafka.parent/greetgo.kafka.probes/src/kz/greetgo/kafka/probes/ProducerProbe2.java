@@ -36,7 +36,7 @@ public class ProducerProbe2 {
 
     @Override
     protected String topic() {
-      return "new-test";
+      return "client";
     }
   }
 
@@ -50,9 +50,9 @@ public class ProducerProbe2 {
         String I = "" + i;
         while (I.length() < 5) I = "0" + I;
         Client client = new Client();
-        client.id = "hi-" + I;
-        client.surname = "Иванов";
-        client.name = "Иван";
+        client.id = "asd-" + I;
+        client.surname = "Иванов " + I;
+        client.name = "Иван" + I;
 
         kafkaSender.send(client);
       }
