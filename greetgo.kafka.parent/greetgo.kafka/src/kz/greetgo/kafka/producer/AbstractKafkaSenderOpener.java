@@ -69,8 +69,6 @@ public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
 
   @Override
   public KafkaSender open() {
-
-
     return new KafkaSender() {
       KafkaProducer<String, String> producer = new KafkaProducer<>(getProperties());
 
@@ -100,6 +98,7 @@ public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
 
       @Override
       public void close() throws Exception {
+        if (producer == null) return;
         producer.close();
         producer = null;
       }
