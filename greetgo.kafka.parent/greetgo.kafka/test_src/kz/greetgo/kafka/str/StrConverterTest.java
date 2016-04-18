@@ -1,65 +1,54 @@
 package kz.greetgo.kafka.str;
 
-import org.junit.Test;
+import kz.greetgo.util.RND;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.util.Date;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class StrConverterTest {
 
+  private StrConverter converter;
+
+  @BeforeMethod
+  public void setup() {
+    converter = new StrConverterXml();
+  }
+
   static class Client {
     public String id;
     public String surname;
     public String name;
+    public Date birthDate;
   }
 
   @Test
-  public void marshall() throws Exception {
-    StrConverter converter = new StrConverter();
-    converter.useClass("Client123", Client.class);
-
-    StringWriter stringWriter = new StringWriter();
+  public void toStr_fromStr() throws Exception {
+    converter.useClass(Client.class, "Client123");
 
     Client client = new Client();
-    client.id = "asd";
-    client.surname = "Привем";
-    client.name = "Капитал";
+    client.id = RND.str(10);
+    client.surname = RND.str(10);
+    client.name = RND.str(10);
+    client.birthDate = RND.dateDays(-10000, 0);
 
     //
     //
-    converter.marshall(client, stringWriter);
+    String str = converter.toStr(client);
+    Client actual = converter.fromStr(str);
     //
     //
 
-    String str = stringWriter.toString();
-    System.out.println(str);
-    assertThat(str).isEqualTo("Client123{id='asd',surname='Привем',name='Капитал'}");
+    assertThat(actual).isNotNull();
+    assertThat(actual.id).isEqualTo(client.id);
+    assertThat(actual.surname).isEqualTo(client.surname);
+    assertThat(actual.name).isEqualTo(client.name);
+    assertThat(actual.birthDate).isEqualTo(client.birthDate);
+
+
   }
 
-  @Test
-  public void unMarshall() throws Exception {
-
-    StringReader stringReader = new StringReader("ClientAsd{id='大家好',surname='Привем',name='Капитал'}");
-
-    StrConverter converter = new StrConverter();
-    converter.useClass("ClientAsd", Client.class);
-
-    //
-    //
-    Object o = converter.unMarshall(stringReader);
-    //
-    //
-
-    assertThat(o).isNotNull();
-    assertThat(o).isInstanceOf(Client.class);
-
-    Client client = (Client) o;
-    assertThat(client.id).isEqualTo("大家好");
-    assertThat(client.surname).isEqualTo("Привем");
-    assertThat(client.name).isEqualTo("Капитал");
-
-  }
 
 }

@@ -1,26 +1,11 @@
 package kz.greetgo.kafka.str;
 
-import java.io.Reader;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+public interface StrConverter {
 
-public class StrConverter {
+  String toStr(Object object);
 
-  private final Map<String, Class<?>> usingClasses = new HashMap<>();
+  <T> T fromStr(String str);
 
-  private final Map<String, FieldAcceptor> fieldAcceptors = new ConcurrentHashMap<>();
+  void useClass(Class<?> aClass, String asName);
 
-  public void marshall(Object object, Writer writer) {
-
-  }
-
-  public Object unMarshall(Reader reader) {
-    return null;
-  }
-
-  public void useClass(String name, Class<?> aClass) {
-
-  }
 }
