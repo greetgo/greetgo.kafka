@@ -88,7 +88,7 @@ public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
         String key = extractId(object);
 
         try {
-          producer.send(new ProducerRecord<String, String>(topic(), key, value)).get();
+          producer.send(new ProducerRecord<>(topic(), key, value)).get();
         } catch (InterruptedException e) {
           throw new RuntimeInterruptedException(e);
         } catch (ExecutionException e) {
