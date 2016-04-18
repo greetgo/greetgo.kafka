@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+  <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+    <errorHandler class="org.apache.log4j.helpers.OnlyOnceErrorHandler"/>
+    <param name="Target" value="System.out"/>
+    <param name="Threshold" value="TRACE"/>
+
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d %-5p [%c{1}] %m%n"/>
+    </layout>
+  </appender>
+
+  <appender name="SERVER" class="org.apache.log4j.RollingFileAppender">
+    <param name="File" value="${user.home}/kaspiptp.d/logs/server.log"/>
+    <param name="Threshold" value="TRACE"/>
+    <param name="Append" value="true"/>
+    <param name="MaxFileSize" value="100MB"/>
+    <param name="MaxBackupIndex" value="100"/>
+
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d %-5p [%c] %m%n"/>
+    </layout>
+  </appender>
+
+  <category name="kz.greetgo" additivity="true">
+    <priority value="INFO"/>
+    <appender-ref ref="CONSOLE"/>
+  </category>
+
+
+  <category name="org.apache.kafka.clients.producer" additivity="true">
+    <priority value="TRACE"/>
+    <appender-ref ref="CONSOLE"/>
+  </category>
+
+
+  <root>
+    <priority value="ERROR"/>
+    <!-- <appender-ref ref="SERVER"/> -->
+    <!-- appender-ref ref="CONSOLE"/ -->
+  </root>
+
+</log4j:configuration>

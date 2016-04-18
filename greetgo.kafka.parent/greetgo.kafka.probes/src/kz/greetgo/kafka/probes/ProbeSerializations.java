@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class ProbeCustomer {
+public class ProbeSerializations {
 
   public static void main(String[] args) throws Exception {
     long timeMillis = System.currentTimeMillis();
