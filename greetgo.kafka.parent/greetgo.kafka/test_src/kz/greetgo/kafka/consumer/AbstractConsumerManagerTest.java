@@ -1,8 +1,15 @@
 package kz.greetgo.kafka.consumer;
 
+import kz.greetgo.kafka.Servers;
 import kz.greetgo.kafka.consumer.AbstractConsumerManager.Caller;
 import kz.greetgo.kafka.core.Box;
+import kz.greetgo.kafka.core.HasId;
 import kz.greetgo.kafka.core.Head;
+import kz.greetgo.kafka.core.StrConverterPreparation;
+import kz.greetgo.kafka.producer.AbstractKafkaSenderOpener;
+import kz.greetgo.kafka.producer.KafkaSender;
+import kz.greetgo.kafka.str.StrConverter;
+import kz.greetgo.kafka.str.StrConverterXml;
 import kz.greetgo.util.RND;
 import org.testng.annotations.Test;
 
@@ -242,5 +249,134 @@ public class AbstractConsumerManagerTest {
     assertThat(testing.objectHead_headList).hasSize(2);
     assertThat(testing.objectHead_headList.get(0).a).isEqualTo(list.get(0).head.a);
     assertThat(testing.objectHead_headList.get(1).a).isEqualTo(list.get(1).head.a);
+  }
+
+  static class Client implements HasId {
+    public String id;
+    public String surname;
+    public String name;
+
+    public Client() {
+    }
+
+    public Client(String id, String surname, String name) {
+      this.id = id;
+      this.surname = surname;
+      this.name = name;
+    }
+
+    @Override
+    public String getId() {
+      return id;
+    }
+
+    @Override
+    public String toString() {
+      return "Client{" +
+          "id='" + id + '\'' +
+          ", surname='" + surname + '\'' +
+          ", name='" + name + '\'' +
+          '}';
+    }
+  }
+
+  private static void prepareStrConverter(StrConverter strConverter) {
+    StrConverterPreparation.prepare(strConverter);
+  }
+
+  static class MySenderOpener extends AbstractKafkaSenderOpener {
+
+    public int port;
+
+    @Override
+    protected String getBootstrapServers() {
+      return "localhost:" + port;
+    }
+
+    @Override
+    protected StrConverter createStrConverter() {
+      StrConverter ret = new StrConverterXml();
+      prepareStrConverter(ret);
+      return ret;
+    }
+
+    public String author = "asd";
+
+    @Override
+    protected String author() {
+      return author;
+    }
+
+    @Override
+    protected String topic() {
+      return "client";
+    }
+  }
+
+  static class TestConsumerManager extends AbstractConsumerManager {
+    public int port;
+
+    @Override
+    protected String bootstrapServers() {
+      return "localhost:" + port;
+    }
+
+    @Override
+    protected void handleCallException(Object bean, Method method, Exception exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
+  static class TestConsumers {
+
+    public final List<Client> clientList = new ArrayList<>();
+
+    @Consume(groupId = "asd", topics = "client")
+    public void someClients(Client client) {
+      clientList.add(client);
+      System.out.println(client);
+    }
+
+  }
+
+  @Test
+  public void startup_shutdown() throws Exception {
+    Servers servers = new Servers();
+
+    servers.startupAll();
+
+    MySenderOpener senderOpener = new MySenderOpener();
+    senderOpener.port = servers.kafkaServerPort;
+
+    try (KafkaSender ks = senderOpener.open()) {
+
+      ks.send(new Client("client-001", "Иванов", "Иван"));
+      ks.send(new Client("client-002", "Петров", "Пётр"));
+
+    }
+
+    TestConsumerManager consumerManager = new TestConsumerManager();
+    consumerManager.strConverter = senderOpener.strConverter();
+
+    TestConsumers testConsumers = new TestConsumers();
+
+    consumerManager.appendBean(testConsumers);
+
+    consumerManager.startup();
+
+    System.out.println("Sleep");
+    Thread.sleep(5000);
+
+    System.out.println("Check point 1");
+
+    consumerManager.shutdownAndJoin();
+
+    System.out.println("Check point 2");
+
+    servers.shutdownAll();
+
+    System.out.println("Shut downed");
+    //servers.clean();
+
   }
 }

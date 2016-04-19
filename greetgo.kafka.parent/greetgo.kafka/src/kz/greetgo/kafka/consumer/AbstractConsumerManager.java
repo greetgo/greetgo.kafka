@@ -4,7 +4,6 @@ import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.Head;
 import kz.greetgo.kafka.str.StrConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -57,18 +56,20 @@ public abstract class AbstractConsumerManager {
           final List<Box> list = new ArrayList<>();
 
           while (running) {
-            ConsumerRecords<String, String> records = consumer.poll(pollTimeout());
-            for (ConsumerRecord<String, String> record : records) {
+            list.clear();
+            System.out.println("hrewr: in circle of method " + method.getName());
+            for (ConsumerRecord<String, String> record : consumer.poll(pollTimeout())) {
               list.add(strConverter.<Box>fromStr(record.value()));
             }
+            if (list.size() == 0) continue;
             try {
-              list.clear();
               caller.call(list);
               consumer.commitSync();
             } catch (Exception e) {
               handleCallException(bean, method, e);
             }
           }
+
         }
       }
     }));
