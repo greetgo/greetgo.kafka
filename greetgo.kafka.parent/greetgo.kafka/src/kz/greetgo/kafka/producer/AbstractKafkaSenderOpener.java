@@ -4,7 +4,6 @@ import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.HasId;
 import kz.greetgo.kafka.core.Head;
 import kz.greetgo.kafka.str.StrConverter;
-import kz.greetgo.kafka.str.StrConverterXml;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -19,24 +18,11 @@ public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
 
   private StrConverter strConverter = null;
 
-  protected StrConverter strConverter() {
-    if (strConverter == null) {
-      strConverter = createStrConverter();
-      prepareStrConverter(strConverter);
-    }
-
-    return strConverter;
+  public StrConverter strConverter() {
+    return strConverter == null ? strConverter = createStrConverter() : strConverter;
   }
 
-  protected StrConverter createStrConverter() {
-    StrConverterXml strConverter = new StrConverterXml();
-    strConverter.useClass(Box.class, Box.class.getSimpleName());
-    strConverter.useClass(Head.class, Head.class.getSimpleName());
-    prepareStrConverter(strConverter);
-    return strConverter;
-  }
-
-  protected abstract void prepareStrConverter(StrConverter strConverter);
+  protected abstract StrConverter createStrConverter();
 
   protected abstract String author();
 

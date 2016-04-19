@@ -1,9 +1,11 @@
 package kz.greetgo.kafka.probes;
 
 import kz.greetgo.kafka.core.HasId;
+import kz.greetgo.kafka.core.StrConverterPreparation;
 import kz.greetgo.kafka.producer.AbstractKafkaSenderOpener;
 import kz.greetgo.kafka.producer.KafkaSender;
 import kz.greetgo.kafka.str.StrConverter;
+import kz.greetgo.kafka.str.StrConverterXml;
 
 public class ProducerProbe2 {
 
@@ -25,8 +27,11 @@ public class ProducerProbe2 {
     }
 
     @Override
-    protected void prepareStrConverter(StrConverter strConverter) {
-      strConverter.useClass(Client.class, Client.class.getSimpleName());
+    protected StrConverter createStrConverter() {
+      StrConverterXml ret = new StrConverterXml();
+      StrConverterPreparation.prepare(ret);
+      ret.useClass(Client.class, Client.class.getSimpleName());
+      return ret;
     }
 
     @Override
