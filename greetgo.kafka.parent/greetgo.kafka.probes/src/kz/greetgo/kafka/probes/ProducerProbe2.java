@@ -2,8 +2,8 @@ package kz.greetgo.kafka.probes;
 
 import kz.greetgo.kafka.core.HasId;
 import kz.greetgo.kafka.core.StrConverterPreparation;
-import kz.greetgo.kafka.producer.AbstractKafkaSenderOpener;
-import kz.greetgo.kafka.producer.KafkaSender;
+import kz.greetgo.kafka.producer.AbstractKafkaSender;
+import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
 
@@ -19,7 +19,7 @@ public class ProducerProbe2 {
     }
   }
 
-  static class MyKafkaSenderOpener extends AbstractKafkaSenderOpener {
+  static class MyKafkaSender extends AbstractKafkaSender {
 
     @Override
     protected String getBootstrapServers() {
@@ -47,9 +47,9 @@ public class ProducerProbe2 {
 
 
   public static void main(String[] args) throws Exception {
-    MyKafkaSenderOpener so = new MyKafkaSenderOpener();
+    MyKafkaSender so = new MyKafkaSender();
 
-    try (KafkaSender kafkaSender = so.open()) {
+    try (KafkaSending kafkaSending = so.open()) {
 
       for (int i = 10; i < 20; i++) {
         String I = "" + i;
@@ -59,7 +59,7 @@ public class ProducerProbe2 {
         client.surname = "Иванов " + I;
         client.name = "Иван" + I;
 
-        kafkaSender.send(client);
+        kafkaSending.send(client);
       }
     }
 

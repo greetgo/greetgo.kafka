@@ -6,8 +6,8 @@ import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.HasId;
 import kz.greetgo.kafka.core.Head;
 import kz.greetgo.kafka.core.StrConverterPreparation;
-import kz.greetgo.kafka.producer.AbstractKafkaSenderOpener;
-import kz.greetgo.kafka.producer.KafkaSender;
+import kz.greetgo.kafka.producer.AbstractKafkaSender;
+import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
 import kz.greetgo.util.RND;
@@ -284,7 +284,7 @@ public class AbstractConsumerManagerTest {
     StrConverterPreparation.prepare(strConverter);
   }
 
-  static class MySenderOpener extends AbstractKafkaSenderOpener {
+  static class MySender extends AbstractKafkaSender {
 
     public int port;
 
@@ -342,13 +342,14 @@ public class AbstractConsumerManagerTest {
   @Test
   public void startup_shutdown() throws Exception {
     Servers servers = new Servers();
+    servers.tmpDir = "build/asd";
 
     servers.startupAll();
 
-    MySenderOpener senderOpener = new MySenderOpener();
+    MySender senderOpener = new MySender();
     senderOpener.port = servers.kafkaServerPort;
 
-    try (KafkaSender ks = senderOpener.open()) {
+    try (KafkaSending ks = senderOpener.open()) {
 
       ks.send(new Client("client-001", "Иванов", "Иван"));
       ks.send(new Client("client-002", "Петров", "Пётр"));

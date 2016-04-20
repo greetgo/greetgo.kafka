@@ -20,7 +20,7 @@ public class Servers {
     return "build/" + sdf.format(new Date());
   }
 
-  final String tmpDir = createTmpDir();
+  public String tmpDir = createTmpDir();
   final int zookeeperClientPort = 2181;
   public final int kafkaServerPort = 9092;
 

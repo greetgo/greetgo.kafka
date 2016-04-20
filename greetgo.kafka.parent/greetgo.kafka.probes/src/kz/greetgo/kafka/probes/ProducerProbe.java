@@ -22,7 +22,7 @@ public class ProducerProbe {
 
     try (KafkaProducer<String, String> kp = new KafkaProducer<>(props)) {
       for (int i = 0; i < 5; i++) {
-        int I = i + 2000000;
+        int I = i + 3000000;
         kp.send(new ProducerRecord<String, String>("topic", pre + "-" + I, pre + "-" + I + " value")).get();
         System.out.println("Sent " + i);
       }

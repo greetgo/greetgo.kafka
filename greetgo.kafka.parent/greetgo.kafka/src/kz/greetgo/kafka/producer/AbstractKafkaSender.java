@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
-public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
+public abstract class AbstractKafkaSender implements KafkaSender {
 
   protected abstract String getBootstrapServers();
 
@@ -54,8 +54,8 @@ public abstract class AbstractKafkaSenderOpener implements KafkaSenderOpener {
   }
 
   @Override
-  public KafkaSender open() {
-    return new KafkaSender() {
+  public KafkaSending open() {
+    return new KafkaSending() {
       KafkaProducer<String, String> producer = new KafkaProducer<>(getProperties());
 
       @Override

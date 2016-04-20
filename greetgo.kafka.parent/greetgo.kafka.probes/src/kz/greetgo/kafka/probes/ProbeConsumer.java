@@ -29,7 +29,7 @@ public class ProbeConsumer {
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
           System.out.println("Consumer has been started");
 
-          consumer.subscribe(Arrays.asList("client"));
+          consumer.subscribe(Arrays.asList("topic"));
           while (running[0]) {
             ConsumerRecords<String, String> records = consumer.poll(1000);
             for (ConsumerRecord<String, String> record : records) {
