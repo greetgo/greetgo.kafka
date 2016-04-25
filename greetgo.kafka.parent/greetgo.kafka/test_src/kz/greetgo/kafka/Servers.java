@@ -47,7 +47,6 @@ public class Servers {
     kafkaServerConfig.getParentFile().mkdirs();
 
     try (PrintStream pr = new PrintStream(kafkaServerConfig, "UTF-8")) {
-      pr.println("dataDir=" + tmpDir + "/kafka_server_data");
       pr.println("broker.id=0");
       pr.println("listeners=PLAINTEXT://:" + kafkaServerPort);
       pr.println("num.network.threads=3");
@@ -56,13 +55,13 @@ public class Servers {
       pr.println("socket.receive.buffer.bytes=102400");
       pr.println("socket.request.max.bytes=104857600");
       pr.println("log.dirs=" + tmpDir + "/kafka_server_data");
+      pr.println("auto.create.topics.enable=false");
       pr.println("num.partitions=1");
       pr.println("num.recovery.threads.per.data.dir=1");
       pr.println("log.retention.hours=168");
       pr.println("log.segment.bytes=1073741824");
       pr.println("log.retention.check.interval.ms=300000");
       pr.println("log.cleaner.enable=false");
-      pr.println("auto.create.topics.enable=false");
       pr.println("zookeeper.connect=localhost:" + zookeeperClientPort);
       pr.println("zookeeper.connection.timeout.ms=6000");
     }

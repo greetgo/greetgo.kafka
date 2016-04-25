@@ -8,7 +8,7 @@ public class Client {
   public String toString() {
     return "Client{" +
         "id=" + id +
-        ", surname=" + surname +
+        ", name=" + surname +
         ", name= " + name +
         ", patronymic=" + patronymic +
         '}';

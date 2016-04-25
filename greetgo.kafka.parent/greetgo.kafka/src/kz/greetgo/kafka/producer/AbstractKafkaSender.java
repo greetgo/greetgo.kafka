@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -29,8 +30,32 @@ public abstract class AbstractKafkaSender implements KafkaSender {
   protected abstract String topic();
 
   protected String extractId(Object object) {
+    if (object == null) throw new NullPointerException("Cannot extract id from null");
+
     if (object instanceof HasId) return ((HasId) object).getId();
+
+    if (object instanceof List) {
+      return extractIdFromList((List) object);
+    }
+
     return extractAlternativeId(object);
+  }
+
+  private String extractIdFromList(List objectList) {
+    if (objectList.size() == 0) {
+      throw new RuntimeException("List cannot be empty");
+    }
+
+    String id = extractId(objectList.get(0));
+
+    for (int i = 1, size = objectList.size(); i < size; i++) {
+      String ithId = extractId(objectList.get(i));
+      if (!id.equals(ithId)) {
+        throw new RuntimeException("Ids in list must be same, but 0-th id = " + id + ", " + i + "-th id = " + ithId);
+      }
+    }
+
+    return id;
   }
 
   protected String extractAlternativeId(Object object) {

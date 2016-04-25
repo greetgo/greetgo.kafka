@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Properties;
 
 public abstract class AbstractConsumerManager {
-  public StrConverter strConverter;
+
   private boolean running = true;
 
   protected abstract String bootstrapServers();
@@ -59,9 +59,8 @@ public abstract class AbstractConsumerManager {
             list.clear();
 
             for (ConsumerRecord<String, String> record : consumer.poll(pollTimeout())) {
-              list.add(strConverter.<Box>fromStr(record.value()));
+              list.add(strConverter().<Box>fromStr(record.value()));
             }
-            System.out.println("hrewr: come count = " + list.size());
 
             if (list.size() == 0) continue;
             try {
@@ -76,6 +75,8 @@ public abstract class AbstractConsumerManager {
       }
     }));
   }
+
+  protected abstract StrConverter strConverter();
 
   protected abstract void handleCallException(Object bean, Method method, Exception exception);
 
@@ -109,7 +110,7 @@ public abstract class AbstractConsumerManager {
         public void call(List<Box> list) {
           List<Object> objectList = new ArrayList<>(list.size());
           for (Box box : list) {
-            objectList.add(box.body);
+            extractBodiesAndAdd(objectList, box);
           }
           try {
             method.invoke(bean, objectList);
@@ -175,6 +176,23 @@ public abstract class AbstractConsumerManager {
         "* Box - it is " + Box.class.getName() + "\n" +
         "* Head - it is " + Head.class.getName() + "\n" +
         "* SomeClass - it is some class except Box or Head");
+  }
+
+  private static void extractBodiesAndAdd(List<Object> objectList, Object object) {
+
+    if (object instanceof Box) {
+      object = ((Box) object).body;
+    }
+
+    if (object instanceof List) {
+      for (Object subObject : (List) object) {
+        extractBodiesAndAdd(objectList, subObject);
+      }
+      return;
+    }
+
+    objectList.add(object);
+
   }
 
   private static boolean isListOfBoxes(Type type) {

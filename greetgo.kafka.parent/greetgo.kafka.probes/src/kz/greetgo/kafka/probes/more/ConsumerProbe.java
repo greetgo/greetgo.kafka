@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class ProbeConsumer {
+public class ConsumerProbe {
   public static void main(String[] args) throws Exception {
     final Properties props = new Properties();
     props.put("bootstrap.servers", "localhost:9092");

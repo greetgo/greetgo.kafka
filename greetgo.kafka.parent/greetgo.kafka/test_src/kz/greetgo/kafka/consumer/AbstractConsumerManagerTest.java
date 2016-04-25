@@ -8,7 +8,7 @@ import kz.greetgo.kafka.consumer.AbstractConsumerManager.Caller;
 import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.HasId;
 import kz.greetgo.kafka.core.Head;
-import kz.greetgo.kafka.core.StrConverterPreparation;
+import kz.greetgo.kafka.core.StrConverterPreparationBased;
 import kz.greetgo.kafka.producer.AbstractKafkaSender;
 import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.str.StrConverter;
@@ -20,9 +20,11 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import static java.util.Arrays.asList;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class AbstractConsumerManagerTest {
@@ -94,6 +96,39 @@ public class AbstractConsumerManagerTest {
     assertThat(testing.listBox_1).isNotNull();
     assertThat(testing.listBox_1.get(0).head.a).isEqualTo(list.get(0).head.a);
     assertThat(testing.listBox_1.get(0).body).isEqualTo(tmpStr);
+  }
+
+  @Test
+  public void createCaller_listObject_2() throws Exception {
+
+    Method method = Testing.class.getMethod("listObject", List.class);
+
+    Testing testing = new Testing();
+
+    //
+    //
+    Caller caller = AbstractConsumerManager.createCaller(testing, method);
+    //
+    //
+
+    assertThat(caller).isNotNull();
+
+    List<Box> list = new ArrayList<>();
+    list.add(boxWithBody("a"));
+    list.add(boxWithBody(asList("b", "c")));
+    list.add(boxWithBody(asList(asList("d", "e"), "f")));
+
+    caller.call(list);
+
+    assertThat(testing.listObject_1).containsExactly("a", "b", "c", "d", "e", "f");
+  }
+
+  private Box boxWithBody(Object body) {
+    Box box = new Box();
+    box.head = new Head();
+    box.head.a = RND.str(10);
+    box.body = body;
+    return box;
   }
 
   @Test
@@ -287,7 +322,8 @@ public class AbstractConsumerManagerTest {
   }
 
   private static void prepareStrConverter(StrConverter strConverter) {
-    StrConverterPreparation.prepare(strConverter);
+    StrConverterPreparationBased.prepare(strConverter);
+    strConverter.useClass(Client.class, "Client");
   }
 
   static class MySender extends AbstractKafkaSender {
@@ -315,7 +351,7 @@ public class AbstractConsumerManagerTest {
 
     @Override
     protected String topic() {
-      return "client";
+      return TEST_TOPIC_NAME;
     }
   }
 
@@ -325,6 +361,13 @@ public class AbstractConsumerManagerTest {
     @Override
     protected String bootstrapServers() {
       return "localhost:" + port;
+    }
+
+    StrConverter strConverter = null;
+
+    @Override
+    protected StrConverter strConverter() {
+      return strConverter;
     }
 
     @Override
@@ -337,7 +380,7 @@ public class AbstractConsumerManagerTest {
 
     public final List<Client> clientList = new ArrayList<>();
 
-    @Consume(groupId = "asd", topics = "client")
+    @Consume(groupId = "asd", topics = TEST_TOPIC_NAME)
     public void someClients(Client client) {
       clientList.add(client);
       System.out.println(client);
@@ -345,7 +388,9 @@ public class AbstractConsumerManagerTest {
 
   }
 
-  @Test(timeOut = 30_000)
+  public static final String TEST_TOPIC_NAME = "client";
+
+  @Test(timeOut = 30_000, enabled = false)
   public void startup_shutdown() throws Exception {
     Servers servers = new Servers();
     servers.tmpDir = "build/startup_shutdown_" + RND.str(10);
@@ -360,7 +405,7 @@ public class AbstractConsumerManagerTest {
         ZkClient zkClient = new ZkClient(zkConnection, 3000, ZKStringSerializer$.MODULE$);
         ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
         int partitions = 1, replicationFactor = 1;
-        AdminUtils.createTopic(zkUtils, "client", partitions, replicationFactor, new Properties());
+        AdminUtils.createTopic(zkUtils, TEST_TOPIC_NAME, partitions, replicationFactor, new Properties());
       } finally {
         zkConnection.close();
       }
