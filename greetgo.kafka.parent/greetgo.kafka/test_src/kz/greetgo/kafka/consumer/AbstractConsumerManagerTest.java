@@ -1,5 +1,8 @@
 package kz.greetgo.kafka.consumer;
 
+import kafka.admin.AdminUtils;
+import kafka.utils.ZKStringSerializer$;
+import kafka.utils.ZkUtils;
 import kz.greetgo.kafka.Servers;
 import kz.greetgo.kafka.consumer.AbstractConsumerManager.Caller;
 import kz.greetgo.kafka.core.Box;
@@ -11,11 +14,14 @@ import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
 import kz.greetgo.util.RND;
+import org.I0Itec.zkclient.ZkClient;
+import org.I0Itec.zkclient.ZkConnection;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -300,7 +306,7 @@ public class AbstractConsumerManagerTest {
       return ret;
     }
 
-    public String author = "asd";
+    public String author = "left author";
 
     @Override
     protected String author() {
@@ -339,12 +345,28 @@ public class AbstractConsumerManagerTest {
 
   }
 
-  @Test
+  @Test(timeOut = 30_000)
   public void startup_shutdown() throws Exception {
     Servers servers = new Servers();
-    servers.tmpDir = "build/asd";
+    servers.tmpDir = "build/startup_shutdown_" + RND.str(10);
 
     servers.startupAll();
+
+    System.out.println("---- point 001");
+
+    {
+      ZkConnection zkConnection = new ZkConnection("localhost:" + servers.zookeeperClientPort, 3000);
+      try {
+        ZkClient zkClient = new ZkClient(zkConnection, 3000, ZKStringSerializer$.MODULE$);
+        ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+        int partitions = 1, replicationFactor = 1;
+        AdminUtils.createTopic(zkUtils, "client", partitions, replicationFactor, new Properties());
+      } finally {
+        zkConnection.close();
+      }
+    }
+
+    System.out.println("---- point 002");
 
     MySender senderOpener = new MySender();
     senderOpener.port = servers.kafkaServerPort;
@@ -356,8 +378,11 @@ public class AbstractConsumerManagerTest {
 
     }
 
+    System.out.println("---- point 003");
+
     TestConsumerManager consumerManager = new TestConsumerManager();
     consumerManager.strConverter = senderOpener.strConverter();
+    consumerManager.port = servers.kafkaServerPort;
 
     TestConsumers testConsumers = new TestConsumers();
 
@@ -365,8 +390,11 @@ public class AbstractConsumerManagerTest {
 
     consumerManager.startup();
 
-    System.out.println("Sleep");
-    Thread.sleep(5000);
+    while (testConsumers.clientList.size() < 2) {
+      System.out.println("--- -- ---- -- ---- ---- -- -- --- - ---- - ----" +
+          " Sleep testConsumers.clientList.size() = " + testConsumers.clientList.size());
+      Thread.sleep(300);
+    }
 
     System.out.println("Check point 1");
 

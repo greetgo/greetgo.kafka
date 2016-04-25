@@ -1,4 +1,4 @@
-package kz.greetgo.kafka.probes;
+package kz.greetgo.kafka.probes.more;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -12,8 +12,7 @@ import java.util.Properties;
 public class ProbeConsumer {
   public static void main(String[] args) throws Exception {
     final Properties props = new Properties();
-    props.put("bootstrap.servers", "192.168.11.185:9092");
-    props.put("group.id", "asd-002-1");
+    props.put("bootstrap.servers", "localhost:9092");
     props.put("enable.auto.commit", "false");
     props.put("auto.commit.interval.ms", "1000");
     props.put("session.timeout.ms", "30000");
@@ -21,21 +20,24 @@ public class ProbeConsumer {
     props.put("value.deserializer", StringDeserializer.class.getName());
     props.put("auto.offset.reset", "earliest");
 
+    props.put("group.id", "cursor-A");
+
     final boolean running[] = new boolean[]{true};
 
     Thread thread = new Thread(new Runnable() {
       @Override
       public void run() {
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
-          System.out.println("Consumer has been started");
+          System.out.println("More Consumer has been started");
 
-          consumer.subscribe(Arrays.asList("asd-002"));
+          consumer.subscribe(Arrays.asList(Params.TOPIC_NAME));
           while (running[0]) {
-            ConsumerRecords<String, String> records = consumer.poll(100);
+            ConsumerRecords<String, String> records = consumer.poll(200);
+
             for (ConsumerRecord<String, String> record : records) {
               String key = record.key();
               String value = record.value();
-              System.out.println(key + " -> " + value);
+              System.out.println("~~~ " + key + " -> " + value);
             }
 
             consumer.commitSync();
@@ -47,7 +49,7 @@ public class ProbeConsumer {
 
     thread.start();
 
-    File working = new File("build/consumer_working");
+    File working = new File("build/more_consumer_working");
     working.getParentFile().mkdirs();
     working.createNewFile();
 

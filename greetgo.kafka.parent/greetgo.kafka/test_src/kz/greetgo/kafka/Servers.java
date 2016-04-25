@@ -21,7 +21,7 @@ public class Servers {
   }
 
   public String tmpDir = createTmpDir();
-  final int zookeeperClientPort = 2181;
+  public final int zookeeperClientPort = 2181;
   public final int kafkaServerPort = 9092;
 
   ServerCnxnFactory zookeeperCnxnFactory = null;
@@ -62,6 +62,7 @@ public class Servers {
       pr.println("log.segment.bytes=1073741824");
       pr.println("log.retention.check.interval.ms=300000");
       pr.println("log.cleaner.enable=false");
+      pr.println("auto.create.topics.enable=false");
       pr.println("zookeeper.connect=localhost:" + zookeeperClientPort);
       pr.println("zookeeper.connection.timeout.ms=6000");
     }

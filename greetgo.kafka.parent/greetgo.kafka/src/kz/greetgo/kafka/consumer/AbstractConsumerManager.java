@@ -57,10 +57,12 @@ public abstract class AbstractConsumerManager {
 
           while (running) {
             list.clear();
-            System.out.println("hrewr: in circle of method " + method.getName());
+
             for (ConsumerRecord<String, String> record : consumer.poll(pollTimeout())) {
               list.add(strConverter.<Box>fromStr(record.value()));
             }
+            System.out.println("hrewr: come count = " + list.size());
+
             if (list.size() == 0) continue;
             try {
               caller.call(list);
