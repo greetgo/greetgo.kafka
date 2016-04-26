@@ -1,30 +1,20 @@
 package kz.greetgo.kafka.consumer;
 
-import kafka.admin.AdminUtils;
-import kafka.utils.ZKStringSerializer$;
-import kafka.utils.ZkUtils;
-import kz.greetgo.kafka.Servers;
 import kz.greetgo.kafka.consumer.AbstractConsumerManager.Caller;
-import kz.greetgo.kafka.core.Box;
-import kz.greetgo.kafka.core.HasId;
-import kz.greetgo.kafka.core.Head;
-import kz.greetgo.kafka.core.StrConverterPreparationBased;
+import kz.greetgo.kafka.core.*;
 import kz.greetgo.kafka.producer.AbstractKafkaSender;
 import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
 import kz.greetgo.util.RND;
-import org.I0Itec.zkclient.ZkClient;
-import org.I0Itec.zkclient.ZkConnection;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.synchronizedList;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class AbstractConsumerManagerTest {
@@ -206,6 +196,7 @@ public class AbstractConsumerManagerTest {
     assertThat(testing.box_list.get(1).head.a).isEqualTo(list.get(1).head.a);
   }
 
+
   @Test
   public void createCaller_object() throws Exception {
 
@@ -292,7 +283,22 @@ public class AbstractConsumerManagerTest {
     assertThat(testing.objectHead_headList.get(1).a).isEqualTo(list.get(1).head.a);
   }
 
-  static class Client implements HasId {
+  public static class MyTopicManager extends AbstractKafkaTopicManager {
+
+    private KafkaParams kafkaParams;
+
+    public MyTopicManager(KafkaParams kafkaParams) {
+      this.kafkaParams = kafkaParams;
+    }
+
+    @Override
+    protected String zookeeperServers() {
+      return kafkaParams.zookeeperServers();
+    }
+  }
+
+
+  public static class Client implements HasId {
     public String id;
     public String surname;
     public String name;
@@ -319,6 +325,27 @@ public class AbstractConsumerManagerTest {
           ", name='" + name + '\'' +
           '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      Client client = (Client) o;
+
+      if (id != null ? !id.equals(client.id) : client.id != null) return false;
+      if (surname != null ? !surname.equals(client.surname) : client.surname != null) return false;
+      return name != null ? name.equals(client.name) : client.name == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+      int result = id != null ? id.hashCode() : 0;
+      result = 31 * result + (surname != null ? surname.hashCode() : 0);
+      result = 31 * result + (name != null ? name.hashCode() : 0);
+      return result;
+    }
   }
 
   private static void prepareStrConverter(StrConverter strConverter) {
@@ -328,11 +355,15 @@ public class AbstractConsumerManagerTest {
 
   static class MySender extends AbstractKafkaSender {
 
-    public int port;
+    private KafkaParams kafkaParams;
+
+    public MySender(KafkaParams kafkaParams) {
+      this.kafkaParams = kafkaParams;
+    }
 
     @Override
     protected String getBootstrapServers() {
-      return "localhost:" + port;
+      return kafkaParams.kafkaServers();
     }
 
     @Override
@@ -356,18 +387,21 @@ public class AbstractConsumerManagerTest {
   }
 
   static class TestConsumerManager extends AbstractConsumerManager {
-    public int port;
+    private KafkaParams kafkaParams;
+
+    public TestConsumerManager(KafkaParams kafkaParams) {
+      this.kafkaParams = kafkaParams;
+    }
 
     @Override
     protected String bootstrapServers() {
-      return "localhost:" + port;
+      return kafkaParams.kafkaServers();
     }
 
-    StrConverter strConverter = null;
 
     @Override
     protected StrConverter strConverter() {
-      return strConverter;
+      return kafkaParams.createStrConverter();
     }
 
     @Override
@@ -376,81 +410,99 @@ public class AbstractConsumerManagerTest {
     }
   }
 
+  @Test
+  public void name() throws Exception {
+
+  }
+
   static class TestConsumers {
 
-    public final List<Client> clientList = new ArrayList<>();
+    public final List<Client> clientList = synchronizedList(new ArrayList<Client>());
 
-    @Consume(groupId = "asd", topics = TEST_TOPIC_NAME)
+    int i = 0;
+
+    @Consume(groupId = TEST_TOPIC_NAME + "-main-cursor-1", topics = TEST_TOPIC_NAME)
     public void someClients(Client client) {
       clientList.add(client);
-      System.out.println(client);
+      System.out.println(++i + " Consumer gets " + client);
     }
 
   }
 
-  public static final String TEST_TOPIC_NAME = "client";
+  public static final String TEST_TOPIC_NAME = "client1";
 
-  @Test(timeOut = 30_000, enabled = false)
-  public void startup_shutdown() throws Exception {
-    Servers servers = new Servers();
-    servers.tmpDir = "build/startup_shutdown_" + RND.str(10);
+  interface KafkaParams {
+    String zookeeperServers();
 
-    servers.startupAll();
+    String kafkaServers();
 
-    System.out.println("---- point 001");
+    StrConverter createStrConverter();
+  }
 
-    {
-      ZkConnection zkConnection = new ZkConnection("localhost:" + servers.zookeeperClientPort, 3000);
-      try {
-        ZkClient zkClient = new ZkClient(zkConnection, 3000, ZKStringSerializer$.MODULE$);
-        ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-        int partitions = 1, replicationFactor = 1;
-        AdminUtils.createTopic(zkUtils, TEST_TOPIC_NAME, partitions, replicationFactor, new Properties());
-      } finally {
-        zkConnection.close();
+  static class KafkaParamsImpl implements KafkaParams {
+
+    @Override
+    public String zookeeperServers() {
+      return "localhost:2181";
+    }
+
+    @Override
+    public String kafkaServers() {
+      return "localhost:9092";
+    }
+
+    @Override
+    public StrConverter createStrConverter() {
+      StrConverter ret = new StrConverterXml();
+      prepareStrConverter(ret);
+      return ret;
+    }
+  }
+
+  @Test(timeOut = 30_000)
+  public void consumer() throws Exception {
+    KafkaParams kafkaParams = new KafkaParamsImpl();
+
+    MySender sender = new MySender(kafkaParams);
+
+    int clientCount = 3;
+
+    final List<Client> clientList = new ArrayList<>();
+
+    try (KafkaSending sending = sender.open()) {
+      for (int u = 0; u < clientCount; u++) {
+        Client c = new Client();
+        c.id = u + "-" + RND.intStr(10);
+        c.surname = "surname " + RND.plusInt(100000);
+        c.name = "name " + RND.plusInt(100000);
+
+        sending.send(c);
+        clientList.add(c);
       }
-    }
-
-    System.out.println("---- point 002");
-
-    MySender senderOpener = new MySender();
-    senderOpener.port = servers.kafkaServerPort;
-
-    try (KafkaSending ks = senderOpener.open()) {
-
-      ks.send(new Client("client-001", "Иванов", "Иван"));
-      ks.send(new Client("client-002", "Петров", "Пётр"));
 
     }
 
-    System.out.println("---- point 003");
-
-    TestConsumerManager consumerManager = new TestConsumerManager();
-    consumerManager.strConverter = senderOpener.strConverter();
-    consumerManager.port = servers.kafkaServerPort;
+    TestConsumerManager consumerManager = new TestConsumerManager(kafkaParams);
 
     TestConsumers testConsumers = new TestConsumers();
-
     consumerManager.appendBean(testConsumers);
 
     consumerManager.startup();
 
-    while (testConsumers.clientList.size() < 2) {
-      System.out.println("--- -- ---- -- ---- ---- -- -- --- - ---- - ----" +
-          " Sleep testConsumers.clientList.size() = " + testConsumers.clientList.size());
-      Thread.sleep(300);
+    while (testConsumers.clientList.size() < clientCount) {
+      Thread.sleep(100);
     }
 
-    System.out.println("Check point 1");
+    consumerManager.shutdown();
 
-    consumerManager.shutdownAndJoin();
+    assertThat(testConsumers.clientList).isEqualTo(clientList);
+  }
 
-    System.out.println("Check point 2");
+  @Test(timeOut = 30_000, enabled = false)
+  public void removeTopicClient() throws Exception {
+    KafkaParams kafkaParams = new KafkaParamsImpl();
 
-    servers.shutdownAll();
-
-    System.out.println("Shut downed");
-    //servers.clean();
-
+    MyTopicManager topicManager = new MyTopicManager(kafkaParams);
+    topicManager.removeTopic(TEST_TOPIC_NAME);
   }
 }

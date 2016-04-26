@@ -120,4 +120,8 @@ public class Servers {
     zookeeperCnxnFactory.startup(zkServer);
   }
 
+  public static void main(String[] args) throws Exception {
+    Servers servers = new Servers();
+    servers.startupAll();
+  }
 }
