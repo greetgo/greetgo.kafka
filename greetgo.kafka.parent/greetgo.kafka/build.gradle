@@ -21,3 +21,17 @@ artifacts {
   archives sourcesJar
   archives javadocJar
 }
+
+uploadArchives {
+  repositories.mavenDeployer {
+    configuration = configurations.archives
+    repository(
+        url: System.getenv('GG_REPO')
+    )
+
+    pom.project {
+      name project.name
+      packaging 'jar'
+    }
+  }
+}
