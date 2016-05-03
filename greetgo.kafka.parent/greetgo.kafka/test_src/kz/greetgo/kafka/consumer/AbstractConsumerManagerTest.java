@@ -11,10 +11,12 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.synchronizedList;
+import static kz.greetgo.util.ServerUtil.notNull;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class AbstractConsumerManagerTest {
@@ -298,7 +300,7 @@ public class AbstractConsumerManagerTest {
   }
 
 
-  public static class Client implements HasId {
+  public static class Client implements HasId, Comparable<Client> {
     public String id;
     public String surname;
     public String name;
@@ -345,6 +347,11 @@ public class AbstractConsumerManagerTest {
       result = 31 * result + (surname != null ? surname.hashCode() : 0);
       result = 31 * result + (name != null ? name.hashCode() : 0);
       return result;
+    }
+
+    @Override
+    public int compareTo(Client o) {
+      return notNull(id).compareTo(notNull(o.id));
     }
   }
 
@@ -495,6 +502,9 @@ public class AbstractConsumerManagerTest {
 
     consumerManager.shutdown();
 
+    Collections.sort(testConsumers.clientList);
+    Collections.sort(clientList);
+    
     assertThat(testConsumers.clientList).isEqualTo(clientList);
   }
 

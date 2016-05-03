@@ -15,6 +15,9 @@ allprojects {
   group = "kz.greetgo.kafka"
 
   eclipse.project.natures 'org.springsource.ide.eclipse.gradle.core.nature'
+  compileJava.options.debugOptions.debugLevel = "source,lines,vars"
+  compileTestJava.options.debugOptions.debugLevel = "source,lines,vars"
+  
 }
 
 subprojects {
@@ -42,6 +45,7 @@ subprojects {
 
   dependencies {
     ext.greetgoConfVersion = '0.0.12'
+    ext.greetgoUtilVersion = '0.0.25'
 
     testCompile 'org.testng:testng:6.5.1'
     testCompile 'org.easytesting:fest-assert-core:2.0M10'

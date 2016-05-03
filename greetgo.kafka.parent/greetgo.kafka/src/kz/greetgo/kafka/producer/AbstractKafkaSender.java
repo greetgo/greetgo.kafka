@@ -38,7 +38,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
       return extractIdFromList((List) object);
     }
 
-    return extractAlternativeId(object);
+    return alternativelyExtractId(object);
   }
 
   private String extractIdFromList(List objectList) {
@@ -58,7 +58,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
     return id;
   }
 
-  protected String extractAlternativeId(Object object) {
+  protected String alternativelyExtractId(Object object) {
     throw new IllegalArgumentException("Cannot extract id from " + object.getClass());
   }
 

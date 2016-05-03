@@ -3,6 +3,7 @@ package kz.greetgo.kafka.consumer;
 import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.Head;
 import kz.greetgo.kafka.str.StrConverter;
+import kz.greetgo.util.ServerUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -37,9 +38,17 @@ public abstract class AbstractConsumerManager {
 
   private final List<Thread> threadList = new ArrayList<>();
 
+  protected String groupIdPrefix() {
+    return "";
+  }
+
+  protected String topicPrefix() {
+    return "";
+  }
+
   public void appendBean(Object bean) {
     for (Method method : bean.getClass().getMethods()) {
-      Consume consume = method.getAnnotation(Consume.class);
+      Consume consume = ServerUtil.getAnnotation(method, Consume.class);
       if (consume != null) prepareThread(bean, method, consume);
     }
   }
@@ -50,8 +59,10 @@ public abstract class AbstractConsumerManager {
 
       @Override
       public void run() {
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(createProperties(consume.groupId()))) {
-          consumer.subscribe(Arrays.asList(consume.topics()));
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(
+            createProperties(groupIdPrefix() + consume.groupId()))
+        ) {
+          consumer.subscribe(addPrefix(topicPrefix(), Arrays.asList(consume.topics())));
 
           final List<Box> list = new ArrayList<>();
 
@@ -67,7 +78,12 @@ public abstract class AbstractConsumerManager {
               caller.call(list);
               consumer.commitSync();
             } catch (Exception e) {
-              handleCallException(bean, method, e);
+              try {
+                handleCallException(bean, method, e);
+              } catch (Exception ex) {
+                if (ex instanceof RuntimeException) throw (RuntimeException) ex;
+                throw new RuntimeException(ex);
+              }
             }
           }
 
@@ -76,9 +92,17 @@ public abstract class AbstractConsumerManager {
     }));
   }
 
+  private static List<String> addPrefix(String prefix, List<String> list) {
+    List<String> ret = new ArrayList<>(list.size());
+    for (String str : list) {
+      ret.add(prefix + str);
+    }
+    return ret;
+  }
+
   protected abstract StrConverter strConverter();
 
-  protected abstract void handleCallException(Object bean, Method method, Exception exception);
+  protected abstract void handleCallException(Object bean, Method method, Exception exception) throws Exception;
 
   protected long pollTimeout() {
     return 100;
@@ -231,6 +255,7 @@ public abstract class AbstractConsumerManager {
     }
   }
 
+  @SuppressWarnings("unused")
   public void shutdownAndJoin() {
     shutdown();
     join();
