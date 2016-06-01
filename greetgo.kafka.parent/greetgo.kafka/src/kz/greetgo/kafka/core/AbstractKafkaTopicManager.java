@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.core;
 
 import kafka.admin.AdminUtils;
+import kafka.admin.RackAwareMode;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkClient;
@@ -27,7 +28,8 @@ public abstract class AbstractKafkaTopicManager {
   public void createTopic(String topicName, int partitionCount, int replicationFactor) {
     try (ZkClientHolder holder = createKzClient()) {
       ZkUtils zkUtils = new ZkUtils(holder.client, holder.connection, false);
-      AdminUtils.createTopic(zkUtils, topicName, partitionCount, replicationFactor, new Properties());
+      AdminUtils.createTopic(zkUtils, topicName, partitionCount, replicationFactor, new Properties(),
+          RackAwareMode.Safe$.MODULE$);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

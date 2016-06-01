@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.probes.more;
 
 import kafka.admin.AdminUtils;
+import kafka.admin.RackAwareMode;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkClient;
@@ -16,7 +17,7 @@ public class CreateTopic {
       ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
       AdminUtils.createTopic(zkUtils,
           Params.TOPIC_NAME, Params.TOPIC_PARTITIONS, Params.TOPIC_REPLICATION_FACTOR,
-          new Properties());
+          new Properties(), RackAwareMode.Safe$.MODULE$);
     } finally {
       zkConnection.close();
     }
