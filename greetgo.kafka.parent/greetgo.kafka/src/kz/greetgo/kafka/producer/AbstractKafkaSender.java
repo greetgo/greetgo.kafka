@@ -108,7 +108,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
       }
 
       @Override
-      public void close() throws Exception {
+      public void close() {
         if (producer == null) return;
         producer.close();
         producer = null;
