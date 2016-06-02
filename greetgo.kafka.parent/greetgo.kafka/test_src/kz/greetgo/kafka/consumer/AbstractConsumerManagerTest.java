@@ -436,7 +436,7 @@ public class AbstractConsumerManagerTest {
     public final List<Client> clientList = synchronizedList(new ArrayList<Client>());
     int i = 0;
 
-    @Consume(cursorId = TEST_TOPIC_NAME + "-main-cursor-1", topics = TEST_TOPIC_NAME)
+    @Consume(name="test", cursorId = TEST_TOPIC_NAME + "-main-cursor-1", topics = TEST_TOPIC_NAME)
     public void someClients(Client client) {
       clientList.add(client);
       System.out.println(++i + " Consumer gets " + client);
@@ -501,7 +501,7 @@ public class AbstractConsumerManagerTest {
     TestConsumerManager consumerManager = new TestConsumerManager(kafkaParams);
 
     TestConsumers testConsumers = new TestConsumers();
-    consumerManager.appendBean(testConsumers);
+    consumerManager.registerBean(testConsumers);
 
     consumerManager.startup();
 

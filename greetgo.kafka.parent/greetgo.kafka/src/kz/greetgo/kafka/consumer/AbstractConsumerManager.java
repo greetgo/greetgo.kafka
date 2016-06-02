@@ -12,10 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public abstract class AbstractConsumerManager {
 
@@ -42,14 +39,26 @@ public abstract class AbstractConsumerManager {
 
   protected abstract String topicPrefix();
 
-  public void appendBean(Object bean) {
+  public void registerBean(Object bean) {
     for (Method method : bean.getClass().getMethods()) {
       Consume consume = ServerUtil.getAnnotation(method, Consume.class);
       if (consume != null) prepareThread(bean, method, consume);
     }
   }
 
+  private final Map<String, Method> registeredConsumers = new HashMap<>();
+
   private void prepareThread(final Object bean, final Method method, final Consume consume) {
+
+    synchronized (registeredConsumers) {
+      Method registeredMethod = registeredConsumers.get(consume.name());
+      if (registeredMethod != null) {
+        throw new RuntimeException("Consumer with name " + consume.name() + " already registered in " + registeredMethod
+            + ". Secondary registration was in " + method);
+      }
+      registeredConsumers.put(consume.name(), method);
+    }
+
     threadList.add(new Thread(new Runnable() {
       final Caller caller = createCaller(bean, method);
 
@@ -106,7 +115,7 @@ public abstract class AbstractConsumerManager {
   protected abstract void handleCallException(Object bean, Method method, Exception exception) throws Exception;
 
   protected long pollTimeout() {
-    return 100;
+    return 300;
   }
 
   public interface Caller {
