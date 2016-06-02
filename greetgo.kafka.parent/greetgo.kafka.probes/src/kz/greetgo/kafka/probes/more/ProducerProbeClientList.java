@@ -32,6 +32,11 @@ public class ProducerProbeClientList {
     }
 
     @Override
+    protected String ignorableConsumers(String author, Object sendingObject, String key, String value) {
+      return null;
+    }
+
+    @Override
     protected String topic() {
       return Params.TOPIC_NAME;
     }

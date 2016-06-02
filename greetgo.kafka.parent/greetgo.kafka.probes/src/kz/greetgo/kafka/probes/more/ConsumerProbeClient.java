@@ -38,6 +38,16 @@ public class ConsumerProbeClient {
     }
 
     @Override
+    protected String cursorIdPrefix() {
+      return "";
+    }
+
+    @Override
+    protected String topicPrefix() {
+      return "";
+    }
+
+    @Override
     protected StrConverter strConverter() {
       return createStrConverter();
     }

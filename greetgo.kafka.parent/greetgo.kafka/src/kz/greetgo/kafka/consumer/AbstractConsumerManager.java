@@ -38,13 +38,9 @@ public abstract class AbstractConsumerManager {
 
   private final List<Thread> threadList = new ArrayList<>();
 
-  protected String cursorIdPrefix() {
-    return "";
-  }
+  protected abstract String cursorIdPrefix();
 
-  protected String topicPrefix() {
-    return "";
-  }
+  protected abstract String topicPrefix();
 
   public void appendBean(Object bean) {
     for (Method method : bean.getClass().getMethods()) {
@@ -60,9 +56,9 @@ public abstract class AbstractConsumerManager {
       @Override
       public void run() {
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(
-            createProperties(cursorIdPrefix() + consume.cursorId()))
+            createProperties(notNull(cursorIdPrefix(), "cursorIdPrefix") + consume.cursorId()))
         ) {
-          consumer.subscribe(addPrefix(topicPrefix(), Arrays.asList(consume.topics())));
+          consumer.subscribe(addPrefix(notNull(topicPrefix(), "topicPrefix"), Arrays.asList(consume.topics())));
 
           final List<Box> list = new ArrayList<>();
 
@@ -90,6 +86,11 @@ public abstract class AbstractConsumerManager {
         }
       }
     }));
+  }
+
+  private static String notNull(String fieldValue, String fieldName) {
+    if (fieldValue == null) throw new NullPointerException(fieldName);
+    return fieldValue;
   }
 
   private static List<String> addPrefix(String prefix, List<String> list) {
