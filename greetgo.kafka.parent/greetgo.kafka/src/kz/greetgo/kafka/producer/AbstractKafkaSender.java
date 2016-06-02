@@ -27,6 +27,8 @@ public abstract class AbstractKafkaSender implements KafkaSender {
 
   protected abstract String author();
 
+  protected abstract String ignorableConsumers(String author, Object sendingObject, String key, String value);
+
   protected abstract String topic();
 
   protected String extractId(Object object) {
@@ -97,6 +99,8 @@ public abstract class AbstractKafkaSender implements KafkaSender {
 
         String value = strConverter().toStr(box);
         String key = extractId(object);
+
+        box.head.ign = ignorableConsumers(box.head.a, object, key, value);
 
         try {
           producer.send(new ProducerRecord<>(topic(), key, value)).get();

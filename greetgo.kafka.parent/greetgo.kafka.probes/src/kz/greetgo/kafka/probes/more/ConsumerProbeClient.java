@@ -23,7 +23,7 @@ public class ConsumerProbeClient {
 
     public final List<Object> clientList = new ArrayList<>();
 
-    @Consume(groupId = "cursor-B", topics = Params.TOPIC_NAME)
+    @Consume(cursorId = "cursor-B", topics = Params.TOPIC_NAME)
     public void someClients(List<Object> clientList) {
       this.clientList.addAll(clientList);
       System.out.println(clientList);

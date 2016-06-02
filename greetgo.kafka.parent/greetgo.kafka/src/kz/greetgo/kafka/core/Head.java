@@ -20,4 +20,9 @@ public class Head {
    * Author of insertion
    */
   public String a;
+
+  /**
+   * Comma-separated list of names of ignorable consumers
+   */
+  public String ign;
 }

@@ -38,7 +38,7 @@ public abstract class AbstractConsumerManager {
 
   private final List<Thread> threadList = new ArrayList<>();
 
-  protected String groupIdPrefix() {
+  protected String cursorIdPrefix() {
     return "";
   }
 
@@ -60,7 +60,7 @@ public abstract class AbstractConsumerManager {
       @Override
       public void run() {
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(
-            createProperties(groupIdPrefix() + consume.groupId()))
+            createProperties(cursorIdPrefix() + consume.cursorId()))
         ) {
           consumer.subscribe(addPrefix(topicPrefix(), Arrays.asList(consume.topics())));
 

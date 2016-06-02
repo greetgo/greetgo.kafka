@@ -388,6 +388,11 @@ public class AbstractConsumerManagerTest {
     }
 
     @Override
+    protected String ignorableConsumers(String author, Object object, String key, String value) {
+      return null;
+    }
+
+    @Override
     protected String topic() {
       return TEST_TOPIC_NAME;
     }
@@ -417,26 +422,18 @@ public class AbstractConsumerManagerTest {
     }
   }
 
-  @Test
-  public void name() throws Exception {
-
-  }
-
   static class TestConsumers {
-
     public final List<Client> clientList = synchronizedList(new ArrayList<Client>());
-
     int i = 0;
 
-    @Consume(groupId = TEST_TOPIC_NAME + "-main-cursor-1", topics = TEST_TOPIC_NAME)
+    @Consume(cursorId = TEST_TOPIC_NAME + "-main-cursor-1", topics = TEST_TOPIC_NAME)
     public void someClients(Client client) {
       clientList.add(client);
       System.out.println(++i + " Consumer gets " + client);
     }
-
   }
 
-  public static final String TEST_TOPIC_NAME = "client1";
+  public static final String TEST_TOPIC_NAME = "AbstractConsumerManagerTest_001";
 
   interface KafkaParams {
     String zookeeperServers();
@@ -483,11 +480,13 @@ public class AbstractConsumerManagerTest {
         c.surname = "surname " + RND.plusInt(100000);
         c.name = "name " + RND.plusInt(100000);
 
+        System.out.println("Sending " + c);
         sending.send(c);
         clientList.add(c);
       }
-
     }
+
+    //if ("a".equals("a")) return;
 
     TestConsumerManager consumerManager = new TestConsumerManager(kafkaParams);
 
@@ -504,7 +503,7 @@ public class AbstractConsumerManagerTest {
 
     Collections.sort(testConsumers.clientList);
     Collections.sort(clientList);
-    
+
     assertThat(testConsumers.clientList).isEqualTo(clientList);
   }
 
