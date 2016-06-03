@@ -500,7 +500,7 @@ public class AbstractConsumerManagerTest {
     TestConsumers testConsumers = new TestConsumers();
     consumerManager.registerBean(testConsumers);
 
-    consumerManager.ensureStartedUp("test");
+    consumerManager.ensureStarted("test");
 
     while (!testConsumers.clientMap.keySet().containsAll(clientMap.keySet())) {
       Thread.sleep(100);

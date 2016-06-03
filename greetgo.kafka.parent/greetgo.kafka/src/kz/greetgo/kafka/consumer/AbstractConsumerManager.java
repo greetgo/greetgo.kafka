@@ -117,13 +117,30 @@ public abstract class AbstractConsumerManager {
     return 300;
   }
 
-  public void startupAll() {
+  public void startAll() {
     for (String consumeName : registeredBeans.keySet()) {
-      ensureStartedUp(consumeName);
+      ensureStarted(consumeName);
     }
   }
 
-  public synchronized void ensureStartedUp(String consumeName) {
+  private boolean initiated = false;
+
+  protected void initiate() throws Exception {
+  }
+
+  private void init() {
+    try {
+      if (initiated) return;
+      initiate();
+      initiated = true;
+    } catch (Exception e) {
+      if (e instanceof RuntimeException) throw (RuntimeException) e;
+      throw new RuntimeException(e);
+    }
+  }
+
+  public synchronized void ensureStarted(String consumeName) {
+    init();
     for (ConsumerThread thread : threads.keySet()) {
       if (thread.consumerDefinition.consume.name().equals(consumeName)) {
         if (thread.running) return;

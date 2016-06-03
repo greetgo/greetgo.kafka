@@ -65,6 +65,6 @@ public class ConsumerProbeClient {
 
     consumerManager.registerBean(probeConsumers);
 
-    consumerManager.startupAll();
+    consumerManager.startAll();
   }
 }
