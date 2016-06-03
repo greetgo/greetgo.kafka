@@ -9,12 +9,10 @@ import kz.greetgo.util.RND;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.synchronizedList;
 import static kz.greetgo.util.ServerUtil.notNull;
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -432,12 +430,12 @@ public class AbstractConsumerManagerTest {
   }
 
   static class TestConsumers {
-    public final List<Client> clientList = synchronizedList(new ArrayList<Client>());
+    public final Map<String, Client> clientMap = new ConcurrentHashMap<>();
     int i = 0;
 
-    @Consume(name="test", cursorId = TEST_TOPIC_NAME + "-main-cursor-1", topics = TEST_TOPIC_NAME)
+    @Consume(name = "test", cursorId = TEST_TOPIC_NAME + "-main-cursor-3", topics = TEST_TOPIC_NAME)
     public void someClients(Client client) {
-      clientList.add(client);
+      clientMap.put(client.id, client);
       System.out.println(++i + " Consumer gets " + client);
     }
   }
@@ -480,7 +478,7 @@ public class AbstractConsumerManagerTest {
 
     int clientCount = 3;
 
-    final List<Client> clientList = new ArrayList<>();
+    final Map<String, Client> clientMap = new HashMap<>();
 
     try (KafkaSending sending = sender.open()) {
       for (int u = 0; u < clientCount; u++) {
@@ -491,7 +489,7 @@ public class AbstractConsumerManagerTest {
 
         System.out.println("Sending " + c);
         sending.send(c);
-        clientList.add(c);
+        clientMap.put(c.id, c);
       }
     }
 
@@ -502,24 +500,28 @@ public class AbstractConsumerManagerTest {
     TestConsumers testConsumers = new TestConsumers();
     consumerManager.registerBean(testConsumers);
 
-    consumerManager.startup();
+    consumerManager.ensureStartedUp("test");
 
-    while (testConsumers.clientList.size() < clientCount) {
+    while (!testConsumers.clientMap.keySet().containsAll(clientMap.keySet())) {
       Thread.sleep(100);
     }
 
     consumerManager.shutdown();
 
-    Collections.sort(testConsumers.clientList);
-    Collections.sort(clientList);
+    Set<String> ids = new HashSet<>();
+    ids.addAll(testConsumers.clientMap.keySet());
+    for (String id : ids) {
+      if (!clientMap.keySet().contains(id)) {
+        testConsumers.clientMap.remove(id);
+      }
+    }
 
-    assertThat(testConsumers.clientList).isEqualTo(clientList);
+    assertThat(testConsumers.clientMap).isEqualTo(clientMap);
   }
 
   @Test(timeOut = 30_000, enabled = false)
   public void removeTopicClient() throws Exception {
     KafkaParams kafkaParams = new KafkaParamsImpl();
-
     MyTopicManager topicManager = new MyTopicManager(kafkaParams);
     topicManager.removeTopic(TEST_TOPIC_NAME);
   }

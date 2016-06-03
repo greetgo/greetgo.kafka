@@ -9,6 +9,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractConsumerManager {
 
@@ -27,24 +28,32 @@ public abstract class AbstractConsumerManager {
     return props;
   }
 
-  private final List<ConsumerThread> threadList = new ArrayList<>();
-
   protected abstract String cursorIdPrefix();
 
   protected abstract String topicPrefix();
 
+  private final Map<String, ConsumerDefinition> registeredBeans = new ConcurrentHashMap<>();
+
   public void registerBean(Object bean) {
     for (Method method : bean.getClass().getMethods()) {
       Consume consume = ServerUtil.getAnnotation(method, Consume.class);
-      if (consume != null) prepareThread(bean, method, consume);
+      if (consume == null) continue;
+      {
+        ConsumerDefinition consumerDefinition = registeredBeans.get(consume.name());
+        if (consumerDefinition != null) {
+          throw new RuntimeException("Consumer with name " + consume.name() + " already registered in "
+              + consumerDefinition.method + ". Secondary registration was in " + method);
+        }
+        registeredBeans.put(consume.name(), new ConsumerDefinition(bean, method, consume));
+      }
     }
   }
 
-  private final Map<String, Method> registeredConsumers = new HashMap<>();
+  private final Map<ConsumerThread, ConsumerThread> threads = new ConcurrentHashMap<>();
 
   class ConsumerThread extends Thread {
 
-    private final ConsumerDefinition consumerDefinition;
+    final ConsumerDefinition consumerDefinition;
     boolean running = true;
 
     public ConsumerThread(ConsumerDefinition consumerDefinition) {
@@ -81,21 +90,10 @@ public abstract class AbstractConsumerManager {
             }
           }
         }
+
+        threads.remove(ConsumerThread.this);
       }
     }
-  }
-
-  private void prepareThread(final Object bean, final Method method, final Consume consume) {
-    synchronized (registeredConsumers) {
-      Method registeredMethod = registeredConsumers.get(consume.name());
-      if (registeredMethod != null) {
-        throw new RuntimeException("Consumer with name " + consume.name() + " already registered in " + registeredMethod
-            + ". Secondary registration was in " + method);
-      }
-      registeredConsumers.put(consume.name(), method);
-    }
-
-    threadList.add(new ConsumerThread(new ConsumerDefinition(bean, method, consume)));
   }
 
   private static String notNull(String fieldValue, String fieldName) {
@@ -119,24 +117,60 @@ public abstract class AbstractConsumerManager {
     return 300;
   }
 
-  public void startup() {
-    for (ConsumerThread thread : threadList) {
-      thread.start();
+  public void startupAll() {
+    for (String consumeName : registeredBeans.keySet()) {
+      ensureStartedUp(consumeName);
     }
   }
 
+  public synchronized void ensureStartedUp(String consumeName) {
+    if (shuttingDown) throw new RuntimeException("Shutting down in progress");
+
+    for (ConsumerThread thread : threads.keySet()) {
+      if (thread.consumerDefinition.consume.name().equals(consumeName)) {
+        if (thread.running) return;
+      }
+    }
+
+    ConsumerDefinition consumerDefinition = registeredBeans.get(consumeName);
+    if (consumerDefinition == null) throw new RuntimeException("No consumer " + consumeName);
+
+    ConsumerThread thread = new ConsumerThread(consumerDefinition);
+    thread.start();
+    threads.put(thread, thread);
+  }
+
+  public synchronized void stop(String consumeName) {
+    if (shuttingDown) return;
+
+    boolean was = false;
+
+    for (ConsumerThread thread : threads.keySet()) {
+      if (thread.consumerDefinition.consume.name().equals(consumeName)) {
+        thread.running = false;
+        was = true;
+      }
+    }
+
+    if (was) return;
+
+    throw new RuntimeException("No consumer with name = " + consumeName);
+  }
+
+  private boolean shuttingDown = false;
+
   public void shutdown() {
-    for (ConsumerThread thread : threadList) {
+    shuttingDown = true;
+    for (ConsumerThread thread : threads.keySet()) {
       thread.running = false;
     }
   }
 
   public void join() {
-    for (Thread thread : threadList) {
+    for (Thread thread : threads.keySet()) {
       try {
         thread.join();
-      } catch (InterruptedException e) {
-        //ignore
+      } catch (InterruptedException ignore) {
       }
     }
   }
