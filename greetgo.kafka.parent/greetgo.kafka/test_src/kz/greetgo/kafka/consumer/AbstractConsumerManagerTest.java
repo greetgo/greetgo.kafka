@@ -1,6 +1,5 @@
 package kz.greetgo.kafka.consumer;
 
-import kz.greetgo.kafka.consumer.AbstractConsumerManager.Caller;
 import kz.greetgo.kafka.core.*;
 import kz.greetgo.kafka.producer.AbstractKafkaSender;
 import kz.greetgo.kafka.producer.KafkaSending;
@@ -66,7 +65,7 @@ public class AbstractConsumerManagerTest {
 
     //
     //
-    Caller caller = AbstractConsumerManager.createCaller(testing, method);
+    Caller caller = UtilCaller.createCaller(testing, method);
     //
     //
 
@@ -99,7 +98,7 @@ public class AbstractConsumerManagerTest {
 
     //
     //
-    Caller caller = AbstractConsumerManager.createCaller(testing, method);
+    Caller caller = UtilCaller.createCaller(testing, method);
     //
     //
 
@@ -132,7 +131,7 @@ public class AbstractConsumerManagerTest {
 
     //
     //
-    Caller caller = AbstractConsumerManager.createCaller(testing, method);
+    Caller caller = UtilCaller.createCaller(testing, method);
     //
     //
 
@@ -164,7 +163,7 @@ public class AbstractConsumerManagerTest {
 
     //
     //
-    Caller caller = AbstractConsumerManager.createCaller(testing, method);
+    Caller caller = UtilCaller.createCaller(testing, method);
     //
     //
 
@@ -208,7 +207,7 @@ public class AbstractConsumerManagerTest {
 
     //
     //
-    Caller caller = AbstractConsumerManager.createCaller(testing, method);
+    Caller caller = UtilCaller.createCaller(testing, method);
     //
     //
 
@@ -249,7 +248,7 @@ public class AbstractConsumerManagerTest {
 
     //
     //
-    Caller caller = AbstractConsumerManager.createCaller(testing, method);
+    Caller caller = UtilCaller.createCaller(testing, method);
     //
     //
 
