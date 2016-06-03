@@ -1,6 +1,8 @@
 package kz.greetgo.kafka.core;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Head of kafka box
@@ -22,7 +24,12 @@ public class Head {
   public String a;
 
   /**
-   * Comma-separated list of names of ignorable consumers
+   * Ignorable consumers
    */
-  public String ign;
+  public Set<String> ign = new HashSet<>();
+
+  public boolean isIgnore(String consumerName) {
+    if (ign == null) return false;
+    return ign.contains(consumerName);
+  }
 }

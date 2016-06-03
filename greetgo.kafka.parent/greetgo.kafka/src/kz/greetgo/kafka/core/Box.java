@@ -13,4 +13,9 @@ public class Box {
    * The body
    */
   public Object body;
+
+  public boolean isIgnore(String consumerName) {
+    if (head == null) return false;
+    return head.isIgnore(consumerName);
+  }
 }

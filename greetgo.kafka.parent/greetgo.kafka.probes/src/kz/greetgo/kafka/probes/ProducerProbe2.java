@@ -7,6 +7,8 @@ import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
 
+import java.util.Set;
+
 public class ProducerProbe2 {
 
   public static class Client implements HasId {
@@ -40,7 +42,7 @@ public class ProducerProbe2 {
     }
 
     @Override
-    protected String ignorableConsumers(String author, Object sendingObject, String key, String value) {
+    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key, String value) {
       return null;
     }
 

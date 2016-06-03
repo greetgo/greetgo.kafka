@@ -11,6 +11,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public abstract class AbstractKafkaSender implements KafkaSender {
@@ -27,7 +28,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
 
   protected abstract String author();
 
-  protected abstract String ignorableConsumers(String author, Object sendingObject, String key, String value);
+  protected abstract Set<String> ignorableConsumers(String author, Object sendingObject, String key, String value);
 
   protected abstract String topic();
 

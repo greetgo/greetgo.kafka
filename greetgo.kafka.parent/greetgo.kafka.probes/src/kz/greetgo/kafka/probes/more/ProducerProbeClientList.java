@@ -8,6 +8,7 @@ import kz.greetgo.kafka.str.StrConverterXml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ProducerProbeClientList {
 
@@ -32,7 +33,7 @@ public class ProducerProbeClientList {
     }
 
     @Override
-    protected String ignorableConsumers(String author, Object sendingObject, String key, String value) {
+    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key, String value) {
       return null;
     }
 

@@ -385,7 +385,7 @@ public class AbstractConsumerManagerTest {
     }
 
     @Override
-    protected String ignorableConsumers(String author, Object object, String key, String value) {
+    protected Set<String> ignorableConsumers(String author, Object object, String key, String value) {
       return null;
     }
 
