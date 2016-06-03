@@ -506,7 +506,7 @@ public class AbstractConsumerManagerTest {
       Thread.sleep(100);
     }
 
-    consumerManager.shutdown();
+    consumerManager.stopAll();
 
     Set<String> ids = new HashSet<>();
     ids.addAll(testConsumers.clientMap.keySet());

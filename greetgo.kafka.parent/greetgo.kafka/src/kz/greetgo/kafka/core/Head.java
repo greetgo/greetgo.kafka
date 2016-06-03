@@ -26,7 +26,7 @@ public class Head {
   /**
    * Ignorable consumers
    */
-  public Set<String> ign = new HashSet<>();
+  public Set<String> ign;
 
   public boolean isIgnore(String consumerName) {
     if (ign == null) return false;

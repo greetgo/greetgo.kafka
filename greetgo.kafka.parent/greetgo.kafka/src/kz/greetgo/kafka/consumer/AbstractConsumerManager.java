@@ -124,8 +124,6 @@ public abstract class AbstractConsumerManager {
   }
 
   public synchronized void ensureStartedUp(String consumeName) {
-    if (shuttingDown) throw new RuntimeException("Shutting down in progress");
-
     for (ConsumerThread thread : threads.keySet()) {
       if (thread.consumerDefinition.consume.name().equals(consumeName)) {
         if (thread.running) return;
@@ -141,8 +139,6 @@ public abstract class AbstractConsumerManager {
   }
 
   public synchronized void stop(String consumeName) {
-    if (shuttingDown) return;
-
     boolean was = false;
 
     for (ConsumerThread thread : threads.keySet()) {
@@ -157,10 +153,7 @@ public abstract class AbstractConsumerManager {
     throw new RuntimeException("No consumer with name = " + consumeName);
   }
 
-  private boolean shuttingDown = false;
-
-  public void shutdown() {
-    shuttingDown = true;
+  public void stopAll() {
     for (ConsumerThread thread : threads.keySet()) {
       thread.running = false;
     }
@@ -176,8 +169,8 @@ public abstract class AbstractConsumerManager {
   }
 
   @SuppressWarnings("unused")
-  public void shutdownAndJoin() {
-    shutdown();
+  public void stopAllAndJoin() {
+    stopAll();
     join();
   }
 }
