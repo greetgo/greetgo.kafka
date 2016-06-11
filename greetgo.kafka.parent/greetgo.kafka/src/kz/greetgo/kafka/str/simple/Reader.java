@@ -244,6 +244,23 @@ public class Reader {
     char openBrace = source[index++];
     if (openBrace != '{') throw new RuntimeException("AQ87A2K8GYT: Here must be char {");
 
+    Class<?> objectClass = convertHelper.aliasClassMap.get(alias);
+    if (objectClass == null) throw new RuntimeException("No alias " + alias);
+
+    if (objectClass.isEnum()) {
+      String enumStrValue = readJavaId();
+      char closeBrace = source[index++];
+      if (closeBrace != '}') throw new RuntimeException("AJYRw8U: Here must be char }");
+
+      try {
+        @SuppressWarnings("unchecked")
+        Object enumValue = Enum.valueOf((Class<? extends Enum>) objectClass, enumStrValue);
+        return enumValue;
+      } catch (IllegalArgumentException | NullPointerException ignore) {
+        return null;
+      }
+    }
+
     Object object = convertHelper.createObjectWithAlias(alias);
     AcceptorManager acceptorManager = convertHelper.getAcceptorManager(alias);
 
@@ -259,8 +276,8 @@ public class Reader {
       if (eq != '=') throw new RuntimeException("Here must be =");
       Object value = read0();
       if (source[index] == ',') index++;
-      AttrAcceptor acceptor = acceptorManager.getAcceptor(name);
 
+      AttrAcceptor acceptor = acceptorManager.getAcceptor(name);
       if (acceptor != null) acceptor.set(object, value);
     }
 

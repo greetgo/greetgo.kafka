@@ -141,6 +141,13 @@ public class Writer {
       String alias = convertHelper.classAliasMap.get(objectClass);
       if (alias != null) {
 
+        if (objectClass.isEnum()) {
+          Enum<?> e = (Enum<?>) object;
+          res.append('Q').append(alias).append('{').append(e.name()).append('}');
+          return;
+        }
+
+
         res.append('Q').append(alias).append('{');
         AcceptorManager acceptorManager = convertHelper.getAcceptorManager(objectClass);
 
