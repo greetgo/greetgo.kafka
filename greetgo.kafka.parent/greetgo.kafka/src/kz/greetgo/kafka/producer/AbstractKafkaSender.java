@@ -84,7 +84,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
   @Override
   public KafkaSending open() {
     return new KafkaSending() {
-      KafkaProducer<String, String> producer = new KafkaProducer<>(getProperties());
+      KafkaProducer<String, String> producer = getProducer();
 
       @Override
       public void send(Object object) {
@@ -114,10 +114,33 @@ public abstract class AbstractKafkaSender implements KafkaSender {
 
       @Override
       public void close() {
-        if (producer == null) return;
-        producer.close();
         producer = null;
       }
     };
   }
+
+  private KafkaProducer<String, String> producer = null;
+
+  private KafkaProducer<String, String> getProducer() {
+    if (producer != null) return producer;
+    synchronized (this) {
+      if (producer != null) return producer;
+      return producer = new KafkaProducer<>(getProperties());
+    }
+  }
+
+  public void close() {
+    if (producer == null) return;
+
+    KafkaProducer<String, String> localProducer;
+
+    synchronized (this) {
+      if (producer == null) return;
+      localProducer = producer;
+      producer = null;
+    }
+
+    localProducer.close();
+  }
+
 }
