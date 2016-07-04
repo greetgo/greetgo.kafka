@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.consumer;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 public class ConsumerDefinition {
   public final Object bean;
@@ -13,5 +14,15 @@ public class ConsumerDefinition {
     this.method = method;
     this.consume = consume;
     this.caller = UtilCaller.createCaller(bean, method);
+  }
+
+  @Override
+  public String toString() {
+    return "ConsumerDefinition{" +
+        ", consume(name=" + consume.name() +
+        ", cursorId=" + consume.cursorId() +
+        ", topics=" + Arrays.toString(consume.topics()) +
+        "), bean=" + bean + ", method=" + method +
+        '}';
   }
 }

@@ -2,11 +2,11 @@ package kz.greetgo.kafka.probes.more;
 
 import kz.greetgo.kafka.consumer.AbstractConsumerManager;
 import kz.greetgo.kafka.consumer.Consume;
+import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.core.StrConverterPreparationBased;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +53,7 @@ public class ConsumerProbeClient {
     }
 
     @Override
-    protected void handleCallException(Object bean, Method method, Exception exception) {
+    protected void handleCallException(ConsumerDefinition consumerDefinition, Exception exception) {
       throw new RuntimeException(exception);
     }
   }

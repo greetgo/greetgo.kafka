@@ -424,7 +424,7 @@ public class AbstractConsumerManagerTest {
     }
 
     @Override
-    protected void handleCallException(Object bean, Method method, Exception exception) {
+    protected void handleCallException(ConsumerDefinition consumerDefinition, Exception exception) {
       throw new RuntimeException(exception);
     }
   }
