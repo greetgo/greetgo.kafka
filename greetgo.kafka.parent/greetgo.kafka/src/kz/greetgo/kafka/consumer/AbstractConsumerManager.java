@@ -11,6 +11,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.util.Collections.unmodifiableSet;
+
 public abstract class AbstractConsumerManager {
 
   protected abstract String bootstrapServers();
@@ -117,10 +119,9 @@ public abstract class AbstractConsumerManager {
     return 300;
   }
 
-  public void startAll() {
-    for (String consumeName : registeredBeans.keySet()) {
-      ensureStarted(consumeName);
-    }
+  public Set<String> consumerNames() {
+    init();
+    return unmodifiableSet(registeredBeans.keySet());
   }
 
   private boolean initiated = false;
