@@ -191,18 +191,11 @@ public abstract class AbstractConsumerManager {
 
   @SuppressWarnings("unused")
   public synchronized void stop(String consumeName) {
-    boolean was = false;
-
     for (ConsumerThread thread : threads.keySet()) {
       if (thread.consumerDefinition.consume.name().equals(consumeName)) {
         thread.shutdown();
-        was = true;
       }
     }
-
-    if (was) return;
-
-    throw new RuntimeException("No consumer with name = " + consumeName);
   }
 
   public void stopAll() {
