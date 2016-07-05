@@ -2,9 +2,10 @@ package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.events.KafkaEventCatcher;
-import kz.greetgo.kafka.events.e.ConsumerException;
-import kz.greetgo.kafka.events.e.ConsumerStart;
-import kz.greetgo.kafka.events.e.ConsumerStop;
+import kz.greetgo.kafka.events.e.ConsumerEventException;
+import kz.greetgo.kafka.events.e.ConsumerEventRegister;
+import kz.greetgo.kafka.events.e.ConsumerEventStart;
+import kz.greetgo.kafka.events.e.ConsumerEventStop;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.util.ServerUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -50,13 +51,21 @@ public abstract class AbstractConsumerManager {
     for (Method method : bean.getClass().getMethods()) {
       Consume consume = ServerUtil.getAnnotation(method, Consume.class);
       if (consume == null) continue;
+
       {
         ConsumerDefinition consumerDefinition = registeredBeans.get(consume.name());
         if (consumerDefinition != null) {
           throw new RuntimeException("Consumer with name " + consume.name() + " already registered in "
               + consumerDefinition.method + ". Secondary registration is in " + method);
         }
-        registeredBeans.put(consume.name(), new ConsumerDefinition(bean, method, consume));
+      }
+
+      {
+        ConsumerDefinition consumerDefinition = new ConsumerDefinition(bean, method, consume);
+        if (eventCatcher()!=null&&eventCatcher().needCatchOf(ConsumerEventRegister.class)) {
+          eventCatcher().catchEvent(new ConsumerEventRegister(consumerDefinition));
+        }
+        registeredBeans.put(consume.name(), consumerDefinition);
       }
     }
   }
@@ -92,8 +101,8 @@ public abstract class AbstractConsumerManager {
       try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(createProperties(cursorId))) {
         consumer.subscribe(topicPrefixList);
 
-        if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerStart.class)) {
-          eventCatcher().catchEvent(new ConsumerStart(consumerDefinition, cursorId, topicPrefixList));
+        if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventStart.class)) {
+          eventCatcher().catchEvent(new ConsumerEventStart(consumerDefinition, cursorId, topicPrefixList));
         }
 
         final List<Box> list = new ArrayList<>();
@@ -110,8 +119,8 @@ public abstract class AbstractConsumerManager {
             consumerDefinition.caller.call(unmodifiableList(list));
             consumer.commitSync();
           } catch (Exception e) {
-            if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerException.class)) {
-              eventCatcher().catchEvent(new ConsumerException(consumerDefinition, cursorId, topicPrefixList, e));
+            if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventException.class)) {
+              eventCatcher().catchEvent(new ConsumerEventException(consumerDefinition, cursorId, topicPrefixList, e));
             }
             try {
               handleCallException(consumerDefinition, e);
@@ -124,8 +133,8 @@ public abstract class AbstractConsumerManager {
 
       } finally {
         threads.remove(ConsumerThread.this);
-        if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerStop.class)) {
-          eventCatcher().catchEvent(new ConsumerStop(consumerDefinition, cursorId, topicPrefixList));
+        if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventStop.class)) {
+          eventCatcher().catchEvent(new ConsumerEventStop(consumerDefinition, cursorId, topicPrefixList));
         }
       }
     }
