@@ -8,7 +8,7 @@ allprojects {
   apply plugin: 'maven'
   apply plugin: 'idea'
 
-  version = '0.0.19'
+  version = '0.0.20'
 
   sourceCompatibility = 1.7
 
@@ -36,7 +36,6 @@ subprojects {
   }
 
   repositories {
-    mavenLocal()
     maven {
       name 'Our repository'
       url System.getenv('GG_REPO')
@@ -63,7 +62,7 @@ subprojects {
 
   sourceSets {
     main {
-      java.srcDirs = ["src", "src_resources"]
+      java.srcDirs = ["src"]
       resources.srcDirs = ["src", "src_resources"]
       output.resourcesDir = "build/classes/main"
     }

@@ -24,7 +24,7 @@ public abstract class AbstractConsumerManager {
 
   protected abstract String bootstrapServers();
 
-  protected Properties createProperties(String groupId) {
+  protected Properties createProperties(String groupId, ConsumerDefinition consumerDefinition) {
     final Properties props = new Properties();
     props.put("bootstrap.servers", bootstrapServers());
     props.put("group.id", groupId);
@@ -98,7 +98,7 @@ public abstract class AbstractConsumerManager {
           Arrays.asList(consumerDefinition.consume.topics())
       );
 
-      try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(createProperties(cursorId))) {
+      try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(createProperties(cursorId, consumerDefinition))) {
         consumer.subscribe(topicPrefixList);
 
         if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventStart.class)) {
