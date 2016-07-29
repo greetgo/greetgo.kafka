@@ -31,6 +31,7 @@ public abstract class AbstractKafkaTopicManager {
       AdminUtils.createTopic(zkUtils, topicName, partitionCount, replicationFactor, new Properties(),
           RackAwareMode.Safe$.MODULE$);
     } catch (Exception e) {
+      if (e instanceof RuntimeException) throw (RuntimeException) e;
       throw new RuntimeException(e);
     }
   }
