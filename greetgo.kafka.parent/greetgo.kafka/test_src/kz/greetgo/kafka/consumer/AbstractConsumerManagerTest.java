@@ -433,7 +433,7 @@ public class AbstractConsumerManagerTest {
     public final Map<String, Client> clientMap = new ConcurrentHashMap<>();
     int i = 0;
 
-    @Consume(name = "test", cursorId = TEST_TOPIC_NAME + "-main-cursor-3", topics = TEST_TOPIC_NAME)
+    @Consume(name = "testConsumerName", cursorId = TEST_TOPIC_NAME + "-main-cursor-3", topics = TEST_TOPIC_NAME)
     public void someClients(Client client) {
       clientMap.put(client.id, client);
       System.out.println(++i + " Consumer gets " + client);
@@ -500,7 +500,21 @@ public class AbstractConsumerManagerTest {
     TestConsumers testConsumers = new TestConsumers();
     consumerManager.registerBean(testConsumers);
 
-    consumerManager.ensureStarted("test");
+    String consumeName = "testConsumerName";
+
+    consumerManager.setWorkingThreads(consumeName, 3);
+
+    Thread t[] = new Thread[Thread.activeCount()];
+    Thread.enumerate(t);
+
+    int consumeThreadCount = 0;
+    for (Thread thread : t) {
+      if (thread.getName().startsWith(consumeName)) consumeThreadCount++;
+      System.out.println(thread.getName());
+    }
+
+    assertThat(consumeThreadCount).isEqualTo(3);
+
 
     while (!testConsumers.clientMap.keySet().containsAll(clientMap.keySet())) {
       Thread.sleep(100);

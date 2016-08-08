@@ -62,7 +62,7 @@ public abstract class AbstractConsumerManager {
 
       {
         ConsumerDefinition consumerDefinition = new ConsumerDefinition(bean, method, consume);
-        if (eventCatcher()!=null&&eventCatcher().needCatchOf(ConsumerEventRegister.class)) {
+        if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventRegister.class)) {
           eventCatcher().catchEvent(new ConsumerEventRegister(consumerDefinition));
         }
         registeredBeans.put(consume.name(), consumerDefinition);
@@ -87,6 +87,8 @@ public abstract class AbstractConsumerManager {
 
     public ConsumerThread(ConsumerDefinition consumerDefinition) {
       this.consumerDefinition = consumerDefinition;
+
+      setName(consumerDefinition.consume.name() + "_" + getName());
     }
 
     @Override
@@ -182,27 +184,39 @@ public abstract class AbstractConsumerManager {
     }
   }
 
-  public synchronized void ensureStarted(String consumeName) {
+  public synchronized void setWorkingThreads(String consumeName, int threadCount) {
     init();
+
+    int currentCount = 0;
+
     for (ConsumerThread thread : threads.keySet()) {
       if (thread.consumerDefinition.consume.name().equals(consumeName)) {
-        if (thread.running()) return;
+        if (thread.running()) currentCount++;
       }
     }
 
-    ConsumerDefinition consumerDefinition = registeredBeans.get(consumeName);
-    if (consumerDefinition == null) throw new RuntimeException("No consumer " + consumeName);
+    if (currentCount == threadCount) return;
 
-    ConsumerThread thread = new ConsumerThread(consumerDefinition);
-    thread.start();
-    threads.put(thread, thread);
-  }
+    if (threadCount > currentCount) {
 
-  @SuppressWarnings("unused")
-  public synchronized void stop(String consumeName) {
-    for (ConsumerThread thread : threads.keySet()) {
-      if (thread.consumerDefinition.consume.name().equals(consumeName)) {
-        thread.shutdown();
+      ConsumerDefinition consumerDefinition = registeredBeans.get(consumeName);
+      if (consumerDefinition == null) throw new RuntimeException("No consumer " + consumeName);
+
+      for (int i = 0, n = threadCount - currentCount; i < n; i++) {
+        ConsumerThread thread = new ConsumerThread(consumerDefinition);
+        thread.start();
+        threads.put(thread, thread);
+      }
+
+      return;
+    }
+
+    {
+      for (ConsumerThread thread : threads.keySet()) {
+        if (thread.consumerDefinition.consume.name().equals(consumeName)) {
+          thread.shutdown();
+          if (--currentCount <= threadCount) return;
+        }
       }
     }
   }

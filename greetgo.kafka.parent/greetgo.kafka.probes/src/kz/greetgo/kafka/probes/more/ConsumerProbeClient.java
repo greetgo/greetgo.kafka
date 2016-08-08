@@ -66,7 +66,7 @@ public class ConsumerProbeClient {
     consumerManager.registerBean(probeConsumers);
 
     for (String consumerName : consumerManager.consumerNames()) {
-      consumerManager.ensureStarted(consumerName);
+      consumerManager.setWorkingThreads(consumerName, 1);
     }
   }
 }
