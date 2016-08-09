@@ -8,11 +8,13 @@ public class ConsumerDefinition {
   public final Method method;
   public final Consume consume;
   public final Caller caller;
+  public final boolean addSoulIdToEndOfCursorId;
 
-  public ConsumerDefinition(Object bean, Method method, Consume consume) {
+  public ConsumerDefinition(Object bean, Method method, Consume consume, boolean addSoulIdToEndOfCursorId) {
     this.bean = bean;
     this.method = method;
     this.consume = consume;
+    this.addSoulIdToEndOfCursorId = addSoulIdToEndOfCursorId;
     this.caller = UtilCaller.createCaller(bean, method);
   }
 

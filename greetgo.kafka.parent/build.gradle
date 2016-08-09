@@ -8,7 +8,7 @@ allprojects {
   apply plugin: 'maven'
   apply plugin: 'idea'
 
-  version = '0.0.22'
+  version = '0.0.23'
 
   sourceCompatibility = 1.7
 

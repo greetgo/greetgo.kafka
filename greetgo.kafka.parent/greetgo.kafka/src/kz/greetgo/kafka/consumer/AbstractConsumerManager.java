@@ -61,13 +61,22 @@ public abstract class AbstractConsumerManager {
       }
 
       {
-        ConsumerDefinition consumerDefinition = new ConsumerDefinition(bean, method, consume);
+        ConsumerDefinition consumerDefinition = new ConsumerDefinition(
+            bean, method, consume, ServerUtil.getAnnotation(method, AddSoulIdToEndOfCursorId.class) != null
+        );
         if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventRegister.class)) {
           eventCatcher().catchEvent(new ConsumerEventRegister(consumerDefinition));
         }
         registeredBeans.put(consume.name(), consumerDefinition);
       }
     }
+  }
+
+  protected abstract String soulId();
+
+  protected String getCursorId(ConsumerDefinition consumerDefinition) {
+    return notNull(cursorIdPrefix(), "cursorIdPrefix") + consumerDefinition.consume.cursorId() +
+        (consumerDefinition.addSoulIdToEndOfCursorId ? '_' + notNull(soulId(), "soulId") : "");
   }
 
   private final Map<ConsumerThread, ConsumerThread> threads = new ConcurrentHashMap<>();
@@ -88,12 +97,12 @@ public abstract class AbstractConsumerManager {
     public ConsumerThread(ConsumerDefinition consumerDefinition) {
       this.consumerDefinition = consumerDefinition;
 
-      setName(consumerDefinition.consume.name() + "_" + getName());
+      setName(consumerDefinition.consume.name() + '_' + getName());
     }
 
     @Override
     public void run() {
-      String cursorId = notNull(cursorIdPrefix(), "cursorIdPrefix") + consumerDefinition.consume.cursorId();
+      String cursorId = getCursorId(consumerDefinition);
 
       List<String> topicPrefixList = addPrefix(
           notNull(topicPrefix(), "topicPrefix"),
