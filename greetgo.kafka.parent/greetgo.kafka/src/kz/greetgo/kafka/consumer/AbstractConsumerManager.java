@@ -24,6 +24,7 @@ public abstract class AbstractConsumerManager {
 
   protected abstract String bootstrapServers();
 
+  @SuppressWarnings("UnusedParameters")
   protected Properties createProperties(String groupId, ConsumerDefinition consumerDefinition) {
     final Properties props = new Properties();
     props.put("bootstrap.servers", bootstrapServers());
@@ -73,6 +74,10 @@ public abstract class AbstractConsumerManager {
   }
 
   protected abstract String soulId();
+
+  @SuppressWarnings("UnusedParameters")
+  protected void beforeCall(ConsumerDefinition consumerDefinition) {
+  }
 
   protected String getCursorId(ConsumerDefinition consumerDefinition) {
     return notNull(cursorIdPrefix(), "cursorIdPrefix") + consumerDefinition.consume.cursorId() +
@@ -127,6 +132,7 @@ public abstract class AbstractConsumerManager {
 
           if (list.size() == 0) continue;
           try {
+            beforeCall(consumerDefinition);
             consumerDefinition.caller.call(unmodifiableList(list));
             consumer.commitSync();
           } catch (Exception e) {
