@@ -28,7 +28,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
 
   protected abstract String author();
 
-  protected abstract Set<String> ignorableConsumers(String author, Object sendingObject, String key, String value);
+  protected abstract Set<String> ignorableConsumers(String author, Object sendingObject, String key);
 
   protected abstract String topic();
 
@@ -91,17 +91,18 @@ public abstract class AbstractKafkaSender implements KafkaSender {
         if (object == null) throw new NullPointerException();
         if (producer == null) throw new RuntimeException("Sender already closed");
 
+        final String author = author();
+        String key = extractId(object);
+
         Box box = new Box();
         box.head = new Head();
-        box.head.a = author();
+        box.head.a = author;
         box.head.n = System.nanoTime();
         box.head.t = new Date();
+        box.head.ign = ignorableConsumers(author, object, key);
         box.body = object;
 
         String value = strConverter().toStr(box);
-        String key = extractId(object);
-
-        box.head.ign = ignorableConsumers(box.head.a, object, key, value);
 
         try {
           producer.send(new ProducerRecord<>(topic(), key, value)).get();
