@@ -69,7 +69,8 @@ public abstract class AbstractKafkaSender implements KafkaSender {
     Properties props = new Properties();
     props.put("bootstrap.servers", getBootstrapServers());
     props.put("acks", "all");
-    props.put("retries", 0);
+    props.put("retries", 10_000);
+    props.put("max.in.flight.requests.per.connection", 1);
     props.put("key.serializer", StringSerializer.class.getName());
     props.put("value.serializer", StringSerializer.class.getName());
     return props;
@@ -115,6 +116,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
 
       @Override
       public void close() {
+        producer.flush();
         producer = null;
       }
     };
