@@ -76,7 +76,7 @@ public abstract class AbstractConsumerManager {
   protected abstract String soulId();
 
   @SuppressWarnings("UnusedParameters")
-  protected void beforeCall(ConsumerDefinition consumerDefinition) {
+  protected void beforeCall(ConsumerDefinition consumerDefinition, int listSize) {
   }
 
   protected String getCursorId(ConsumerDefinition consumerDefinition) {
@@ -130,9 +130,12 @@ public abstract class AbstractConsumerManager {
             list.add(strConverter().<Box>fromStr(record.value()));
           }
 
-          if (list.size() == 0) continue;
+          final int listSize = list.size();
+
+          if (listSize == 0) continue;
+
           try {
-            beforeCall(consumerDefinition);
+            beforeCall(consumerDefinition, listSize);
             consumerDefinition.caller.call(unmodifiableList(list));
             consumer.commitSync();
           } catch (Exception e) {
