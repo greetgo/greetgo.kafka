@@ -91,35 +91,55 @@ public abstract class AbstractKafkaSender implements KafkaSender {
       public void send(Object object) {
         if (object == null) throw new NullPointerException();
         if (producer == null) throw new RuntimeException("Sender already closed");
-
-        final String author = author();
-        String key = extractId(object);
-
-        Box box = new Box();
-        box.head = new Head();
-        box.head.a = author;
-        box.head.n = System.nanoTime();
-        box.head.t = new Date();
-        box.head.ign = ignorableConsumers(author, object, key);
-        box.body = object;
-
-        String value = strConverter().toStr(box);
-
-        try {
-          producer.send(new ProducerRecord<>(topic(), key, value)).get();
-        } catch (InterruptedException e) {
-          throw new RuntimeInterruptedException(e);
-        } catch (ExecutionException e) {
-          throw new RuntimeExecutionException(e);
-        }
+        doSend(producer, prepareProducerRecord(object));
       }
 
       @Override
       public void close() {
-        producer.flush();
-        producer = null;
+        if (producer != null) {
+          doProducerClose(producer);
+          producer = null;
+        }
       }
     };
+  }
+
+  protected void doProducerClose(KafkaProducer<String, String> producer) {
+    producer.flush();
+  }
+
+  protected void doSend(KafkaProducer<String, String> producer, ProducerRecord<String, String> producerRecord) {
+    try {
+      doSendEx(producer, producerRecord);
+    } catch (InterruptedException e) {
+      throw new RuntimeInterruptedException(e);
+    } catch (ExecutionException e) {
+      throw new RuntimeExecutionException(e);
+    }
+  }
+
+  protected void doSendEx(KafkaProducer<String, String> producer, ProducerRecord<String, String> producerRecord)
+      throws ExecutionException, InterruptedException {
+
+    producer.send(producerRecord).get();
+
+  }
+
+  protected ProducerRecord<String, String> prepareProducerRecord(Object object) {
+    final String author = author();
+    String key = extractId(object);
+
+    Box box = new Box();
+    box.head = new Head();
+    box.head.a = author;
+    box.head.n = System.nanoTime();
+    box.head.t = new Date();
+    box.head.ign = ignorableConsumers(author, object, key);
+    box.body = object;
+
+    String value = strConverter().toStr(box);
+
+    return new ProducerRecord<>(topic(), key, value);
   }
 
   private KafkaProducer<String, String> producer = null;
