@@ -438,4 +438,9 @@ public abstract class AbstractConsumerManager {
     registeredBeans.values().forEach(ConsumerDot::join);
   }
 
+  public void stopAllAndJoin() {
+    stopAll();
+    joinAll();
+  }
+
 }
