@@ -31,7 +31,7 @@ public class ConsumerProbeClient {
 
   }
 
-  public static class ProbeNewConsumerManager extends AbstractNewConsumerManager {
+  public static class ProbeConsumerManager extends AbstractNewConsumerManager {
     @Override
     protected String bootstrapServers() {
       return "localhost:9092";
@@ -64,7 +64,7 @@ public class ConsumerProbeClient {
   }
 
   public static void main(String[] args) throws Exception {
-    ProbeNewConsumerManager consumerManager = new ProbeNewConsumerManager();
+    ProbeConsumerManager consumerManager = new ProbeConsumerManager();
 
     ProbeConsumers probeConsumers = new ProbeConsumers();
 
