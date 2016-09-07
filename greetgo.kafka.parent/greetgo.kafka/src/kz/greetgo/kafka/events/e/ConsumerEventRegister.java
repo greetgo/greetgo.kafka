@@ -15,6 +15,6 @@ public class ConsumerEventRegister extends KafkaEvent {
   @Override
   public String toString() {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    return sdf.format(at) + ' ' + name() + ' ' + consumerDefinition;
+    return sdf.format(at) + ' ' + name() + ' ' + consumerDefinition.consume.name();
   }
 }

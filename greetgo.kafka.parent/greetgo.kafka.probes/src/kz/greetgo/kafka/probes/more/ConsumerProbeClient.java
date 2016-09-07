@@ -1,6 +1,6 @@
 package kz.greetgo.kafka.probes.more;
 
-import kz.greetgo.kafka.consumer.AbstractNewConsumerManager;
+import kz.greetgo.kafka.consumer.AbstractConsumerManager;
 import kz.greetgo.kafka.consumer.Consume;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.core.StrConverterPreparationBased;
@@ -31,10 +31,15 @@ public class ConsumerProbeClient {
 
   }
 
-  public static class ProbeConsumerManager extends AbstractNewConsumerManager {
+  public static class ProbeConsumerManager extends AbstractConsumerManager {
     @Override
     protected String bootstrapServers() {
       return "localhost:9092";
+    }
+
+    @Override
+    protected String zookeeperConnectStr() {
+      return "localhost:2181";
     }
 
     @Override

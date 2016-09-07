@@ -395,7 +395,7 @@ public class AbstractConsumerManagerTest {
     }
   }
 
-  static class TestConsumerManager extends AbstractNewConsumerManager {
+  static class TestConsumerManager extends AbstractConsumerManager {
     private KafkaParams kafkaParams;
 
     public TestConsumerManager(KafkaParams kafkaParams) {
@@ -405,6 +405,11 @@ public class AbstractConsumerManagerTest {
     @Override
     protected String bootstrapServers() {
       return kafkaParams.kafkaServers();
+    }
+
+    @Override
+    protected String zookeeperConnectStr() {
+      return kafkaParams.zookeeperServers();
     }
 
     @Override

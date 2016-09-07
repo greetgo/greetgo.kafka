@@ -20,7 +20,7 @@ public abstract class ConsumerEventStartStop extends KafkaEvent {
   @Override
   public String toString() {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    return sdf.format(at) + ' ' + name() + " [consumerDefinition: " + consumerDefinition + ", factCursorId: "
-        + factCursorId + ", factTopicList: " + factTopicList + "]";
+    return sdf.format(at) + ' ' + name() + ", consumer: " + consumerDefinition.consume.name()
+        + ", topics: " + factTopicList + ", cursorId: " + factCursorId;
   }
 }

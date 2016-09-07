@@ -6,16 +6,16 @@ import kz.greetgo.kafka.events.KafkaEvent;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class ConsumerEventException extends KafkaEvent {
+public class OldConsumerEventException extends KafkaEvent {
   public final ConsumerDefinition consumerDefinition;
   public final String factCursorId;
   public final List<String> factTopicList;
   public final Exception exception;
 
-  public ConsumerEventException(ConsumerDefinition consumerDefinition,
-                                String factCursorId,
-                                List<String> factTopicList,
-                                Exception exception) {
+  public OldConsumerEventException(ConsumerDefinition consumerDefinition,
+                                   String factCursorId,
+                                   List<String> factTopicList,
+                                   Exception exception) {
     this.consumerDefinition = consumerDefinition;
     this.factCursorId = factCursorId;
     this.factTopicList = factTopicList;
