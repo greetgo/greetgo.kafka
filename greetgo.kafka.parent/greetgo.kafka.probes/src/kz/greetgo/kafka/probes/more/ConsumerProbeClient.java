@@ -1,6 +1,6 @@
 package kz.greetgo.kafka.probes.more;
 
-import kz.greetgo.kafka.consumer.AbstractConsumerManager;
+import kz.greetgo.kafka.consumer.AbstractNewConsumerManager;
 import kz.greetgo.kafka.consumer.Consume;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.core.StrConverterPreparationBased;
@@ -31,7 +31,7 @@ public class ConsumerProbeClient {
 
   }
 
-  public static class ProbeConsumerManager extends AbstractConsumerManager {
+  public static class ProbeNewConsumerManager extends AbstractNewConsumerManager {
     @Override
     protected String bootstrapServers() {
       return "localhost:9092";
@@ -48,6 +48,11 @@ public class ConsumerProbeClient {
     }
 
     @Override
+    protected String soulId() {
+      return "asd";
+    }
+
+    @Override
     protected StrConverter strConverter() {
       return createStrConverter();
     }
@@ -59,7 +64,7 @@ public class ConsumerProbeClient {
   }
 
   public static void main(String[] args) throws Exception {
-    ProbeConsumerManager consumerManager = new ProbeConsumerManager();
+    ProbeNewConsumerManager consumerManager = new ProbeNewConsumerManager();
 
     ProbeConsumers probeConsumers = new ProbeConsumers();
 

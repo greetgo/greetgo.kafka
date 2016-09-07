@@ -33,7 +33,7 @@ public class ProducerProbeClientList {
     }
 
     @Override
-    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key, String value) {
+    protected Set<String> ignorableConsumers(String author, Object sendingObject, String value) {
       return null;
     }
 

@@ -16,7 +16,7 @@ import static java.util.Arrays.asList;
 import static kz.greetgo.util.ServerUtil.notNull;
 import static org.fest.assertions.api.Assertions.assertThat;
 
-public class AbstractConsumerManagerTest {
+public class AbstractNewConsumerManagerTest {
 
   @SuppressWarnings("unused")
   private static class Testing {
@@ -385,7 +385,7 @@ public class AbstractConsumerManagerTest {
     }
 
     @Override
-    protected Set<String> ignorableConsumers(String author, Object object, String key, String value) {
+    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key) {
       return null;
     }
 
@@ -395,10 +395,10 @@ public class AbstractConsumerManagerTest {
     }
   }
 
-  static class TestConsumerManager extends AbstractConsumerManager {
+  static class TestNewConsumerManager extends AbstractNewConsumerManager {
     private KafkaParams kafkaParams;
 
-    public TestConsumerManager(KafkaParams kafkaParams) {
+    public TestNewConsumerManager(KafkaParams kafkaParams) {
       this.kafkaParams = kafkaParams;
     }
 
@@ -417,6 +417,10 @@ public class AbstractConsumerManagerTest {
       return "";
     }
 
+    @Override
+    protected String soulId() {
+      return "asd";
+    }
 
     @Override
     protected StrConverter strConverter() {
@@ -495,7 +499,7 @@ public class AbstractConsumerManagerTest {
 
     //if ("a".equals("a")) return;
 
-    TestConsumerManager consumerManager = new TestConsumerManager(kafkaParams);
+    TestNewConsumerManager consumerManager = new TestNewConsumerManager(kafkaParams);
 
     TestConsumers testConsumers = new TestConsumers();
     consumerManager.registerBean(testConsumers);

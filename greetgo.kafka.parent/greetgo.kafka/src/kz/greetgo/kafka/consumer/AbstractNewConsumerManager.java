@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 
-public abstract class AbstractConsumerManager {
+public abstract class AbstractNewConsumerManager extends CommonConsumerManager {
 
   protected abstract String bootstrapServers();
 
@@ -109,16 +109,16 @@ public abstract class AbstractConsumerManager {
     public void run() {
       String cursorId = getCursorId(consumerDefinition);
 
-      List<String> topicPrefixList = addPrefix(
+      List<String> topicList = addPrefix(
           notNull(topicPrefix(), "topicPrefix"),
           Arrays.asList(consumerDefinition.consume.topics())
       );
 
       try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(createProperties(cursorId, consumerDefinition))) {
-        consumer.subscribe(topicPrefixList);
+        consumer.subscribe(topicList);
 
         if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventStart.class)) {
-          eventCatcher().catchEvent(new ConsumerEventStart(consumerDefinition, cursorId, topicPrefixList));
+          eventCatcher().catchEvent(new ConsumerEventStart(consumerDefinition, cursorId, topicList));
         }
 
         final List<Box> list = new ArrayList<>();
@@ -140,7 +140,7 @@ public abstract class AbstractConsumerManager {
             consumer.commitSync();
           } catch (Exception e) {
             if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventException.class)) {
-              eventCatcher().catchEvent(new ConsumerEventException(consumerDefinition, cursorId, topicPrefixList, e));
+              eventCatcher().catchEvent(new ConsumerEventException(consumerDefinition, cursorId, topicList, e));
             }
             try {
               handleCallException(consumerDefinition, e);
@@ -154,7 +154,7 @@ public abstract class AbstractConsumerManager {
       } finally {
         threads.remove(ConsumerThread.this);
         if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventStop.class)) {
-          eventCatcher().catchEvent(new ConsumerEventStop(consumerDefinition, cursorId, topicPrefixList));
+          eventCatcher().catchEvent(new ConsumerEventStop(consumerDefinition, cursorId, topicList));
         }
       }
     }
@@ -240,9 +240,7 @@ public abstract class AbstractConsumerManager {
   }
 
   public void stopAll() {
-    for (ConsumerThread thread : threads.keySet()) {
-      thread.shutdown();
-    }
+    threads.keySet().forEach(ConsumerThread::shutdown);
   }
 
   public void join() {

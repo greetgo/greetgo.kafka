@@ -42,7 +42,7 @@ public class ProducerProbe2 {
     }
 
     @Override
-    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key, String value) {
+    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key) {
       return null;
     }
 

@@ -53,7 +53,7 @@ public class AbstractKafkaSenderTest {
     }
 
     @Override
-    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key, String value) {
+    protected Set<String> ignorableConsumers(String author, Object sendingObject, String key) {
       return new HashSet<>();
     }
 
