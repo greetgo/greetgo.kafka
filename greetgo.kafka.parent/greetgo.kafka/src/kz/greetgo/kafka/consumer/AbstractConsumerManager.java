@@ -367,6 +367,10 @@ public abstract class AbstractConsumerManager {
 
           Thread thread = new Thread(() -> {
 
+            if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventStart.class)) {
+              eventCatcher().catchEvent(new OldConsumerEventStart(consumerDefinition, cursorId, topicList));
+            }
+            
             final ConsumerIterator<byte[], byte[]> iterator = threadKafkaStream.iterator();
 
             while (true) {
