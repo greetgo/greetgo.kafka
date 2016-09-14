@@ -242,12 +242,17 @@ public abstract class AbstractConsumerManager {
     class NewConsumerThread extends Thread {
       final AtomicBoolean running = new AtomicBoolean(true);
 
+      KafkaConsumer<String, String> consumer = null;
+
       boolean isRunning() {
         return running.get();
       }
 
       void shutdown() {
         running.set(false);
+
+        final KafkaConsumer<String, String> consumer = this.consumer;
+        if (consumer != null) consumer.wakeup();
       }
 
       public NewConsumerThread() {
@@ -260,7 +265,8 @@ public abstract class AbstractConsumerManager {
 
         List<String> topicList = topicList(consumerDefinition);
 
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(createNewProperties(cursorId, consumerDefinition))) {
+        consumer = new KafkaConsumer<>(createNewProperties(cursorId, consumerDefinition));
+        try {
           consumer.subscribe(topicList);
 
           if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventStart.class)) {
@@ -272,8 +278,11 @@ public abstract class AbstractConsumerManager {
           while (running.get()) {
             list.clear();
 
-            for (ConsumerRecord<String, String> record : consumer.poll(pollTimeout())) {
-              list.add(strConverter().<Box>fromStr(record.value()));
+            try {
+              for (ConsumerRecord<String, String> record : consumer.poll(pollTimeout())) {
+                list.add(strConverter().<Box>fromStr(record.value()));
+              }
+            } catch (org.apache.kafka.common.errors.WakeupException ignore) {
             }
 
             final int listSize = list.size();
@@ -302,6 +311,7 @@ public abstract class AbstractConsumerManager {
           if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventStop.class)) {
             eventCatcher().catchEvent(new NewConsumerEventStop(consumerDefinition, cursorId, topicList));
           }
+          consumer = null;
         }
       }
     }
@@ -370,7 +380,7 @@ public abstract class AbstractConsumerManager {
             if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventStart.class)) {
               eventCatcher().catchEvent(new OldConsumerEventStart(consumerDefinition, cursorId, topicList));
             }
-            
+
             final ConsumerIterator<byte[], byte[]> iterator = threadKafkaStream.iterator();
 
             while (true) {
