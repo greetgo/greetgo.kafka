@@ -15,7 +15,7 @@ public class ConsumerDefinition {
     this.method = method;
     this.consume = consume;
     this.addSoulIdToEndOfCursorId = addSoulIdToEndOfCursorId;
-    this.caller = UtilCaller.createCaller(bean, method);
+    this.caller = CallerCreator.create(bean, method);
   }
 
   @Override

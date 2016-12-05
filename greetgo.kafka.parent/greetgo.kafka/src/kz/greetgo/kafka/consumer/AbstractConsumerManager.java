@@ -4,6 +4,8 @@ import kafka.consumer.*;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.DefaultDecoder;
 import kz.greetgo.kafka.core.Box;
+import kz.greetgo.kafka.core.BoxRecord;
+import kz.greetgo.kafka.core.RecordPlace;
 import kz.greetgo.kafka.events.KafkaEventCatcher;
 import kz.greetgo.kafka.events.e.*;
 import kz.greetgo.kafka.str.StrConverter;
@@ -89,13 +91,13 @@ public abstract class AbstractConsumerManager {
         ConsumerDot consumerDot = registeredBeans.get(consume.name());
         if (consumerDot != null) {
           throw new RuntimeException("Consumer with name " + consume.name() + " already registered in "
-              + consumerDot.consumerDefinition.method + ". Secondary registration is in " + method);
+            + consumerDot.consumerDefinition.method + ". Secondary registration is in " + method);
         }
       }
 
       {
         ConsumerDefinition consumerDefinition = new ConsumerDefinition(
-            bean, method, consume, ServerUtil.getAnnotation(method, AddSoulIdToEndOfCursorId.class) != null
+          bean, method, consume, ServerUtil.getAnnotation(method, AddSoulIdToEndOfCursorId.class) != null
         );
         if (eventCatcher() != null && eventCatcher().needCatchOf(ConsumerEventRegister.class)) {
           eventCatcher().catchEvent(new ConsumerEventRegister(consumerDefinition));
@@ -116,7 +118,7 @@ public abstract class AbstractConsumerManager {
 
   protected String getCursorId(ConsumerDefinition consumerDefinition) {
     return notNull(cursorIdPrefix(), "cursorIdPrefix") + consumerDefinition.consume.cursorId() +
-        (consumerDefinition.addSoulIdToEndOfCursorId ? '_' + notNull(soulId(), "soulId") : "");
+      (consumerDefinition.addSoulIdToEndOfCursorId ? '_' + notNull(soulId(), "soulId") : "");
   }
 
   @SuppressWarnings("UnusedParameters")
@@ -176,8 +178,8 @@ public abstract class AbstractConsumerManager {
 
   private List<String> topicList(ConsumerDefinition consumerDefinition) {
     return addPrefix(
-        notNull(topicPrefix(), "topicPrefix"),
-        Arrays.asList(consumerDefinition.consume.topics())
+      notNull(topicPrefix(), "topicPrefix"),
+      Arrays.asList(consumerDefinition.consume.topics())
     );
   }
 
@@ -272,14 +274,38 @@ public abstract class AbstractConsumerManager {
             eventCatcher().catchEvent(new NewConsumerEventStart(consumerDefinition, cursorId, topicList));
           }
 
-          final List<Box> list = new ArrayList<>();
+          final List<BoxRecord> list = new ArrayList<>();
 
           while (running.get()) {
             list.clear();
 
             try {
               for (ConsumerRecord<String, String> record : consumer.poll(pollTimeout())) {
-                list.add(strConverter().fromStr(record.value()));
+                list.add(new BoxRecord() {
+                  Box box = null;
+
+                  @Override
+                  public Box box() {
+                    if (box == null) return box = createBox();
+                    return box;
+                  }
+
+                  private Box createBox() {
+                    return strConverter().fromStr(record.value());
+                  }
+
+                  RecordPlace place = null;
+
+                  @Override
+                  public RecordPlace place() {
+                    if (place == null) return place = createPlace();
+                    return place;
+                  }
+
+                  private RecordPlace createPlace() {
+                    return new RecordPlace(record.topic(), record.partition(), record.offset());
+                  }
+                });
               }
             } catch (org.apache.kafka.common.errors.WakeupException ignore) {
             }
@@ -361,7 +387,7 @@ public abstract class AbstractConsumerManager {
         final DefaultDecoder valueDecoder = new DefaultDecoder(null);
 
         final Seq<KafkaStream<byte[], byte[]>> kafkaStream = consumerConnector.createMessageStreamsByFilter(
-            filter, threadCount, keyDecoder, valueDecoder
+          filter, threadCount, keyDecoder, valueDecoder
         );
 
         final scala.collection.Iterator<KafkaStream<byte[], byte[]>> kafkaStreamIterator = kafkaStream.iterator();
@@ -394,13 +420,36 @@ public abstract class AbstractConsumerManager {
                 break;
               }
 
-              final String message = stringDeserializer.deserialize(whileListStr, mam.message());
-              final Box box = strConverter().fromStr(message);
-              final List<Box> boxList = Collections.singletonList(box);
+              final List<BoxRecord> boxRecordList = Collections.singletonList(new BoxRecord() {
+                Box box = null;
+
+                @Override
+                public Box box() {
+                  if (box == null) return box = createBox();
+                  return box;
+                }
+
+                private Box createBox() {
+                  final String message = stringDeserializer.deserialize(whileListStr, mam.message());
+                  return strConverter().fromStr(message);
+                }
+
+                RecordPlace place = null;
+
+                @Override
+                public RecordPlace place() {
+                  if (place == null) return place = createPlace();
+                  return place;
+                }
+
+                private RecordPlace createPlace() {
+                  return new RecordPlace(mam.topic(), mam.partition(), mam.offset());
+                }
+              });
 
               try {
                 beforeCall(consumerDefinition, 1);
-                consumerDefinition.caller.call(boxList);
+                consumerDefinition.caller.call(boxRecordList);
                 consumerConnector.commitOffsets(true);
               } catch (Exception e) {
                 if (eventCatcher() != null && eventCatcher().needCatchOf(OldConsumerEventException.class)) {
