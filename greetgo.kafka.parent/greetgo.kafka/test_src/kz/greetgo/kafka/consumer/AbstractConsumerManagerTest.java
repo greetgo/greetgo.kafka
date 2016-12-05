@@ -1,6 +1,8 @@
 package kz.greetgo.kafka.consumer;
 
-import kz.greetgo.kafka.core.*;
+import kz.greetgo.kafka.core.AbstractKafkaTopicManager;
+import kz.greetgo.kafka.core.HasId;
+import kz.greetgo.kafka.core.StrConverterPreparationBased;
 import kz.greetgo.kafka.producer.AbstractKafkaSender;
 import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.str.StrConverter;
@@ -8,279 +10,17 @@ import kz.greetgo.kafka.str.StrConverterXml;
 import kz.greetgo.util.RND;
 import org.testng.annotations.Test;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.util.Arrays.asList;
 import static kz.greetgo.util.ServerUtil.notNull;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class AbstractConsumerManagerTest {
 
-  @SuppressWarnings("unused")
-  private static class Testing {
-
-    public List<Box> listBox_1 = null;
-
-    public void listBox(List<Box> list) {
-      listBox_1 = list;
-    }
-
-    public List<Object> listObject_1 = null;
-
-    public void listObject(List<Object> list) {
-      listObject_1 = list;
-    }
-
-    public final List<Box> box_list = new ArrayList<>();
-
-    public void box(Box box) {
-      box_list.add(box);
-    }
-
-    public final List<Object> object_list = new ArrayList<>();
-
-    public void object(Object object) {
-      object_list.add(object);
-    }
-
-    public final List<Object> objectHead_objectList = new ArrayList<>();
-    public final List<Head> objectHead_headList = new ArrayList<>();
-
-    public void objectHead(Object object, Head head) {
-      objectHead_objectList.add(object);
-      objectHead_headList.add(head);
-    }
-  }
-
-  @Test
-  public void createCaller_listBox() throws Exception {
-
-    Method method = Testing.class.getMethod("listBox", List.class);
-
-    Testing testing = new Testing();
-
-    //
-    //
-    Caller caller = UtilCaller.createCaller(testing, method);
-    //
-    //
-
-    assertThat(caller).isNotNull();
-
-    String tmpStr = RND.str(10);
-
-    List<Box> list = new ArrayList<>();
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr;
-      list.add(box);
-    }
-
-    caller.call(list);
-
-    assertThat(testing.listBox_1).isNotNull();
-    assertThat(testing.listBox_1.get(0).head.a).isEqualTo(list.get(0).head.a);
-    assertThat(testing.listBox_1.get(0).body).isEqualTo(tmpStr);
-  }
-
-  @Test
-  public void createCaller_listObject_2() throws Exception {
-
-    Method method = Testing.class.getMethod("listObject", List.class);
-
-    Testing testing = new Testing();
-
-    //
-    //
-    Caller caller = UtilCaller.createCaller(testing, method);
-    //
-    //
-
-    assertThat(caller).isNotNull();
-
-    List<Box> list = new ArrayList<>();
-    list.add(boxWithBody("a"));
-    list.add(boxWithBody(asList("b", "c")));
-    list.add(boxWithBody(asList(asList("d", "e"), "f")));
-
-    caller.call(list);
-
-    assertThat(testing.listObject_1).containsExactly("a", "b", "c", "d", "e", "f");
-  }
-
-  private Box boxWithBody(Object body) {
-    Box box = new Box();
-    box.head = new Head();
-    box.head.a = RND.str(10);
-    box.body = body;
-    return box;
-  }
-
-  @Test
-  public void createCaller_listObject() throws Exception {
-
-    Method method = Testing.class.getMethod("listObject", List.class);
-
-    Testing testing = new Testing();
-
-    //
-    //
-    Caller caller = UtilCaller.createCaller(testing, method);
-    //
-    //
-
-    assertThat(caller).isNotNull();
-
-    String tmpStr = RND.str(10);
-
-    List<Box> list = new ArrayList<>();
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr;
-      list.add(box);
-    }
-
-    caller.call(list);
-
-    assertThat(testing.listObject_1).isNotNull();
-    assertThat(testing.listObject_1.get(0)).isEqualTo(tmpStr);
-  }
-
-  @Test
-  public void createCaller_box() throws Exception {
-
-    Method method = Testing.class.getMethod("box", Box.class);
-
-    Testing testing = new Testing();
-
-    //
-    //
-    Caller caller = UtilCaller.createCaller(testing, method);
-    //
-    //
-
-    assertThat(caller).isNotNull();
-
-    String tmpStr1 = RND.str(10);
-    String tmpStr2 = RND.str(10);
-
-    List<Box> list = new ArrayList<>();
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr1;
-      list.add(box);
-    }
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr2;
-      list.add(box);
-    }
-
-    caller.call(list);
-
-    assertThat(testing.box_list).hasSize(2);
-    assertThat(testing.box_list.get(0).body).isEqualTo(tmpStr1);
-    assertThat(testing.box_list.get(0).head.a).isEqualTo(list.get(0).head.a);
-    assertThat(testing.box_list.get(1).body).isEqualTo(tmpStr2);
-    assertThat(testing.box_list.get(1).head.a).isEqualTo(list.get(1).head.a);
-  }
-
-
-  @Test
-  public void createCaller_object() throws Exception {
-
-    Method method = Testing.class.getMethod("object", Object.class);
-
-    Testing testing = new Testing();
-
-    //
-    //
-    Caller caller = UtilCaller.createCaller(testing, method);
-    //
-    //
-
-    assertThat(caller).isNotNull();
-
-    String tmpStr1 = RND.str(10);
-    String tmpStr2 = RND.str(10);
-
-    List<Box> list = new ArrayList<>();
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr1;
-      list.add(box);
-    }
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr2;
-      list.add(box);
-    }
-
-    caller.call(list);
-
-    assertThat(testing.object_list).hasSize(2);
-    assertThat(testing.object_list.get(0)).isEqualTo(tmpStr1);
-    assertThat(testing.object_list.get(1)).isEqualTo(tmpStr2);
-  }
-
-  @Test
-  public void createCaller_objectHead() throws Exception {
-
-    Method method = Testing.class.getMethod("objectHead", Object.class, Head.class);
-
-    Testing testing = new Testing();
-
-    //
-    //
-    Caller caller = UtilCaller.createCaller(testing, method);
-    //
-    //
-
-    assertThat(caller).isNotNull();
-
-    String tmpStr1 = RND.str(10);
-    String tmpStr2 = RND.str(10);
-
-    List<Box> list = new ArrayList<>();
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr1;
-      list.add(box);
-    }
-    {
-      Box box = new Box();
-      box.head = new Head();
-      box.head.a = RND.str(10);
-      box.body = tmpStr2;
-      list.add(box);
-    }
-
-    caller.call(list);
-
-    assertThat(testing.objectHead_objectList).hasSize(2);
-    assertThat(testing.objectHead_objectList.get(0)).isEqualTo(tmpStr1);
-    assertThat(testing.objectHead_objectList.get(1)).isEqualTo(tmpStr2);
-
-    assertThat(testing.objectHead_headList).hasSize(2);
-    assertThat(testing.objectHead_headList.get(0).a).isEqualTo(list.get(0).head.a);
-    assertThat(testing.objectHead_headList.get(1).a).isEqualTo(list.get(1).head.a);
-  }
 
   public static class MyTopicManager extends AbstractKafkaTopicManager {
 
@@ -305,12 +45,6 @@ public class AbstractConsumerManagerTest {
     public Client() {
     }
 
-    public Client(String id, String surname, String name) {
-      this.id = id;
-      this.surname = surname;
-      this.name = name;
-    }
-
     @Override
     public String getId() {
       return id;
@@ -319,10 +53,10 @@ public class AbstractConsumerManagerTest {
     @Override
     public String toString() {
       return "Client{" +
-          "id='" + id + '\'' +
-          ", surname='" + surname + '\'' +
-          ", name='" + name + '\'' +
-          '}';
+        "id='" + id + '\'' +
+        ", surname='" + surname + '\'' +
+        ", name='" + name + '\'' +
+        '}';
     }
 
     @Override

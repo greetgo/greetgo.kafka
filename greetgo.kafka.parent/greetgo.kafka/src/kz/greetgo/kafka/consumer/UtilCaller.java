@@ -16,75 +16,60 @@ public class UtilCaller {
     Type[] parameterTypes = method.getGenericParameterTypes();
 
     if (parameterTypes.length == 1 && isListOfBoxes(parameterTypes[0])) {
-      return new Caller() {
-        @Override
-        public void call(List<Box> list) {
-          try {
-            method.invoke(bean, list);
-          } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-          }
+      return list -> {
+        try {
+          method.invoke(bean, list);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+          throw new RuntimeException(e);
         }
       };
     }
 
     if (parameterTypes.length == 1 && isList(parameterTypes[0])) {
-      return new Caller() {
-        @Override
-        public void call(List<Box> list) {
-          List<Object> objectList = new ArrayList<>(list.size());
-          for (Box box : list) {
-            extractBodiesAndAdd(objectList, box);
-          }
-          try {
-            method.invoke(bean, objectList);
-          } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-          }
+      return list -> {
+        List<Object> objectList = new ArrayList<>(list.size());
+        for (Box box : list) {
+          extractBodiesAndAdd(objectList, box);
+        }
+        try {
+          method.invoke(bean, objectList);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+          throw new RuntimeException(e);
         }
       };
     }
 
     if (parameterTypes.length == 1 && parameterTypes[0] == Box.class) {
-      return new Caller() {
-        @Override
-        public void call(List<Box> list) {
-          for (Box box : list) {
-            try {
-              method.invoke(bean, box);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-              throw new RuntimeException(e);
-            }
+      return list -> {
+        for (Box box : list) {
+          try {
+            method.invoke(bean, box);
+          } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
           }
         }
       };
     }
 
     if (parameterTypes.length == 1) {
-      return new Caller() {
-        @Override
-        public void call(List<Box> list) {
-          for (Box box : list) {
-            try {
-              method.invoke(bean, box.body);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-              throw new RuntimeException(e);
-            }
+      return list -> {
+        for (Box box : list) {
+          try {
+            method.invoke(bean, box.body);
+          } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
           }
         }
       };
     }
 
     if (parameterTypes.length == 2 && parameterTypes[1] == Head.class) {
-      return new Caller() {
-        @Override
-        public void call(List<Box> list) {
-          for (Box box : list) {
-            try {
-              method.invoke(bean, box.body, box.head);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-              throw new RuntimeException(e);
-            }
+      return list -> {
+        for (Box box : list) {
+          try {
+            method.invoke(bean, box.body, box.head);
+          } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
           }
         }
       };

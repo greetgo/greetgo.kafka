@@ -17,9 +17,9 @@ public class StrConverterXml implements StrConverter {
     return stringWriter.toString();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T> T fromStr(String str) {
-    //noinspection unchecked
     return (T) xStream.fromXML(str);
   }
 

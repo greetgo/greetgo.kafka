@@ -111,11 +111,7 @@ public abstract class AbstractConsumerManager {
   }
 
   private static List<String> addPrefix(String prefix, List<String> list) {
-    List<String> ret = new ArrayList<>(list.size());
-    for (String str : list) {
-      ret.add(prefix + str);
-    }
-    return ret;
+    return list.stream().map(str -> prefix + str).collect(Collectors.toList());
   }
 
   protected String getCursorId(ConsumerDefinition consumerDefinition) {
@@ -127,6 +123,7 @@ public abstract class AbstractConsumerManager {
   protected void beforeCall(ConsumerDefinition consumerDefinition, int listSize) {
   }
 
+  @SuppressWarnings("UnusedParameters")
   protected Properties createNewProperties(String groupId, ConsumerDefinition consumerDefinition) {
     final Properties props = new Properties();
     props.put("bootstrap.servers", bootstrapServers());
@@ -140,6 +137,7 @@ public abstract class AbstractConsumerManager {
     return props;
   }
 
+  @SuppressWarnings("UnusedParameters")
   protected Properties createOldProperties(String groupId, ConsumerDefinition consumerDefinition) {
     Properties pp = new Properties();
     pp.setProperty("auto.offset.reset", "smallest");
@@ -191,6 +189,7 @@ public abstract class AbstractConsumerManager {
       this.consumerDefinition = consumerDefinition;
     }
 
+    @SuppressWarnings("unused")
     public abstract void join();
   }
 
@@ -280,7 +279,7 @@ public abstract class AbstractConsumerManager {
 
             try {
               for (ConsumerRecord<String, String> record : consumer.poll(pollTimeout())) {
-                list.add(strConverter().<Box>fromStr(record.value()));
+                list.add(strConverter().fromStr(record.value()));
               }
             } catch (org.apache.kafka.common.errors.WakeupException ignore) {
             }
@@ -396,7 +395,7 @@ public abstract class AbstractConsumerManager {
               }
 
               final String message = stringDeserializer.deserialize(whileListStr, mam.message());
-              final Box box = strConverter().<Box>fromStr(message);
+              final Box box = strConverter().fromStr(message);
               final List<Box> boxList = Collections.singletonList(box);
 
               try {
@@ -452,6 +451,7 @@ public abstract class AbstractConsumerManager {
     registeredBeans.values().forEach(ConsumerDot::join);
   }
 
+  @SuppressWarnings("unused")
   public void stopAllAndJoin() {
     stopAll();
     joinAll();
