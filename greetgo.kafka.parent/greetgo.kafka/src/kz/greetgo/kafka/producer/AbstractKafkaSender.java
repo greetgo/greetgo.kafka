@@ -95,6 +95,14 @@ public abstract class AbstractKafkaSender implements KafkaSender {
       }
 
       @Override
+      public void sendDirect(String key, String value) {
+        if (key == null) throw new NullPointerException("key == null in sending to kafka");
+        if (value == null) throw new NullPointerException("value == null in sending to kafka");
+        if (producer == null) throw new RuntimeException("Sender already closed");
+        doSend(producer, new ProducerRecord<>(topic(), key, value));
+      }
+
+      @Override
       public void close() {
         if (producer != null) {
           doProducerClose(producer);
@@ -119,7 +127,7 @@ public abstract class AbstractKafkaSender implements KafkaSender {
   }
 
   protected void doSendEx(KafkaProducer<String, String> producer, ProducerRecord<String, String> producerRecord)
-      throws ExecutionException, InterruptedException {
+    throws ExecutionException, InterruptedException {
 
     producer.send(producerRecord).get();
 
