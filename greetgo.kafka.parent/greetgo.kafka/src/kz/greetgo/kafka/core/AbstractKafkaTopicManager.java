@@ -4,9 +4,12 @@ import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
+import kz.greetgo.kafka.core.model.GroupIdInstance;
+import kz.greetgo.kafka.core.model.GroupIdInstanceSizeOffset;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 
+import java.util.List;
 import java.util.Properties;
 
 public abstract class AbstractKafkaTopicManager {
@@ -29,7 +32,7 @@ public abstract class AbstractKafkaTopicManager {
     try (ZkClientHolder holder = createKzClient()) {
       ZkUtils zkUtils = new ZkUtils(holder.client, holder.connection, false);
       AdminUtils.createTopic(zkUtils, topicName, partitionCount, replicationFactor, new Properties(),
-          RackAwareMode.Safe$.MODULE$);
+        RackAwareMode.Safe$.MODULE$);
     } catch (Exception e) {
       if (e instanceof RuntimeException) throw (RuntimeException) e;
       throw new RuntimeException(e);
@@ -46,6 +49,14 @@ public abstract class AbstractKafkaTopicManager {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public List<GroupIdInstance> allGroupIdInstances() {
+    throw new UnsupportedOperationException();
+  }
+
+  public List<GroupIdInstanceSizeOffset> sizeOffsets(List<GroupIdInstance> input) {
+    throw new UnsupportedOperationException();
   }
 }
   
