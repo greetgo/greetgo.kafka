@@ -1,16 +1,18 @@
 package kz.greetgo.kafka.core;
 
 import kafka.admin.AdminUtils;
-import kafka.admin.ConsumerGroupCommand;
 import kafka.admin.RackAwareMode;
-import kafka.api.*;
+import kafka.api.OffsetFetchRequest;
+import kafka.api.OffsetFetchResponse;
+import kafka.api.OffsetRequest;
+import kafka.api.OffsetResponse;
+import kafka.api.PartitionOffsetRequestInfo;
+import kafka.api.PartitionOffsetsResponse;
 import kafka.client.ClientUtils;
-import kafka.cluster.Cluster;
 import kafka.common.OffsetMetadataAndError;
 import kafka.common.TopicAndPartition;
 import kafka.consumer.SimpleConsumer;
 import kafka.network.BlockingChannel;
-import kafka.tools.ConsumerOffsetChecker;
 import kafka.utils.ZKGroupDirs;
 import kafka.utils.ZKGroupTopicDirs;
 import kafka.utils.ZKStringSerializer$;
@@ -21,24 +23,21 @@ import kz.greetgo.kafka.core.model.SizeOffset;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.exception.ZkNoNodeException;
-import scala.*;
-import scala.Short;
+import scala.Option;
+import scala.Predef;
+import scala.Tuple2;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
-import scala.collection.Traversable;
-import scala.collection.concurrent.INode;
-import scala.collection.generic.CanBuildFrom;
 import scala.collection.immutable.Map$;
-import scala.collection.mutable.HashMap;
-import scala.collection.mutable.Map;
 import scala.collection.mutable.WrappedArray;
 import scala.util.parsing.json.JSON;
 
-import java.lang.Long;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 
 public abstract class AbstractKafkaTopicManager {
 
@@ -60,7 +59,7 @@ public abstract class AbstractKafkaTopicManager {
     try (ZkClientHolder holder = createKzClient()) {
       ZkUtils zkUtils = new ZkUtils(holder.client, holder.connection, false);
       AdminUtils.createTopic(zkUtils, topicName, partitionCount, replicationFactor, new Properties(),
-          RackAwareMode.Safe$.MODULE$);
+        RackAwareMode.Safe$.MODULE$);
     } catch (Exception e) {
       if (e instanceof RuntimeException) throw (RuntimeException) e;
       throw new RuntimeException(e);
@@ -101,7 +100,23 @@ public abstract class AbstractKafkaTopicManager {
     return ret;
   }
 
+  static class GetSizer implements Closeable {
+
+    @Override
+    public void close() {
+      
+    }
+  }
+
   public List<GroupIdInstanceSizeOffset> sizeOffsets(List<GroupIdInstance> input) {
+
+    try (GetSizer getSizer = new GetSizer()) {
+      
+      
+      
+    }
+
+
     List<GroupIdInstanceSizeOffset> ret = new ArrayList<>();
     for (GroupIdInstance instance : input) {
       if (instance.groupId == null) continue;
@@ -140,6 +155,8 @@ public abstract class AbstractKafkaTopicManager {
         long offsetCount = 0;
         long logCount = 0;
 
+        List<Future<Long>> sizeList = new ArrayList<>();
+
         for (TopicAndPartition topicAndPartition : topicAndPartitionOffsetMetadataAndErrorMap1.keySet()) {
 
           ZKGroupTopicDirs zkGroupTopicDirs = new ZKGroupTopicDirs(instance.groupId, topicAndPartition.topic());
@@ -149,12 +166,19 @@ public abstract class AbstractKafkaTopicManager {
           offsetCount += countOffsetCount(zkUtils, topicAndPartition, zkGroupTopicDirs);
 
           logCount += countLogCount(zkUtils, topicAndPartition);
+
+          sizeList.add(getSize(zkUtils, topicAndPartition));
+        }
+
+        long totalSize = 0;
+        for (Future<Long> sizeFuture : sizeList) {
+          totalSize += sizeFuture.get();
         }
 
         GroupIdInstanceSizeOffset offset = new GroupIdInstanceSizeOffset();
         offset.groupIdInstance = instance;
         offset.sizeOffset = new SizeOffset();
-        
+
         offset.sizeOffset.offset = offsetCount;
         offset.sizeOffset.size = logCount;
 
@@ -183,11 +207,16 @@ public abstract class AbstractKafkaTopicManager {
 
     } catch (ZkNoNodeException zkNoNodeException) {
       zkNoNodeException.printStackTrace();
+      return 0;
     }
-    return 0;
+
   }
 
   private java.util.Map<String, SimpleConsumer> simpleConsumerMap = new java.util.HashMap<>();
+
+  private Future<Long> getSize(ZkUtils zkUtils, TopicAndPartition topicAndPartition) {
+    return ForkJoinPool.commonPool().submit(() -> countLogCount(zkUtils, topicAndPartition));
+  }
 
   private long countLogCount(ZkUtils zkUtils, TopicAndPartition topicAndPartition) {
     try {
@@ -218,15 +247,15 @@ public abstract class AbstractKafkaTopicManager {
         getLogCount = simpleConsumerMap.get(host + "_" + port);
       }
 
-      final Tuple2[] ts = {new Tuple2(topicAndPartition, new PartitionOffsetRequestInfo(OffsetRequest.LatestTime(), 1))};
+      final Tuple2[] ts = {new Tuple2<>(topicAndPartition, new PartitionOffsetRequestInfo(OffsetRequest.LatestTime(), 1))};
       final WrappedArray wa = Predef.wrapRefArray(ts);
       scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetRequestInfo> partitionOffsetRequestInfoMap =
-          Map$.MODULE$.apply(wa);
+        Map$.MODULE$.apply(wa);
 
       OffsetResponse offsetsBefore = getLogCount.getOffsetsBefore(new OffsetRequest(partitionOffsetRequestInfoMap, 0, -1));
 
       scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetsResponse> topicAndPartitionPartitionOffsetsResponseMap =
-          offsetsBefore.partitionErrorAndOffsets();
+        offsetsBefore.partitionErrorAndOffsets();
       Option<PartitionOffsetsResponse> partitionOffsetsResponseOption = topicAndPartitionPartitionOffsetsResponseMap.get(topicAndPartition);
       PartitionOffsetsResponse partitionOffsetsResponse = partitionOffsetsResponseOption.get();
       Seq<Object> offsets = partitionOffsetsResponse.offsets();
@@ -234,9 +263,10 @@ public abstract class AbstractKafkaTopicManager {
       return (long) offsets.head();
     } catch (ZkNoNodeException zkNoNodeException) {
       zkNoNodeException.printStackTrace();
+      return 0;
     }
 
-    return 0;
+
   }
 }
   
