@@ -59,7 +59,7 @@ public abstract class AbstractKafkaTopicManager {
     try (ZkClientHolder holder = createKzClient()) {
       ZkUtils zkUtils = new ZkUtils(holder.client, holder.connection, false);
       AdminUtils.createTopic(zkUtils, topicName, partitionCount, replicationFactor, new Properties(),
-        RackAwareMode.Safe$.MODULE$);
+          RackAwareMode.Safe$.MODULE$);
     } catch (Exception e) {
       if (e instanceof RuntimeException) throw (RuntimeException) e;
       throw new RuntimeException(e);
@@ -101,173 +101,164 @@ public abstract class AbstractKafkaTopicManager {
   }
 
   static class GetSizer implements Closeable {
+    private java.util.Map<String, SimpleConsumer> simpleConsumerMap = new java.util.HashMap<>();
+
+    public long countOffsetCount(ZkUtils zkUtils, TopicAndPartition topicAndPartition, ZKGroupTopicDirs zkGroupTopicDirs) {
+      try {
+        if (!zkUtils.pathExists(zkGroupTopicDirs.consumerOffsetDir())) return 0;
+        if (!zkUtils.pathExists(zkGroupTopicDirs.consumerOffsetDir() + "/" + "%d".format(topicAndPartition.partition() + "")))
+          return 0;
+
+        String s = zkUtils.readData(zkGroupTopicDirs.consumerOffsetDir() + "/" + "%d".format(topicAndPartition.partition() + ""))._1;
+
+        return Long.parseLong(s);
+
+      } catch (ZkNoNodeException zkNoNodeException) {
+        zkNoNodeException.printStackTrace();
+        return 0;
+      }
+
+    }
+
+    public Future<Long> getSize(ZkUtils zkUtils, TopicAndPartition topicAndPartition) {
+      return ForkJoinPool.commonPool().submit(() -> countLogCount(zkUtils, topicAndPartition));
+    }
+
+
+    public long countLogCount(ZkUtils zkUtils, TopicAndPartition topicAndPartition) {
+      try {
+        Option<Object> leaderForPartition = zkUtils.getLeaderForPartition(topicAndPartition.topic(), topicAndPartition.partition());
+        if (leaderForPartition == null) return 0;
+
+        if (!zkUtils.pathExists("/brokers")) return 0;
+        if (!zkUtils.pathExists("/brokers/ids")) return 0;
+        if (!zkUtils.pathExists("/brokers/ids/" + (Integer) leaderForPartition.get())) return 0;
+
+        Option<String> stringOption = zkUtils.readDataMaybeNull("/brokers/ids/" + (Integer) leaderForPartition.get())._1;
+        if (stringOption == null) return 0;
+
+        Option<Object> objectOption = JSON.parseFull(stringOption.get());
+
+        if (objectOption == null) return 0;
+        java.util.Map map = JavaConversions.mapAsJavaMap((scala.collection.immutable.Map) objectOption.get());
+        if (map.isEmpty()) return 0;
+        String host = (String) map.get("host");
+        if (host == null) return 0;
+        Integer port = (Integer) map.get("port");
+        if (port == null) return 0;
+
+        SimpleConsumer getLogCount = simpleConsumerMap.get(host + "_" + port);
+
+        if (getLogCount == null) {
+          simpleConsumerMap.put(host + "_" + port, new SimpleConsumer(host, port, 10000, 10000, "GetLogCount"));
+          getLogCount = simpleConsumerMap.get(host + "_" + port);
+        }
+
+        final Tuple2[] ts = {new Tuple2<>(topicAndPartition, new PartitionOffsetRequestInfo(OffsetRequest.LatestTime(), 1))};
+        final WrappedArray wa = Predef.wrapRefArray(ts);
+        scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetRequestInfo> partitionOffsetRequestInfoMap =
+            Map$.MODULE$.apply(wa);
+
+        OffsetResponse offsetsBefore = getLogCount.getOffsetsBefore(new OffsetRequest(partitionOffsetRequestInfoMap, 0, -1));
+
+        scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetsResponse> topicAndPartitionPartitionOffsetsResponseMap =
+            offsetsBefore.partitionErrorAndOffsets();
+        Option<PartitionOffsetsResponse> partitionOffsetsResponseOption = topicAndPartitionPartitionOffsetsResponseMap.get(topicAndPartition);
+        PartitionOffsetsResponse partitionOffsetsResponse = partitionOffsetsResponseOption.get();
+        Seq<Object> offsets = partitionOffsetsResponse.offsets();
+
+        return (long) offsets.head();
+      } catch (ZkNoNodeException zkNoNodeException) {
+        zkNoNodeException.printStackTrace();
+        return 0;
+      }
+    }
 
     @Override
     public void close() {
-      
+      for (String id : simpleConsumerMap.keySet()) {
+        SimpleConsumer simpleConsumer = simpleConsumerMap.get(id);
+        simpleConsumer.close();
+      }
     }
   }
 
   public List<GroupIdInstanceSizeOffset> sizeOffsets(List<GroupIdInstance> input) {
 
-    try (GetSizer getSizer = new GetSizer()) {
-      
-      
-      
-    }
-
-
     List<GroupIdInstanceSizeOffset> ret = new ArrayList<>();
-    for (GroupIdInstance instance : input) {
-      if (instance.groupId == null) continue;
 
-      try (ZkClientHolder holder = createKzClient()) {
+    try (ZkClientHolder holder = createKzClient()) {
+      try (GetSizer getSizer = new GetSizer()) {
+        for (GroupIdInstance instance : input) {
+          if (instance.groupId == null) continue;
 
-        ZkUtils zkUtils = new ZkUtils(holder.client, holder.connection, false);
-        ZKGroupDirs groupDirs = new ZKGroupDirs(instance.groupId);
+          ZkUtils zkUtils = new ZkUtils(holder.client, holder.connection, false);
+          ZKGroupDirs groupDirs = new ZKGroupDirs(instance.groupId);
 
-        if (!zkUtils.pathExists(groupDirs.consumerGroupDir()))
-          if (!zkUtils.pathExists(groupDirs.consumerGroupDir() + "/owners")) continue;
+          if (!zkUtils.pathExists(groupDirs.consumerGroupDir()))
+            if (!zkUtils.pathExists(groupDirs.consumerGroupDir() + "/owners")) continue;
 
-        scala.collection.immutable.List<String> topicsList = zkUtils.getChildren(groupDirs.consumerGroupDir() + "/owners").toList();
-        java.util.Map<String, Seq<Object>> partitionsForTopics = JavaConversions.mapAsJavaMap(zkUtils.getPartitionsForTopics(topicsList));
+          scala.collection.immutable.List<String> topicsList = zkUtils.getChildren(groupDirs.consumerGroupDir() + "/owners").toList();
+          java.util.Map<String, Seq<Object>> partitionsForTopics = JavaConversions.mapAsJavaMap(zkUtils.getPartitionsForTopics(topicsList));
 
-        List<TopicAndPartition> topicAndPartitions = new ArrayList<>();
-        for (String s : partitionsForTopics.keySet()) {
-          Seq<Object> partitions = partitionsForTopics.get(s);
+          List<TopicAndPartition> topicAndPartitions = new ArrayList<>();
+          for (String s : partitionsForTopics.keySet()) {
+            Seq<Object> partitions = partitionsForTopics.get(s);
 
-          List<Object> objects = JavaConversions.seqAsJavaList(partitions);
-          for (Object object : objects) {
-            topicAndPartitions.add(new TopicAndPartition(s, (Integer) object));
+            List<Object> objects = JavaConversions.seqAsJavaList(partitions);
+            for (Object object : objects) {
+              topicAndPartitions.add(new TopicAndPartition(s, (Integer) object));
+            }
           }
+
+          Seq<TopicAndPartition> topicAndPartitionSeq = JavaConversions.asScalaBuffer(topicAndPartitions).toSeq();
+
+          BlockingChannel blockingChannel = ClientUtils.channelToOffsetManager(instance.groupId, zkUtils, 6000, 3000);
+
+          blockingChannel.send(new OffsetFetchRequest(instance.groupId, topicAndPartitionSeq, OffsetFetchRequest.CurrentVersion(), 0, ""));
+
+          OffsetFetchResponse offsetFetchResponse = OffsetFetchResponse.readFrom(blockingChannel.receive().payload());
+
+          java.util.Map<TopicAndPartition, OffsetMetadataAndError> topicAndPartitionOffsetMetadataAndErrorMap1 = JavaConversions.mapAsJavaMap(offsetFetchResponse.requestInfo());
+
+          long offsetCount = 0;
+          long logCount = 0;
+
+          List<Future<Long>> sizeList = new ArrayList<>();
+
+          for (TopicAndPartition topicAndPartition : topicAndPartitionOffsetMetadataAndErrorMap1.keySet()) {
+
+            ZKGroupTopicDirs zkGroupTopicDirs = new ZKGroupTopicDirs(instance.groupId, topicAndPartition.topic());
+
+            if (!zkUtils.pathExists(zkGroupTopicDirs.consumerDir())) continue;
+
+            offsetCount += getSizer.countOffsetCount(zkUtils, topicAndPartition, zkGroupTopicDirs);
+
+            sizeList.add(getSizer.getSize(zkUtils, topicAndPartition));
+
+          }
+
+          for (Future<Long> sizeFuture : sizeList) {
+            logCount += sizeFuture.get();
+          }
+
+          GroupIdInstanceSizeOffset offset = new GroupIdInstanceSizeOffset();
+          offset.groupIdInstance = instance;
+          offset.sizeOffset = new SizeOffset();
+
+          offset.sizeOffset.offset = offsetCount;
+          offset.sizeOffset.size = logCount;
+
+          ret.add(offset);
         }
-
-        Seq<TopicAndPartition> topicAndPartitionSeq = JavaConversions.asScalaBuffer(topicAndPartitions).toSeq();
-
-        BlockingChannel blockingChannel = ClientUtils.channelToOffsetManager(instance.groupId, zkUtils, 6000, 3000);
-
-        blockingChannel.send(new OffsetFetchRequest(instance.groupId, topicAndPartitionSeq, OffsetFetchRequest.CurrentVersion(), 0, ""));
-
-        OffsetFetchResponse offsetFetchResponse = OffsetFetchResponse.readFrom(blockingChannel.receive().payload());
-
-        java.util.Map<TopicAndPartition, OffsetMetadataAndError> topicAndPartitionOffsetMetadataAndErrorMap1 = JavaConversions.mapAsJavaMap(offsetFetchResponse.requestInfo());
-
-        long offsetCount = 0;
-        long logCount = 0;
-
-        List<Future<Long>> sizeList = new ArrayList<>();
-
-        for (TopicAndPartition topicAndPartition : topicAndPartitionOffsetMetadataAndErrorMap1.keySet()) {
-
-          ZKGroupTopicDirs zkGroupTopicDirs = new ZKGroupTopicDirs(instance.groupId, topicAndPartition.topic());
-
-          if (!zkUtils.pathExists(zkGroupTopicDirs.consumerDir())) continue;
-
-          offsetCount += countOffsetCount(zkUtils, topicAndPartition, zkGroupTopicDirs);
-
-          logCount += countLogCount(zkUtils, topicAndPartition);
-
-          sizeList.add(getSize(zkUtils, topicAndPartition));
-        }
-
-        long totalSize = 0;
-        for (Future<Long> sizeFuture : sizeList) {
-          totalSize += sizeFuture.get();
-        }
-
-        GroupIdInstanceSizeOffset offset = new GroupIdInstanceSizeOffset();
-        offset.groupIdInstance = instance;
-        offset.sizeOffset = new SizeOffset();
-
-        offset.sizeOffset.offset = offsetCount;
-        offset.sizeOffset.size = logCount;
-
-      } catch (Exception e) {
-        throw new RuntimeException(e);
       }
-    }
-
-    for (String id : simpleConsumerMap.keySet()) {
-      SimpleConsumer simpleConsumer = simpleConsumerMap.get(id);
-      simpleConsumer.close();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
 
     return ret;
   }
 
-  private long countOffsetCount(ZkUtils zkUtils, TopicAndPartition topicAndPartition, ZKGroupTopicDirs zkGroupTopicDirs) {
-    try {
-      if (!zkUtils.pathExists(zkGroupTopicDirs.consumerOffsetDir())) return 0;
-      if (!zkUtils.pathExists(zkGroupTopicDirs.consumerOffsetDir() + "/" + "%d".format(topicAndPartition.partition() + "")))
-        return 0;
-
-      String s = zkUtils.readData(zkGroupTopicDirs.consumerOffsetDir() + "/" + "%d".format(topicAndPartition.partition() + ""))._1;
-
-      return Long.parseLong(s);
-
-    } catch (ZkNoNodeException zkNoNodeException) {
-      zkNoNodeException.printStackTrace();
-      return 0;
-    }
-
-  }
-
-  private java.util.Map<String, SimpleConsumer> simpleConsumerMap = new java.util.HashMap<>();
-
-  private Future<Long> getSize(ZkUtils zkUtils, TopicAndPartition topicAndPartition) {
-    return ForkJoinPool.commonPool().submit(() -> countLogCount(zkUtils, topicAndPartition));
-  }
-
-  private long countLogCount(ZkUtils zkUtils, TopicAndPartition topicAndPartition) {
-    try {
-      Option<Object> leaderForPartition = zkUtils.getLeaderForPartition(topicAndPartition.topic(), topicAndPartition.partition());
-      if (leaderForPartition == null) return 0;
-
-      if (!zkUtils.pathExists("/brokers")) return 0;
-      if (!zkUtils.pathExists("/brokers/ids")) return 0;
-      if (!zkUtils.pathExists("/brokers/ids/" + (Integer) leaderForPartition.get())) return 0;
-
-      Option<String> stringOption = zkUtils.readDataMaybeNull("/brokers/ids/" + (Integer) leaderForPartition.get())._1;
-      if (stringOption == null) return 0;
-
-      Option<Object> objectOption = JSON.parseFull(stringOption.get());
-
-      if (objectOption == null) return 0;
-      java.util.Map map = JavaConversions.mapAsJavaMap((scala.collection.immutable.Map) objectOption.get());
-      if (map.isEmpty()) return 0;
-      String host = (String) map.get("host");
-      if (host == null) return 0;
-      Integer port = (Integer) map.get("port");
-      if (port == null) return 0;
-
-      SimpleConsumer getLogCount = simpleConsumerMap.get(host + "_" + port);
-
-      if (getLogCount == null) {
-        simpleConsumerMap.put(host + "_" + port, new SimpleConsumer(host, port, 10000, 10000, "GetLogCount"));
-        getLogCount = simpleConsumerMap.get(host + "_" + port);
-      }
-
-      final Tuple2[] ts = {new Tuple2<>(topicAndPartition, new PartitionOffsetRequestInfo(OffsetRequest.LatestTime(), 1))};
-      final WrappedArray wa = Predef.wrapRefArray(ts);
-      scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetRequestInfo> partitionOffsetRequestInfoMap =
-        Map$.MODULE$.apply(wa);
-
-      OffsetResponse offsetsBefore = getLogCount.getOffsetsBefore(new OffsetRequest(partitionOffsetRequestInfoMap, 0, -1));
-
-      scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetsResponse> topicAndPartitionPartitionOffsetsResponseMap =
-        offsetsBefore.partitionErrorAndOffsets();
-      Option<PartitionOffsetsResponse> partitionOffsetsResponseOption = topicAndPartitionPartitionOffsetsResponseMap.get(topicAndPartition);
-      PartitionOffsetsResponse partitionOffsetsResponse = partitionOffsetsResponseOption.get();
-      Seq<Object> offsets = partitionOffsetsResponse.offsets();
-
-      return (long) offsets.head();
-    } catch (ZkNoNodeException zkNoNodeException) {
-      zkNoNodeException.printStackTrace();
-      return 0;
-    }
-
-
-  }
 }
   
 

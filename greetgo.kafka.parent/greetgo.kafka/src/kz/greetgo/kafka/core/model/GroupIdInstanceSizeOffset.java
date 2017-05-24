@@ -11,4 +11,12 @@ public class GroupIdInstanceSizeOffset {
     this.groupIdInstance = groupIdInstance;
     this.sizeOffset = sizeOffset;
   }
+
+  @Override
+  public String toString() {
+    return "GroupIdInstanceSizeOffset{" +
+        "groupIdInstance=" + groupIdInstance +
+        ", sizeOffset=" + sizeOffset +
+        '}';
+  }
 }
