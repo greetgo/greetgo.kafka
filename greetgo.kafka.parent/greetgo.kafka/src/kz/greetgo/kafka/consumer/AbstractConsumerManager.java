@@ -1,13 +1,24 @@
 package kz.greetgo.kafka.consumer;
 
-import kafka.consumer.*;
+import kafka.consumer.Consumer$;
+import kafka.consumer.ConsumerConfig;
+import kafka.consumer.ConsumerConnector;
+import kafka.consumer.ConsumerIterator;
+import kafka.consumer.KafkaStream;
+import kafka.consumer.Whitelist;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.DefaultDecoder;
 import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.BoxRecord;
 import kz.greetgo.kafka.core.RecordPlace;
 import kz.greetgo.kafka.events.KafkaEventCatcher;
-import kz.greetgo.kafka.events.e.*;
+import kz.greetgo.kafka.events.e.ConsumerEventRegister;
+import kz.greetgo.kafka.events.e.NewConsumerEventException;
+import kz.greetgo.kafka.events.e.NewConsumerEventStart;
+import kz.greetgo.kafka.events.e.NewConsumerEventStop;
+import kz.greetgo.kafka.events.e.OldConsumerEventException;
+import kz.greetgo.kafka.events.e.OldConsumerEventStart;
+import kz.greetgo.kafka.events.e.OldConsumerEventStop;
 import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.util.ServerUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -16,7 +27,14 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.collection.Seq;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,6 +123,12 @@ public abstract class AbstractConsumerManager {
         registeredBeans.put(consume.name(), new ConsumerDot(consumerDefinition));
       }
     }
+  }
+
+  public String getCursorIdByConsumerName(String consumerName) {
+    ConsumerDot consumerDot = registeredBeans.get(consumerName);
+    if (consumerDot == null) return null;
+    return getCursorId(consumerDot.consumerDefinition);
   }
 
   private static String notNull(String fieldValue, String fieldName) {
