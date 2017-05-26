@@ -27,14 +27,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.collection.Seq;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -129,6 +122,21 @@ public abstract class AbstractConsumerManager {
     ConsumerDot consumerDot = registeredBeans.get(consumerName);
     if (consumerDot == null) return null;
     return getCursorId(consumerDot.consumerDefinition);
+  }
+
+  public Set<String> allConsumerNamesReadingTopic(String topic) {
+    if (topic == null) throw new NullPointerException("topic == null");
+    Set<String> ret = new HashSet<>();
+    for (ConsumerDot dot : registeredBeans.values()) {
+      _inner_:
+      for (String itTopic : dot.consumerDefinition.consume.topics()) {
+        if (topic.equals(itTopic)) {
+          ret.add(dot.consumerDefinition.consume.name());
+          break _inner_;
+        }
+      }
+    }
+    return ret;
   }
 
   private static String notNull(String fieldValue, String fieldName) {
