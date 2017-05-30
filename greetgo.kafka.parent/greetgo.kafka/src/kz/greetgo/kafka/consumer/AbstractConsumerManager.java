@@ -27,7 +27,15 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.collection.Seq;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,8 +77,14 @@ public abstract class AbstractConsumerManager {
   private void init() {
     try {
       if (initiated) return;
-      initiate();
-      initiated = true;
+
+      synchronized (this) {
+        if (initiated) return;
+
+        initiate();
+
+        initiated = true;
+      }
     } catch (Exception e) {
       if (e instanceof RuntimeException) throw (RuntimeException) e;
       throw new RuntimeException(e);
@@ -83,8 +97,6 @@ public abstract class AbstractConsumerManager {
     if (consumerDot == null) throw new IllegalArgumentException("No consumer with name " + consumeName);
 
     consumerDot.setWorkingThreads(threadCount);
-
-
   }
 
   private final Map<String, ConsumerDot> registeredBeans = new ConcurrentHashMap<>();
@@ -119,12 +131,14 @@ public abstract class AbstractConsumerManager {
   }
 
   public String getCursorIdByConsumerName(String consumerName) {
+    init();
     ConsumerDot consumerDot = registeredBeans.get(consumerName);
     if (consumerDot == null) return null;
     return getCursorId(consumerDot.consumerDefinition);
   }
 
   public Set<String> allConsumerNamesReadingTopic(String topic) {
+    init();
     if (topic == null) throw new NullPointerException("topic == null");
     Set<String> ret = new HashSet<>();
     for (ConsumerDot dot : registeredBeans.values()) {
@@ -154,8 +168,7 @@ public abstract class AbstractConsumerManager {
   }
 
   @SuppressWarnings("UnusedParameters")
-  protected void beforeCall(ConsumerDefinition consumerDefinition, int listSize) {
-  }
+  protected void beforeCall(ConsumerDefinition consumerDefinition, int listSize) {}
 
   @SuppressWarnings("UnusedParameters")
   protected Properties createNewProperties(String groupId, ConsumerDefinition consumerDefinition) {

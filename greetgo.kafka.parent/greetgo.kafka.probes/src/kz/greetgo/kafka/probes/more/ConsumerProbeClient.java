@@ -78,5 +78,20 @@ public class ConsumerProbeClient {
     for (String consumerName : consumerManager.consumerNames()) {
       consumerManager.setWorkingThreads(consumerName, 1);
     }
+
+    consumerManager.allConsumerNamesReadingTopic("asd1")
+      .stream()
+      .map(consumerManager::getCursorIdByConsumerName)
+      .forEachOrdered(cursorId -> {
+        System.out.println("cursorId = " + cursorId);
+        System.out.println("cursorId = " + cursorId);
+      });
+    consumerManager.allConsumerNamesReadingTopic("asd2")
+      .stream()
+      .map(consumerManager::getCursorIdByConsumerName)
+      .forEachOrdered(cursorId -> {
+        System.out.println("cursorId = " + cursorId);
+        System.out.println("cursorId = " + cursorId);
+      });
   }
 }
