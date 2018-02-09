@@ -3,6 +3,7 @@ dependencies {
 
   compile 'xstream:xstream:1.2.2'
   compile 'org.apache.kafka:kafka_2.11:1.0.0'
+  compile group: 'org.scala-lang', name: 'scala-parser-combinators', version: '2.11.0-M4'
 
   testCompile 'com.101tec:zkclient:0.8'
 }

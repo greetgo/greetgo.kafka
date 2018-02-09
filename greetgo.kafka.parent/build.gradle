@@ -18,7 +18,6 @@ allprojects {
   eclipse.project.natures 'org.springsource.ide.eclipse.gradle.core.nature'
   compileJava.options.debugOptions.debugLevel = "source,lines,vars"
   compileTestJava.options.debugOptions.debugLevel = "source,lines,vars"
-
 }
 
 subprojects {
@@ -31,16 +30,13 @@ subprojects {
     if (project.hasProperty("sourceCompatibility")) {
       cp.entries.findAll { it.path.contains('JRE_CONTAINER') }.each {
         it.path += "/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/" +
-            "JavaSE-$project.sourceCompatibility"
+          "JavaSE-$project.sourceCompatibility"
       }
     }
   }
 
   repositories {
-    maven {
-      name 'Our repository'
-      url System.getenv('GG_REPO')
-    }
+    maven { url System.getenv('GG_REPO') }
   }
 
   dependencies {
@@ -55,9 +51,11 @@ subprojects {
 
   jar {
     manifest {
-      attributes 'Implementation-Title': project.name,
-          'Implementation-Version': version, 'Implementation-Vendor': vendorName,
-          'Built-By': System.getProperty("user.name"), 'Built-At': nowFormattedDate
+      attributes 'Implementation-Title': project.name
+      attributes 'Implementation-Version': version
+      attributes 'Implementation-Vendor': vendorName
+      attributes 'Created-By': System.getProperty("user.name")
+      attributes 'Created-At': nowFormattedDate
     }
   }
 
