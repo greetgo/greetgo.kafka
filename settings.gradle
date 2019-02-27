@@ -1,2 +1,4 @@
+rootProject.name = "greetgo.kafka"
+
 include 'greetgo.kafka'
 include 'greetgo.kafka.probes'
