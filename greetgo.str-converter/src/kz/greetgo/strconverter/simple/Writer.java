@@ -1,4 +1,4 @@
-package kz.greetgo.kafka.str.simple;
+package kz.greetgo.strconverter.simple;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;

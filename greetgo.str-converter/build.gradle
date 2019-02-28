@@ -1,0 +1,3 @@
+dependencies {
+  compile "kz.greetgo:greetgo.util:${greetgoUtilVersion}"
+}

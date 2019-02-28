@@ -1,4 +1,4 @@
-package kz.greetgo.kafka.str;
+package kz.greetgo.strconverter;
 
 public interface StrConverter {
 

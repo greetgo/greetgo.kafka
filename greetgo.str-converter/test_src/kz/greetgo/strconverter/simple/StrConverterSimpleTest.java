@@ -1,4 +1,4 @@
-package kz.greetgo.kafka.str.simple;
+package kz.greetgo.strconverter.simple;
 
 import kz.greetgo.util.RND;
 import org.testng.annotations.BeforeMethod;
@@ -7,7 +7,14 @@ import org.testng.annotations.Test;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 

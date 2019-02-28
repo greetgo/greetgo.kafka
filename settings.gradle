@@ -2,3 +2,5 @@ rootProject.name = "greetgo.kafka"
 
 include 'greetgo.kafka'
 include 'greetgo.kafka.probes'
+include 'greetgo.kafka2'
+include 'greetgo.str-converter'
