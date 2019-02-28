@@ -3,7 +3,7 @@ package kz.greetgo.kafka.producer;
 import kz.greetgo.kafka.core.Box;
 import kz.greetgo.kafka.core.HasId;
 import kz.greetgo.kafka.core.Head;
-import kz.greetgo.kafka.str.StrConverter;
+import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;

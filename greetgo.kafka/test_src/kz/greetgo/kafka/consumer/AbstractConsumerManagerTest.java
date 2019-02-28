@@ -5,8 +5,8 @@ import kz.greetgo.kafka.core.HasId;
 import kz.greetgo.kafka.core.StrConverterPreparationBased;
 import kz.greetgo.kafka.producer.AbstractKafkaSender;
 import kz.greetgo.kafka.producer.KafkaSending;
-import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
+import kz.greetgo.strconverter.StrConverter;
 import kz.greetgo.util.RND;
 import org.testng.annotations.Test;
 

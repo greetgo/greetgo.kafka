@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.str;
 
+import kz.greetgo.strconverter.StrConverter;
 import kz.greetgo.util.RND;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -25,7 +26,7 @@ public class StrConverterTest {
   }
 
   @Test
-  public void toStr_fromStr() throws Exception {
+  public void toStr_fromStr() {
     converter.useClass(Client.class, "Client123");
 
     Client client = new Client();

@@ -1,5 +1,6 @@
 dependencies {
   compile "kz.greetgo:greetgo.util:${greetgoUtilVersion}"
+  compile project(':greetgo.str-converter')
 
   compile 'xstream:xstream:1.2.2'
   compile 'org.apache.kafka:kafka_2.11:1.0.0'

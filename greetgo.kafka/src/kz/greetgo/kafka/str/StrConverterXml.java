@@ -3,6 +3,7 @@ package kz.greetgo.kafka.str;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.CompactWriter;
+import kz.greetgo.strconverter.StrConverter;
 
 import java.io.StringWriter;
 

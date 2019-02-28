@@ -19,7 +19,7 @@ import kz.greetgo.kafka.events.e.NewConsumerEventStop;
 import kz.greetgo.kafka.events.e.OldConsumerEventException;
 import kz.greetgo.kafka.events.e.OldConsumerEventStart;
 import kz.greetgo.kafka.events.e.OldConsumerEventStop;
-import kz.greetgo.kafka.str.StrConverter;
+import kz.greetgo.strconverter.StrConverter;
 import kz.greetgo.util.ServerUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
