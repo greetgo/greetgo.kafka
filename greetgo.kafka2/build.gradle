@@ -1,5 +1,7 @@
 dependencies {
-  
-  
-  
+
+  compile 'org.apache.kafka:kafka-clients:2.1.0'
+
+  compile 'com.esotericsoftware:kryo:5.0.0-RC2'
+
 }

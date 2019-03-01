@@ -21,10 +21,10 @@ public class ConsumerDefinition {
   @Override
   public String toString() {
     return "ConsumerDefinition{" +
-        ", consume(name=" + consume.name() +
-        ", cursorId=" + consume.cursorId() +
-        ", topics=" + Arrays.toString(consume.topics()) +
-        "), bean=" + bean + ", method=" + method +
-        '}';
+      ", consume(name=" + consume.name() +
+      ", cursorId=" + consume.cursorId() +
+      ", topics=" + Arrays.toString(consume.topics()) +
+      "), bean=" + bean + ", method=" + method +
+      '}';
   }
 }

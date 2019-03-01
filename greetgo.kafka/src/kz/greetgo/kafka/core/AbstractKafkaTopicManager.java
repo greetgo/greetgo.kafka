@@ -59,7 +59,7 @@ public abstract class AbstractKafkaTopicManager {
     try (ZkClientHolder holder = createKzClient()) {
       ZkUtils zkUtils = new ZkUtils(holder.client, holder.connection, false);
       AdminUtils.createTopic(zkUtils, topicName, partitionCount, replicationFactor, new Properties(),
-          RackAwareMode.Safe$.MODULE$);
+        RackAwareMode.Safe$.MODULE$);
     } catch (Exception e) {
       if (e instanceof RuntimeException) throw (RuntimeException) e;
       throw new RuntimeException(e);
@@ -157,12 +157,12 @@ public abstract class AbstractKafkaTopicManager {
         final Tuple2[] ts = {new Tuple2<>(topicAndPartition, new PartitionOffsetRequestInfo(OffsetRequest.LatestTime(), 1))};
         final WrappedArray wa = Predef.wrapRefArray(ts);
         scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetRequestInfo> partitionOffsetRequestInfoMap =
-            Map$.MODULE$.apply(wa);
+          Map$.MODULE$.apply(wa);
 
         OffsetResponse offsetsBefore = getLogCount.getOffsetsBefore(new OffsetRequest(partitionOffsetRequestInfoMap, 0, -1));
 
         scala.collection.immutable.Map<TopicAndPartition, PartitionOffsetsResponse> topicAndPartitionPartitionOffsetsResponseMap =
-            offsetsBefore.partitionErrorAndOffsets();
+          offsetsBefore.partitionErrorAndOffsets();
         Option<PartitionOffsetsResponse> partitionOffsetsResponseOption = topicAndPartitionPartitionOffsetsResponseMap.get(topicAndPartition);
         PartitionOffsetsResponse partitionOffsetsResponse = partitionOffsetsResponseOption.get();
         Seq<Object> offsets = partitionOffsetsResponse.offsets();

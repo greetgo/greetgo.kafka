@@ -71,8 +71,7 @@ public abstract class AbstractConsumerManager {
 
   private boolean initiated = false;
 
-  protected void initiate() throws Exception {
-  }
+  protected void initiate() throws Exception {}
 
   private void init() {
     try {
@@ -312,11 +311,12 @@ public abstract class AbstractConsumerManager {
         List<String> topicList = topicList(consumerDefinition);
 
         consumer = new KafkaConsumer<>(createNewProperties(cursorId, consumerDefinition));
+        KafkaEventCatcher kafkaEventCatcher = eventCatcher();
         try {
           consumer.subscribe(topicList);
 
-          if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventStart.class)) {
-            eventCatcher().catchEvent(new NewConsumerEventStart(consumerDefinition, cursorId, topicList));
+          if (kafkaEventCatcher != null && kafkaEventCatcher.needCatchOf(NewConsumerEventStart.class)) {
+            kafkaEventCatcher.catchEvent(new NewConsumerEventStart(consumerDefinition, cursorId, topicList));
           }
 
           final List<BoxRecord> list = new ArrayList<>();
@@ -364,8 +364,8 @@ public abstract class AbstractConsumerManager {
               consumerDefinition.caller.call(unmodifiableList(list));
               consumer.commitSync();
             } catch (Exception e) {
-              if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventException.class)) {
-                eventCatcher().catchEvent(new NewConsumerEventException(consumerDefinition, cursorId, topicList, e));
+              if (kafkaEventCatcher != null && kafkaEventCatcher.needCatchOf(NewConsumerEventException.class)) {
+                kafkaEventCatcher.catchEvent(new NewConsumerEventException(consumerDefinition, cursorId, topicList, e));
               }
               try {
                 handleCallException(consumerDefinition, e);
@@ -378,8 +378,8 @@ public abstract class AbstractConsumerManager {
 
         } finally {
           threads.remove(NewConsumerThread.this);
-          if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventStop.class)) {
-            eventCatcher().catchEvent(new NewConsumerEventStop(consumerDefinition, cursorId, topicList));
+          if (kafkaEventCatcher != null && kafkaEventCatcher.needCatchOf(NewConsumerEventStop.class)) {
+            kafkaEventCatcher.catchEvent(new NewConsumerEventStop(consumerDefinition, cursorId, topicList));
           }
           consumer = null;
         }
@@ -447,8 +447,9 @@ public abstract class AbstractConsumerManager {
 
           Thread thread = new Thread(() -> {
 
-            if (eventCatcher() != null && eventCatcher().needCatchOf(NewConsumerEventStart.class)) {
-              eventCatcher().catchEvent(new OldConsumerEventStart(consumerDefinition, cursorId, topicList));
+            KafkaEventCatcher kafkaEventCatcher = eventCatcher();
+            if (kafkaEventCatcher != null && kafkaEventCatcher.needCatchOf(NewConsumerEventStart.class)) {
+              kafkaEventCatcher.catchEvent(new OldConsumerEventStart(consumerDefinition, cursorId, topicList));
             }
 
             final ConsumerIterator<byte[], byte[]> iterator = threadKafkaStream.iterator();
@@ -459,8 +460,8 @@ public abstract class AbstractConsumerManager {
               try {
                 mam = iterator.next();
               } catch (NoSuchElementException e) {
-                if (eventCatcher() != null && eventCatcher().needCatchOf(OldConsumerEventStop.class)) {
-                  eventCatcher().catchEvent(new OldConsumerEventStop(consumerDefinition, cursorId, topicList));
+                if (kafkaEventCatcher != null && kafkaEventCatcher.needCatchOf(OldConsumerEventStop.class)) {
+                  kafkaEventCatcher.catchEvent(new OldConsumerEventStop(consumerDefinition, cursorId, topicList));
                 }
                 break;
               }
@@ -497,8 +498,8 @@ public abstract class AbstractConsumerManager {
                 consumerDefinition.caller.call(boxRecordList);
                 consumerConnector.commitOffsets(true);
               } catch (Exception e) {
-                if (eventCatcher() != null && eventCatcher().needCatchOf(OldConsumerEventException.class)) {
-                  eventCatcher().catchEvent(new OldConsumerEventException(consumerDefinition, cursorId, topicList, e));
+                if (kafkaEventCatcher != null && kafkaEventCatcher.needCatchOf(OldConsumerEventException.class)) {
+                  kafkaEventCatcher.catchEvent(new OldConsumerEventException(consumerDefinition, cursorId, topicList, e));
                 }
                 try {
                   handleCallException(consumerDefinition, e);

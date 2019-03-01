@@ -1,4 +1,4 @@
-package kz.greetgo.kafka.consumer;
+package kz.greetgo.kafka2.consumer;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -13,10 +13,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Consume {
-  /**
-   * @return consumer name
-   */
-  String name();
 
   /**
    * @return cursor id (in Kafka's terming: group id)
@@ -27,4 +23,5 @@ public @interface Consume {
    * @return topic list, this consumer subscribed to
    */
   String[] topics();
+
 }

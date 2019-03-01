@@ -1,0 +1,46 @@
+version: "3.3"
+services:
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+
+  kafka:
+    build: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_CREATE_TOPICS: "test:1:1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager
+    ports:
+      - "9090:9000"
+    environment:
+      ZK_HOSTS: zookeeper:2181
+      APPLICATION_SECRET: letmein
+
+  web:
+    image: elkozmon/zoonavigator-web:0.6.0
+    container_name: zoonavigator-web
+    ports:
+      - "9091:9091"
+    environment:
+      WEB_HTTP_PORT: 9091
+      API_HOST: "api"
+      API_PORT: 9092
+      AUTO_CONNECT_CONNECTION_STRING: zookeeper:2181
+    depends_on:
+      - api
+    restart: always
+  api:
+    image: elkozmon/zoonavigator-api:0.6.0
+    container_name: zoonavigator-api
+    environment:
+      API_HTTP_PORT: 9092
+    restart: always

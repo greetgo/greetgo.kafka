@@ -23,26 +23,23 @@ public class ProbeConsumer {
 
     final boolean running[] = new boolean[]{true};
 
-    Thread thread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
-          System.out.println("Consumer has been started");
+    Thread thread = new Thread(() -> {
+      try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+        System.out.println("Consumer has been started");
 
-          consumer.subscribe(Arrays.asList("asd-002"));
-          while (running[0]) {
-            ConsumerRecords<String, String> records = consumer.poll(100);
-            for (ConsumerRecord<String, String> record : records) {
-              String key = record.key();
-              String value = record.value();
-              System.out.println(key + " -> " + value);
-            }
-
-            consumer.commitSync();
+        consumer.subscribe(Arrays.asList("asd-002"));
+        while (running[0]) {
+          ConsumerRecords<String, String> records = consumer.poll(100);
+          for (ConsumerRecord<String, String> record : records) {
+            String key = record.key();
+            String value = record.value();
+            System.out.println(key + " -> " + value);
           }
-        }
 
+          consumer.commitSync();
+        }
       }
+
     });
 
     thread.start();
