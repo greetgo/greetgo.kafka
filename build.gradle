@@ -22,7 +22,8 @@ subprojects {
 
   dependencies {
     ext.greetgoConfVersion = '0.0.12'
-    ext.greetgoUtilVersion = '0.0.25'
+    ext.greetgoUtilVersion = '0.1.1'
+    ext.greetgoClassScannerVersion = '2.0.0'
 
     testCompile 'org.testng:testng:6.5.1'
     testCompile 'org.easytesting:fest-assert-core:2.0M10'

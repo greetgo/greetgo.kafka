@@ -1,5 +1,5 @@
 dependencies {
-  compile "kz.greetgo:greetgo.util:${greetgoUtilVersion}"
+  compile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
   compile project(':greetgo.str-converter')
 
   compile 'xstream:xstream:1.2.2'

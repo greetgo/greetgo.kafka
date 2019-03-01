@@ -8,5 +8,5 @@ dependencies {
 
   compile "com.google.code.gson:gson:1.7.1"
 
-  compile "kz.greetgo.class_scanner:greetgo.class_scanner:0.0.1"
+  compile "kz.greetgo:greetgo.class_scanner:$greetgoClassScannerVersion"
 }
