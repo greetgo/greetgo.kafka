@@ -4,18 +4,21 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ConsumerProbe {
-  public static void main(String[] args) {
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  public static void main(String[] args) throws IOException {
 
     Properties props = new Properties();
     props.put("bootstrap.servers", "localhost:9092");
-    props.put("group.id", "cool");
-    props.put("enable.auto.commit", "true");
+    props.put("group.id", "cool2");
+    props.put("enable.auto.commit", "false");
     props.put("auto.commit.interval.ms", "1000");
     props.put("session.timeout.ms", "30000");
     props.put("heartbeat.interval.ms", "10000");
@@ -25,14 +28,30 @@ public class ConsumerProbe {
 
     AtomicBoolean working = new AtomicBoolean(true);
 
+    File workingFile = new File("build/probes/ConsumerProbe.working.txt");
+    workingFile.getParentFile().mkdirs();
+    workingFile.createNewFile();
+
+    new Thread(() -> {
+
+      while (working.get()) {
+
+        try {
+          Thread.sleep(300);
+        } catch (InterruptedException e) {
+          break;
+        }
+
+        if (!workingFile.exists()) {
+          working.set(false);
+        }
+
+      }
+
+    }).start();
+
     try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
       consumer.subscribe(Arrays.asList("one", "two"));
-
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        System.out.println("Got Ctrl+C - finishing....");
-        working.set(false);
-        consumer.wakeup();
-      }));
 
       while (working.get()) {
 
@@ -42,10 +61,13 @@ public class ConsumerProbe {
           int recCount = records.count();
 
           for (ConsumerRecord<String, String> record : records) {
-            System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            System.out.printf("offset = %d, topic = %s, key = %s, value = %s%n",
+              record.offset(), record.topic(), record.key(), record.value());
           }
 
-          System.out.println("End part : recCount = " + recCount);
+          consumer.commitSync();
+
+//          System.out.println("End part : recCount = " + recCount);
         } catch (org.apache.kafka.common.errors.WakeupException wakeupException) {
           System.err.println("WakeupException : " + wakeupException.getMessage());
         }

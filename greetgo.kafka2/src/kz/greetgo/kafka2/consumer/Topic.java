@@ -7,21 +7,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Define consumer method
+ * Defines one or more topics for consumer
  */
 @Documented
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Consume {
-
-  /**
-   * @return cursor id (in Kafka's terming: group id)
-   */
-  String cursorId();
+public @interface Topic {
 
   /**
    * @return topic list, this consumer subscribed to
    */
-  String[] topics();
+  String[] value();
 
 }

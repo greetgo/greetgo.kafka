@@ -5,3 +5,9 @@ dependencies {
   compile 'com.esotericsoftware:kryo:5.0.0-RC2'
 
 }
+
+task consumerProbe(type:JavaExec) {
+  group "scripts"
+  main = "kz.greetgo.kafka2.probes.ConsumerProbe"
+  classpath = sourceSets.test.runtimeClasspath
+}
