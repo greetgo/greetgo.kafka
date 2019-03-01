@@ -14,6 +14,8 @@ else
 	url=$(curl --stderr /dev/null "https://www.apache.org/dyn/closer.cgi?path=/kafka/${KAFKA_VERSION}/${FILENAME}&as_json=1" | jq -r '"\(.preferred)\(.path_info)"')
 fi
 
+url="https://archive.apache.org/dist/kafka/${KAFKA_VERSION}/${FILENAME}"
+
 if [[ -z "$url" ]]; then
 	echo "Unable to determine mirror for downloading Kafka, the service may be down"
 	exit 1
