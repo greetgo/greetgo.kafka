@@ -258,16 +258,16 @@ public class InvokerBuilderTest {
     ConsumerRecord<byte[], Box> record = recordOf("test1", new byte[0], box);
     ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record));
 
-    TestErrorCatcher testErrorCatcher = new TestErrorCatcher();
+    TestConsumerLogger testConsumerLogger = new TestConsumerLogger();
 
     //
     //
-    boolean toCommit = new InvokerBuilder(c6, method, testErrorCatcher).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c6, method, testConsumerLogger).build().invoke(records);
     //
     //
 
-    assertThat(testErrorCatcher.errorList).hasSize(1);
-    assertThat(testErrorCatcher.errorList.get(0).getMessage()).isEqualTo(c6.errorMessage);
+    assertThat(testConsumerLogger.errorList).hasSize(1);
+    assertThat(testConsumerLogger.errorList.get(0).getMessage()).isEqualTo(c6.errorMessage);
 
     assertThat(toCommit).isFalse();
   }
@@ -302,17 +302,17 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2));
 
-    TestErrorCatcher testErrorCatcher = new TestErrorCatcher();
+    TestConsumerLogger testConsumerLogger = new TestConsumerLogger();
 
     //
     //
-    boolean toCommit = new InvokerBuilder(c7, method, testErrorCatcher).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c7, method, testConsumerLogger).build().invoke(records);
     //
     //
 
     assertThat(toCommit).isTrue();
-    assertThat(testErrorCatcher.errorList).hasSize(2);
-    assertThat(testErrorCatcher.errorList.get(0)).isSameAs((Error1) box1.body);
-    assertThat(testErrorCatcher.errorList.get(1)).isSameAs((Error2) box1.body);
+    assertThat(testConsumerLogger.errorList).hasSize(2);
+    assertThat(testConsumerLogger.errorList.get(0)).isSameAs((Error1) box1.body);
+    assertThat(testConsumerLogger.errorList.get(1)).isSameAs((Error2) box1.body);
   }
 }

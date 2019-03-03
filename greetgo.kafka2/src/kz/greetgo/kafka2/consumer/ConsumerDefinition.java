@@ -12,7 +12,7 @@ public class ConsumerDefinition {
   private final String folderPath;
   private final Invoker invoker;
 
-  public ConsumerDefinition(Object controller, Method method, ErrorCatcher errorCatcher) {
+  public ConsumerDefinition(Object controller, Method method, ConsumerLogger consumerLogger) {
     this.controller = controller;
 
     {
@@ -20,7 +20,7 @@ public class ConsumerDefinition {
       folderPath = consumersFolder == null ? null : consumersFolder.value();
     }
 
-    invoker = new InvokerBuilder(controller, method, errorCatcher).build();
+    invoker = new InvokerBuilder(controller, method, consumerLogger).build();
   }
 
   /**

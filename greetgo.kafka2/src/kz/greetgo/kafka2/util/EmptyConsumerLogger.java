@@ -12,4 +12,7 @@ public class EmptyConsumerLogger implements ConsumerLogger {
 
   @Override
   public void finishWorker(String consumerInfo, long workerId) {}
+
+  @Override
+  public void errorInMethod(Throwable throwable) {}
 }

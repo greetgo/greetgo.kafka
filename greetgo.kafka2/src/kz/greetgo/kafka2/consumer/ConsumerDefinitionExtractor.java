@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ConsumerDefinitionExtractor {
 
-  public static List<ConsumerDefinition> extract(Object controller, ErrorCatcher errorCatcher) {
+  public static List<ConsumerDefinition> extract(Object controller, ConsumerLogger consumerLogger) {
 
     List<ConsumerDefinition> ret = new ArrayList<>();
 
@@ -19,7 +19,7 @@ public class ConsumerDefinitionExtractor {
         continue;
       }
 
-      ret.add(new ConsumerDefinition(controller, method, errorCatcher));
+      ret.add(new ConsumerDefinition(controller, method, consumerLogger));
     }
 
     return ret;

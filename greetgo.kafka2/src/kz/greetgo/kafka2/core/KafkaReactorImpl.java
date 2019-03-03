@@ -5,8 +5,6 @@ import kz.greetgo.kafka2.consumer.ConsumerDefinition;
 import kz.greetgo.kafka2.consumer.ConsumerDefinitionExtractor;
 import kz.greetgo.kafka2.consumer.ConsumerLogger;
 import kz.greetgo.kafka2.consumer.ConsumerReactor;
-import kz.greetgo.kafka2.consumer.DefaultErrorCatcher;
-import kz.greetgo.kafka2.consumer.ErrorCatcher;
 import kz.greetgo.kafka2.core.config.ConfigStorage;
 import kz.greetgo.kafka2.errors.CannotExtractKeyFrom;
 import kz.greetgo.kafka2.errors.NotDefined;
@@ -27,15 +25,9 @@ public class KafkaReactorImpl implements KafkaReactor {
   private Supplier<String> bootstrapServers;
   private Supplier<String> authorGetter = null;
   private ConsumerLogger consumerLogger = new EmptyConsumerLogger();
-  private ErrorCatcher errorCatcher = new DefaultErrorCatcher();
 
   public void setAuthorGetter(Supplier<String> authorGetter) {
     this.authorGetter = authorGetter;
-  }
-
-  @Override
-  public void setErrorCatcher(ErrorCatcher errorCatcher) {
-    this.errorCatcher = errorCatcher;
   }
 
   @Override
@@ -53,11 +45,11 @@ public class KafkaReactorImpl implements KafkaReactor {
     this.bootstrapServers = bootstrapServers;
   }
 
-  private final List<ConsumerDefinition> consumerDefinitionList = new ArrayList<>();
+  private final List<Object> controllerList = new ArrayList<>();
 
   @Override
   public void addController(Object controller) {
-    consumerDefinitionList.addAll(ConsumerDefinitionExtractor.extract(controller, errorCatcher));
+    controllerList.add(controller);
   }
 
   private final Kryo kryo = new Kryo();
@@ -81,8 +73,18 @@ public class KafkaReactorImpl implements KafkaReactor {
     if (bootstrapServers == null) {
       throw new NotDefined("bootstrapServers in " + KafkaReactor.class.getSimpleName() + ".start()");
     }
-    if (consumerDefinitionList.isEmpty()) {
+    if (controllerList.isEmpty()) {
       throw new NotDefined("Controllers in " + KafkaReactor.class.getSimpleName() + ".start()");
+    }
+
+    List<ConsumerDefinition> consumerDefinitionList = new ArrayList<>();
+
+    for (Object controller : controllerList) {
+      consumerDefinitionList.addAll(ConsumerDefinitionExtractor.extract(controller, consumerLogger));
+    }
+
+    if (consumerDefinitionList.isEmpty()) {
+      throw new NotDefined("Consumers in " + KafkaReactor.class.getSimpleName() + ".start()");
     }
 
     for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {

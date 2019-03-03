@@ -8,4 +8,6 @@ public interface ConsumerLogger {
   void startWorker(String consumerInfo, long workerId);
 
   void finishWorker(String consumerInfo, long workerId);
+
+  void errorInMethod(Throwable throwable);
 }
