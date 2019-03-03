@@ -8,5 +8,7 @@ public interface ConfigStorage {
 
   void writeContent(String path, byte[] content);
 
+  void ensureLookingFor(String path);
+
   ConfigEventRegistration addEventHandler(ConfigEventHandler configEventHandler);
 }

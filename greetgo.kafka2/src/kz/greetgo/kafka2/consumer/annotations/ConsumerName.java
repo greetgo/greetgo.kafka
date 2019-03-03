@@ -1,4 +1,4 @@
-package kz.greetgo.kafka2.consumer;
+package kz.greetgo.kafka2.consumer.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -7,16 +7,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines one or more topics for consumer
+ * Defines consumer name
  */
 @Documented
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Topic {
+public @interface ConsumerName {
 
   /**
-   * @return topic list, this consumer subscribed to
+   * @return consumer name
    */
-  String[] value();
+  String value();
 
 }

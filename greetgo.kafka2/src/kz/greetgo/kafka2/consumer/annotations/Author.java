@@ -1,4 +1,4 @@
-package kz.greetgo.kafka2.consumer;
+package kz.greetgo.kafka2.consumer.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -7,16 +7,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines consumer name
+ * Marks parameter to get author
  */
 @Documented
-@Target({ElementType.METHOD})
+@Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ConsumerName {
-
-  /**
-   * @return consumer name
-   */
-  String value();
-
-}
+public @interface Author {}

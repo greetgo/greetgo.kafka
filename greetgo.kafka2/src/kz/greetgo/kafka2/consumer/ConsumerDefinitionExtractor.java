@@ -1,7 +1,6 @@
 package kz.greetgo.kafka2.consumer;
 
-import kz.greetgo.kafka2.consumer.ConsumerDefinition;
-import kz.greetgo.kafka2.consumer.Topic;
+import kz.greetgo.kafka2.consumer.annotations.Topic;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

@@ -1,5 +1,6 @@
 package kz.greetgo.kafka2.consumer;
 
+import kz.greetgo.kafka2.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka2.model.Box;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -8,11 +9,18 @@ import java.lang.reflect.Method;
 public class ConsumerDefinition {
 
   private final Object controller;
-  private final Method method;
+  private final String folderPath;
+  private final Invoker invoker;
 
   public ConsumerDefinition(Object controller, Method method) {
     this.controller = controller;
-    this.method = method;
+
+    {
+      ConsumersFolder consumersFolder = controller.getClass().getAnnotation(ConsumersFolder.class);
+      folderPath = consumersFolder == null ? null : consumersFolder.value();
+    }
+
+    invoker = new InvokerBuilder(controller, method).build();
   }
 
   /**
@@ -20,7 +28,7 @@ public class ConsumerDefinition {
    * Может быть null - это значит, что папка корневая
    */
   public String getFolderPath() {
-    return null;
+    return folderPath;
   }
 
   public Class<?> getControllerClass() {
@@ -28,7 +36,7 @@ public class ConsumerDefinition {
   }
 
   public void invoke(ConsumerRecords<byte[], Box> records) {
-
+    invoker.invoke(records);
   }
 
   /**
