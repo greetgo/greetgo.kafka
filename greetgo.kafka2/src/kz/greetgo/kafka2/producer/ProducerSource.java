@@ -7,11 +7,9 @@ import java.util.Map;
 public interface ProducerSource {
   Kryo getKryo();
 
-  String bootstrapServers();
-
-  String extractKey(Object body);
+  byte[] extractKey(Object object);
 
   String author();
 
-  default void performAdditionalProducerConfiguration(Map<String, Object> config) {}
+  Map<String, Object> producerConfig(String producerName);
 }

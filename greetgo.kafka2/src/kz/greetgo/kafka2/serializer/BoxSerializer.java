@@ -8,11 +8,11 @@ import org.apache.kafka.common.serialization.Serializer;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
-public class BoxSerializing implements Serializer<Box> {
+public class BoxSerializer implements Serializer<Box> {
 
   private final Kryo kryo;
 
-  public BoxSerializing(Kryo kryo) {
+  public BoxSerializer(Kryo kryo) {
     this.kryo = kryo;
   }
 
