@@ -2,6 +2,7 @@ package kz.greetgo.kafka2.consumer;
 
 import kz.greetgo.kafka2.consumer.annotations.Author;
 import kz.greetgo.kafka2.consumer.annotations.ConsumerName;
+import kz.greetgo.kafka2.consumer.annotations.KafkaCommitOn;
 import kz.greetgo.kafka2.consumer.annotations.Timestamp;
 import kz.greetgo.kafka2.consumer.annotations.Topic;
 import kz.greetgo.kafka2.model.Box;
@@ -40,7 +41,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void build_box_filteringByTopic() {
+  public void box_filteringByTopic() {
     C1 c1 = new C1();
     Method method = findMethod(c1, "method1");
 
@@ -56,13 +57,14 @@ public class InvokerBuilderTest {
 
     //
     //
-    new InvokerBuilder(c1, method).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c1, method, null).build().invoke(records);
     //
     //
 
     assertThat(c1.boxes).hasSize(2);
     assertThat(c1.boxes.get(0)).isSameAs(box1);
     assertThat(c1.boxes.get(1)).isSameAs(box2);
+    assertThat(toCommit).isTrue();
   }
 
   static class C2_Model1 {}
@@ -82,7 +84,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void build_innerType_filteringByType() {
+  public void innerType_filteringByType() {
     C2 c2 = new C2();
     Method method = findMethod(c2, "method1");
 
@@ -99,11 +101,12 @@ public class InvokerBuilderTest {
 
     //
     //
-    new InvokerBuilder(c2, method).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c2, method, null).build().invoke(records);
     //
     //
 
     assertThat(c2.model).isSameAs(model1);
+    assertThat(toCommit).isTrue();
   }
 
   static class C3 {
@@ -119,7 +122,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void build_author() {
+  public void author() {
     C3 c3 = new C3();
     Method method = findMethod(c3, "method1");
 
@@ -132,11 +135,12 @@ public class InvokerBuilderTest {
 
     //
     //
-    new InvokerBuilder(c3, method).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c3, method, null).build().invoke(records);
     //
     //
 
     assertThat(c3.author).isSameAs(box.author);
+    assertThat(toCommit).isTrue();
   }
 
   static class C4 {
@@ -153,7 +157,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void build_timestamp() {
+  public void timestamp() {
     C4 c4 = new C4();
     Method method = findMethod(c4, "method1");
 
@@ -167,12 +171,13 @@ public class InvokerBuilderTest {
 
     //
     //
-    new InvokerBuilder(c4, method).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c4, method, null).build().invoke(records);
     //
     //
 
     assertThat(c4.timestamp).isEqualTo(timestamp.getTime());
     assertThat(c4.timestampDate).isEqualTo(timestamp);
+    assertThat(toCommit).isTrue();
   }
 
   static class C5 {
@@ -189,7 +194,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void build_ignoreConsumer() {
+  public void ignoreConsumer() {
     C5 c5 = new C5();
     Method method = findMethod(c5, "method1");
 
@@ -218,12 +223,96 @@ public class InvokerBuilderTest {
 
     //
     //
-    new InvokerBuilder(c5, method).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c5, method, null).build().invoke(records);
     //
     //
 
     assertThat(c5.authors).contains(box1.author);
     assertThat(c5.authors).contains(box2.author);
     assertThat(c5.authors).hasSize(2);
+    assertThat(toCommit).isTrue();
+
+  }
+
+  static class C6 {
+
+    String errorMessage;
+
+    @Topic("test1")
+    @SuppressWarnings("unused")
+    public void method1(Box box) {
+      throw new RuntimeException(errorMessage);
+    }
+
+  }
+
+  @Test
+  public void returnsFalseBecauseOfException() {
+    C6 c6 = new C6();
+    Method method = findMethod(c6, "method1");
+
+    Box box = new Box();
+
+    c6.errorMessage = RND.str(10);
+
+    ConsumerRecord<byte[], Box> record = recordOf("test1", new byte[0], box);
+    ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record));
+
+    TestErrorCatcher testErrorCatcher = new TestErrorCatcher();
+
+    //
+    //
+    boolean toCommit = new InvokerBuilder(c6, method, testErrorCatcher).build().invoke(records);
+    //
+    //
+
+    assertThat(testErrorCatcher.errorList).hasSize(1);
+    assertThat(testErrorCatcher.errorList.get(0).getMessage()).isEqualTo(c6.errorMessage);
+
+    assertThat(toCommit).isFalse();
+  }
+
+  static class Error1 extends RuntimeException {}
+
+  static class Error2 extends RuntimeException {}
+
+  static class C7 {
+
+    @Topic("test1")
+    @SuppressWarnings("unused")
+    @KafkaCommitOn({Error1.class, Error2.class})
+    public void method1(Box box) {
+      throw (RuntimeException) box.body;
+    }
+
+  }
+
+  @Test
+  public void returnsTrueBecauseOfKafkaCommitOn() {
+    C7 c7 = new C7();
+    Method method = findMethod(c7, "method1");
+
+    Box box1 = new Box();
+    box1.body = new Error1();
+    Box box2 = new Box();
+    box2.body = new Error2();
+
+    ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
+    ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
+
+    ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2));
+
+    TestErrorCatcher testErrorCatcher = new TestErrorCatcher();
+
+    //
+    //
+    boolean toCommit = new InvokerBuilder(c7, method, testErrorCatcher).build().invoke(records);
+    //
+    //
+
+    assertThat(toCommit).isTrue();
+    assertThat(testErrorCatcher.errorList).hasSize(2);
+    assertThat(testErrorCatcher.errorList.get(0)).isSameAs((Error1) box1.body);
+    assertThat(testErrorCatcher.errorList.get(1)).isSameAs((Error2) box1.body);
   }
 }

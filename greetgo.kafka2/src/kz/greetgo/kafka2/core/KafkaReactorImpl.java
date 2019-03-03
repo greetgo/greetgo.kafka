@@ -5,6 +5,8 @@ import kz.greetgo.kafka2.consumer.ConsumerDefinition;
 import kz.greetgo.kafka2.consumer.ConsumerDefinitionExtractor;
 import kz.greetgo.kafka2.consumer.ConsumerLogger;
 import kz.greetgo.kafka2.consumer.ConsumerReactor;
+import kz.greetgo.kafka2.consumer.DefaultErrorCatcher;
+import kz.greetgo.kafka2.consumer.ErrorCatcher;
 import kz.greetgo.kafka2.core.config.ConfigStorage;
 import kz.greetgo.kafka2.errors.CannotExtractKeyFrom;
 import kz.greetgo.kafka2.errors.NotDefined;
@@ -25,9 +27,15 @@ public class KafkaReactorImpl implements KafkaReactor {
   private Supplier<String> bootstrapServers;
   private Supplier<String> authorGetter = null;
   private ConsumerLogger consumerLogger = new EmptyConsumerLogger();
+  private ErrorCatcher errorCatcher = new DefaultErrorCatcher();
 
   public void setAuthorGetter(Supplier<String> authorGetter) {
     this.authorGetter = authorGetter;
+  }
+
+  @Override
+  public void setErrorCatcher(ErrorCatcher errorCatcher) {
+    this.errorCatcher = errorCatcher;
   }
 
   @Override
@@ -49,7 +57,7 @@ public class KafkaReactorImpl implements KafkaReactor {
 
   @Override
   public void addController(Object controller) {
-    consumerDefinitionList.addAll(ConsumerDefinitionExtractor.extract(controller));
+    consumerDefinitionList.addAll(ConsumerDefinitionExtractor.extract(controller, errorCatcher));
   }
 
   private final Kryo kryo = new Kryo();

@@ -147,8 +147,12 @@ public class ConsumerReactor {
           while (working.get() && workers.containsKey(id)) {
             try {
               ConsumerRecords<byte[], Box> records = consumer.poll(consumerConfigWorker.pollDuration());
-              consumerDefinition.invoke(records);
-              consumer.commitSync();
+              if (consumerDefinition.invoke(records)) {
+                consumer.commitSync();
+              } else {
+                workers.remove(id);
+              }
+
             } catch (org.apache.kafka.common.errors.WakeupException wakeupException) {
               consumerLogger.wakeupExceptionHappened(wakeupException);
             }

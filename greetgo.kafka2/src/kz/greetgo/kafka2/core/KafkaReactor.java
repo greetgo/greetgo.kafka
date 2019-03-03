@@ -1,12 +1,15 @@
 package kz.greetgo.kafka2.core;
 
 import kz.greetgo.kafka2.consumer.ConsumerLogger;
+import kz.greetgo.kafka2.consumer.ErrorCatcher;
 import kz.greetgo.kafka2.core.config.ConfigStorage;
 import kz.greetgo.kafka2.producer.ProducerFacade;
 
 import java.util.function.Supplier;
 
 public interface KafkaReactor {
+
+  void setErrorCatcher(ErrorCatcher errorCatcher);
 
   void setConfigStorage(ConfigStorage configStorage);
 
