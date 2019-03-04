@@ -3,6 +3,8 @@ package kz.greetgo.kafka2.consumer;
 import kz.greetgo.kafka2.consumer.annotations.Author;
 import kz.greetgo.kafka2.consumer.annotations.ConsumerName;
 import kz.greetgo.kafka2.consumer.annotations.KafkaCommitOn;
+import kz.greetgo.kafka2.consumer.annotations.Offset;
+import kz.greetgo.kafka2.consumer.annotations.Partition;
 import kz.greetgo.kafka2.consumer.annotations.Timestamp;
 import kz.greetgo.kafka2.consumer.annotations.Topic;
 import kz.greetgo.kafka2.model.Box;
@@ -12,15 +14,15 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static kz.greetgo.kafka2.consumer.RecordUtil.recordOf;
+import static kz.greetgo.kafka2.consumer.RecordUtil.recordWithOffset;
+import static kz.greetgo.kafka2.consumer.RecordUtil.recordWithPartition;
 import static kz.greetgo.kafka2.consumer.RecordUtil.recordWithTimestamp;
 import static kz.greetgo.kafka2.consumer.RecordUtil.recordsOf;
 import static kz.greetgo.kafka2.util.ReflectionUtil.findMethod;
@@ -30,12 +32,12 @@ public class InvokerBuilderTest {
 
   static class C1 {
 
-    final List<Box> boxes = new ArrayList<>();
+    final Set<String> authors = new HashSet<>();
 
     @Topic({"test1", "test2"})
     @SuppressWarnings("unused")
     public void method1(Box box) {
-      boxes.add(box);
+      authors.add(box.author);
     }
 
   }
@@ -46,8 +48,11 @@ public class InvokerBuilderTest {
     Method method = findMethod(c1, "method1");
 
     Box box1 = new Box();
+    box1.author = RND.str(10);
     Box box2 = new Box();
+    box2.author = RND.str(10);
     Box box3 = new Box();
+    box3.author = RND.str(10);
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test2", new byte[0], box2);
@@ -61,9 +66,9 @@ public class InvokerBuilderTest {
     //
     //
 
-    assertThat(c1.boxes).hasSize(2);
-    assertThat(c1.boxes.get(0)).isSameAs(box1);
-    assertThat(c1.boxes.get(1)).isSameAs(box2);
+    assertThat(c1.authors).contains(box1.author);
+    assertThat(c1.authors).contains(box2.author);
+    assertThat(c1.authors).hasSize(2);
     assertThat(toCommit).isTrue();
   }
 
@@ -91,11 +96,13 @@ public class InvokerBuilderTest {
     C2_Model1 model1 = new C2_Model1();
     C2_Model2 model2 = new C2_Model2();
 
-    Box box1 = new Box(model1);
-    Box box2 = new Box(model2);
+    Box box1 = new Box();
+    box1.body = model1;
+    Box box2 = new Box();
+    box2.body = model2;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
-    ConsumerRecord<byte[], Box> record2 = recordOf("test2", new byte[0], box2);
+    ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2));
 
@@ -227,8 +234,8 @@ public class InvokerBuilderTest {
     //
     //
 
-    assertThat(c5.authors).contains(box1.author);
-    assertThat(c5.authors).contains(box2.author);
+    assertThat(c5.authors).contains(box3.author);
+    assertThat(c5.authors).contains(box4.author);
     assertThat(c5.authors).hasSize(2);
     assertThat(toCommit).isTrue();
 
@@ -310,10 +317,80 @@ public class InvokerBuilderTest {
     //
     //
 
-    assertThat(toCommit).isTrue();
     assertThat(testConsumerLogger.errorList).hasSize(2);
     assertThat(testConsumerLogger.errorList.get(0)).isSameAs((Error1) box1.body);
-    assertThat(testConsumerLogger.errorList.get(1)).isSameAs((Error2) box1.body);
+    assertThat(testConsumerLogger.errorList.get(1)).isSameAs((Error2) box2.body);
+    assertThat(toCommit).isTrue();
   }
 
+  static class C8 {
+
+    Integer partition = null;
+
+    @Topic("test1")
+    @SuppressWarnings("unused")
+    public void method1(Box box, @Partition int partition) {
+      this.partition = partition;
+    }
+
+  }
+
+  @Test
+  public void build_invoke__partition() {
+    C8 c8 = new C8();
+    Method method = findMethod(c8, "method1");
+
+    Box box = new Box();
+
+    int partition = RND.plusInt(1_000_000);
+
+    ConsumerRecord<byte[], Box> record1 = recordWithPartition("test1", partition, box);
+
+    ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
+
+    //
+    //
+    boolean toCommit = new InvokerBuilder(c8, method, null).build().invoke(records);
+    //
+    //
+
+    assertThat(c8.partition).isEqualTo(partition);
+    assertThat(toCommit).isTrue();
+  }
+
+
+  static class C9 {
+
+    Long offset = null;
+
+    @Topic("test1")
+    @SuppressWarnings("unused")
+    public void method1(Box box, @Offset long offset) {
+      this.offset = offset;
+    }
+
+  }
+
+  @Test
+  public void build_invoke__offset() {
+    C9 c9 = new C9();
+    Method method = findMethod(c9, "method1");
+
+    Box box = new Box();
+
+    long offset = RND.plusLong(1_000_000_000_000L);
+
+    ConsumerRecord<byte[], Box> record1 = recordWithOffset("test1", offset, box);
+
+    ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
+
+    //
+    //
+    boolean toCommit = new InvokerBuilder(c9, method, null).build().invoke(records);
+    //
+    //
+
+    assertThat(c9.offset).isEqualTo(offset);
+    assertThat(toCommit).isTrue();
+  }
 }

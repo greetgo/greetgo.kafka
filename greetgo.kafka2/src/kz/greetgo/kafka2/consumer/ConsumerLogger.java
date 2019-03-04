@@ -14,4 +14,6 @@ public interface ConsumerLogger {
   void errorInMethod(Throwable throwable);
 
   void showWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap);
+
+  void illegalAccessExceptionInvokingMethod(IllegalAccessException e);
 }

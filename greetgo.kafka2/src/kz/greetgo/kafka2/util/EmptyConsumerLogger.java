@@ -20,4 +20,7 @@ public class EmptyConsumerLogger implements ConsumerLogger {
 
   @Override
   public void showWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap) {}
+
+  @Override
+  public void illegalAccessExceptionInvokingMethod(IllegalAccessException e) {}
 }

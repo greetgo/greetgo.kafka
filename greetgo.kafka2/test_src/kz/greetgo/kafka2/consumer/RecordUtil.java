@@ -18,12 +18,20 @@ public class RecordUtil {
 
   public static ConsumerRecords<byte[], Box> recordsOf(List<ConsumerRecord<byte[], Box>> list) {
     return new ConsumerRecords<>(
-        list.stream()
-            .collect(groupingBy(rec -> new TopicPartition(rec.topic(), 1)))
+      list.stream()
+        .collect(groupingBy(rec -> new TopicPartition(rec.topic(), 1)))
     );
   }
 
   public static ConsumerRecord<byte[], Box> recordWithTimestamp(String topic, Date timestamp, Box box) {
     return new ConsumerRecord<>(topic, 1, 1, timestamp.getTime(), TimestampType.CREATE_TIME, 0, 1, 1, new byte[0], box);
+  }
+
+  public static ConsumerRecord<byte[], Box> recordWithPartition(String topic, int partition, Box box) {
+    return new ConsumerRecord<>(topic, partition, 1, new byte[0], box);
+  }
+
+  public static ConsumerRecord<byte[], Box> recordWithOffset(String topic, long offset, Box box) {
+    return new ConsumerRecord<>(topic, 1, offset, new byte[0], box);
   }
 }

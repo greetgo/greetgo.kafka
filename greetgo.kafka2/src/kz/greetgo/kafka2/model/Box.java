@@ -8,9 +8,4 @@ public class Box {
   public List<String> ignorableConsumers;
   public Object body;
 
-  public Box() {}
-
-  public Box(Object body) {
-    this.body = body;
-  }
 }
