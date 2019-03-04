@@ -110,6 +110,7 @@ public class ConsumerDefinitionTest {
 
   static class C_getFolderPath_null {
 
+    @Topic("topic")
     @SuppressWarnings("unused")
     public void method1() {}
 
@@ -135,6 +136,7 @@ public class ConsumerDefinitionTest {
   @ConsumersFolder("hi_from_consumers_path")
   static class C_getFolderPath_ok {
 
+    @Topic("topic")
     @SuppressWarnings("unused")
     public void method1() {}
 
@@ -160,9 +162,11 @@ public class ConsumerDefinitionTest {
 
   static class C_getConsumerName {
 
+    @Topic("topic")
     @SuppressWarnings("unused")
     public void helloWorldConsumerWOW() {}
 
+    @Topic("topic")
     @ConsumerName("ThisIsACoolConsumer")
     @SuppressWarnings("unused")
     public void method2() {}
@@ -202,6 +206,7 @@ public class ConsumerDefinitionTest {
 
   static class C_isAutoCommit {
 
+    @Topic("topic")
     @SuppressWarnings("unused")
     public void method1() {}
 
@@ -220,14 +225,15 @@ public class ConsumerDefinitionTest {
     //
     //
 
-    assertThat(autoCommit).isTrue();
+    assertThat(autoCommit).isFalse();
   }
 
   @ConsumersFolder("topFolder")
   static class C_logDisplay {
 
-    @ConsumerName("ThisIsACoolConsumer")
+    @Topic("topic")
     @SuppressWarnings("unused")
+    @ConsumerName("ThisIsACoolConsumer")
     public void method1() {}
 
   }
@@ -250,6 +256,7 @@ public class ConsumerDefinitionTest {
 
   static class C2_logDisplay {
 
+    @Topic("topic")
     @SuppressWarnings("unused")
     public void coolMethodName() {}
 

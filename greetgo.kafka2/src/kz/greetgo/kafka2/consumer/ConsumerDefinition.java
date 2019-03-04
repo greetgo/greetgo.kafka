@@ -1,19 +1,26 @@
 package kz.greetgo.kafka2.consumer;
 
 import kz.greetgo.kafka2.consumer.annotations.ConsumersFolder;
+import kz.greetgo.kafka2.consumer.annotations.GroupId;
+import kz.greetgo.kafka2.consumer.annotations.KafkaNotifier;
 import kz.greetgo.kafka2.model.Box;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 public class ConsumerDefinition {
 
   private final Object controller;
+  private final Method method;
   private final String folderPath;
   private final Invoker invoker;
+  private final AutoOffsetReset autoOffsetReset;
+  private final String groupId;
 
   public ConsumerDefinition(Object controller, Method method, ConsumerLogger consumerLogger, String hostId) {
     this.controller = controller;
+    this.method = method;
 
     {
       ConsumersFolder consumersFolder = controller.getClass().getAnnotation(ConsumersFolder.class);
@@ -21,6 +28,23 @@ public class ConsumerDefinition {
     }
 
     invoker = new InvokerBuilder(controller, method, consumerLogger).build();
+
+    {
+      autoOffsetReset = method.getAnnotation(KafkaNotifier.class) == null
+        ? AutoOffsetReset.EARLIEST : AutoOffsetReset.LATEST;
+    }
+
+    {
+      final String tmpGroupId;
+      GroupId annotation = method.getAnnotation(GroupId.class);
+      if (annotation != null) {
+        tmpGroupId = annotation.value();
+      } else {
+        tmpGroupId = method.getName();
+      }
+
+      groupId = autoOffsetReset == AutoOffsetReset.EARLIEST ? tmpGroupId : tmpGroupId + hostId;
+    }
   }
 
   /**
@@ -43,15 +67,33 @@ public class ConsumerDefinition {
    * @return строка для описания в логах этого консюмера
    */
   public String logDisplay() {
-    throw new RuntimeException("Надо сделать");
+
+    StringBuilder sb = new StringBuilder();
+    if (folderPath != null) {
+      sb.append(folderPath).append("/");
+    }
+    sb.append(controller.getClass().getSimpleName());
+    sb.append('.');
+
+    {
+      String consumerName = getConsumerName();
+      if (Objects.equals(consumerName, method.getName())) {
+        sb.append('[').append(consumerName).append(']');
+      } else {
+        sb.append(method.getName()).append('[').append(consumerName).append(']');
+      }
+    }
+
+    return sb.toString();
+
   }
 
   public AutoOffsetReset getAutoOffsetReset() {
-    throw new RuntimeException("Надо сделать");
+    return autoOffsetReset;
   }
 
   public String getGroupId() {
-    throw new RuntimeException("Надо сделать");
+    return groupId;
   }
 
   public boolean isAutoCommit() {
