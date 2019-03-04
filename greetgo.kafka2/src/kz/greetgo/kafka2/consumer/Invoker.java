@@ -8,4 +8,8 @@ public interface Invoker {
    * @return needless to commit
    */
   boolean invoke(ConsumerRecords<byte[], Box> records);
+
+  boolean isAutoCommit();
+
+  String getConsumerName();
 }

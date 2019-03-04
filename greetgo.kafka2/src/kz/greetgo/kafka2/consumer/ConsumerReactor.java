@@ -138,6 +138,11 @@ public class ConsumerReactor {
         consumerLogger.startWorker(consumerDefinition.logDisplay(), id);
         Map<String, Object> configMap = consumerConfigWorker.getConfigMap();
         configMap.put("bootstrap.servers", bootstrapServers.get());
+        configMap.put("auto.offset.reset", consumerDefinition.getAutoOffsetReset());
+        configMap.put("group.id", consumerDefinition.getGroupId());
+        configMap.put("enable.auto.commit", consumerDefinition.isAutoCommit() ? "true" : "false");
+
+        consumerLogger.showWorkerConfig(consumerDefinition.logDisplay(), id, configMap);
 
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
         BoxDeserializer forValue = new BoxDeserializer(kryo);

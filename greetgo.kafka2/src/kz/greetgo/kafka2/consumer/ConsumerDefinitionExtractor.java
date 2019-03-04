@@ -19,7 +19,7 @@ public class ConsumerDefinitionExtractor {
         continue;
       }
 
-      ret.add(new ConsumerDefinition(controller, method, consumerLogger));
+      ret.add(new ConsumerDefinition(controller, method, consumerLogger, null));
     }
 
     return ret;

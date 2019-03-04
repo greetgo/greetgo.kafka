@@ -16,15 +16,17 @@ public class ConsumerProbe {
   public static void main(String[] args) throws IOException {
 
     Properties props = new Properties();
-    props.put("bootstrap.servers", "localhost:9092");
-    props.put("group.id", "cool2");
-    props.put("enable.auto.commit", "false");
+
     props.put("auto.commit.interval.ms", "1000");
     props.put("session.timeout.ms", "30000");
     props.put("heartbeat.interval.ms", "10000");
     props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+    props.put("enable.auto.commit", "false");
     props.put("auto.offset.reset", "earliest");
+    props.put("bootstrap.servers", "localhost:9092");
+    props.put("group.id", "cool2");
 
     AtomicBoolean working = new AtomicBoolean(true);
 

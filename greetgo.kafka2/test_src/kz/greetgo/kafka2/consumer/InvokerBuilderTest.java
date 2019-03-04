@@ -41,7 +41,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void box_filteringByTopic() {
+  public void build_invoke__box_filteringByTopic() {
     C1 c1 = new C1();
     Method method = findMethod(c1, "method1");
 
@@ -84,7 +84,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void innerType_filteringByType() {
+  public void build_invoke__innerType_filteringByType() {
     C2 c2 = new C2();
     Method method = findMethod(c2, "method1");
 
@@ -122,7 +122,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void author() {
+  public void build_invoke__author() {
     C3 c3 = new C3();
     Method method = findMethod(c3, "method1");
 
@@ -157,7 +157,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void timestamp() {
+  public void build_invoke__timestamp() {
     C4 c4 = new C4();
     Method method = findMethod(c4, "method1");
 
@@ -194,7 +194,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void ignoreConsumer() {
+  public void build_invoke__ignoreConsumer() {
     C5 c5 = new C5();
     Method method = findMethod(c5, "method1");
 
@@ -247,7 +247,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void returnsFalseBecauseOfException() {
+  public void build_invoke__returnsFalseBecauseOfExceptionInMethod() {
     C6 c6 = new C6();
     Method method = findMethod(c6, "method1");
 
@@ -288,7 +288,7 @@ public class InvokerBuilderTest {
   }
 
   @Test
-  public void returnsTrueBecauseOfKafkaCommitOn() {
+  public void build_invoke__returnsTrueBecauseOfAnnotation_KafkaCommitOn() {
     C7 c7 = new C7();
     Method method = findMethod(c7, "method1");
 
@@ -315,4 +315,5 @@ public class InvokerBuilderTest {
     assertThat(testConsumerLogger.errorList.get(0)).isSameAs((Error1) box1.body);
     assertThat(testConsumerLogger.errorList.get(1)).isSameAs((Error2) box1.body);
   }
+
 }

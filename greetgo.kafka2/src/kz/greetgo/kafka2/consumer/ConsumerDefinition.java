@@ -12,7 +12,7 @@ public class ConsumerDefinition {
   private final String folderPath;
   private final Invoker invoker;
 
-  public ConsumerDefinition(Object controller, Method method, ConsumerLogger consumerLogger) {
+  public ConsumerDefinition(Object controller, Method method, ConsumerLogger consumerLogger, String hostId) {
     this.controller = controller;
 
     {
@@ -44,5 +44,21 @@ public class ConsumerDefinition {
    */
   public String logDisplay() {
     throw new RuntimeException("Надо сделать");
+  }
+
+  public AutoOffsetReset getAutoOffsetReset() {
+    throw new RuntimeException("Надо сделать");
+  }
+
+  public String getGroupId() {
+    throw new RuntimeException("Надо сделать");
+  }
+
+  public boolean isAutoCommit() {
+    return invoker.isAutoCommit();
+  }
+
+  public String getConsumerName() {
+    return invoker.getConsumerName();
   }
 }
