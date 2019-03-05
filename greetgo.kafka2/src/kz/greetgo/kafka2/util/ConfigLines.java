@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
@@ -25,14 +26,18 @@ public class ConfigLines {
     ConfigLines ret = new ConfigLines();
     ret.configPath = configPath;
     ret.lines.addAll(
-      Arrays.stream(new String(bytes, UTF_8)
-        .split("\n"))
-        .map(ConfigLine::parse)
-        .collect(toList())
+        Arrays.stream(new String(bytes, UTF_8)
+            .split("\n"))
+            .map(ConfigLine::parse)
+            .collect(toList())
     );
     ret.originLines.clear();
     ret.originLines.addAll(ret.lines.stream().map(ConfigLine::line).collect(toList()));
     return ret;
+  }
+
+  public byte[] toBytes() {
+    return lines.stream().map(ConfigLine::line).collect(Collectors.joining("\n")).getBytes(UTF_8);
   }
 
   public String getValue(String key) {
@@ -76,13 +81,17 @@ public class ConfigLines {
   public boolean isModified() {
     int size = originLines.size();
     if (size != lines.size()) {
-      return false;
+      return true;
     }
     for (int i = 0; i < size; i++) {
       if (!Objects.equals(originLines.get(i), lines.get(i).line())) {
-        return false;
+        return true;
       }
     }
-    return true;
+    return false;
+  }
+
+  public void addValueVariant(String key, String valueVariant) {
+
   }
 }
