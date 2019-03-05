@@ -45,7 +45,7 @@ public class ConsumerReactor {
       }
       sb.append(consumerDefinition.getControllerClass().getSimpleName());
       sb.append(".txt");
-      consumerConfigWorker.configPath.set(sb.toString());
+      consumerConfigWorker.setConfigPath(sb.toString());
     }
 
     refresh();
@@ -148,7 +148,7 @@ public class ConsumerReactor {
         BoxDeserializer forValue = new BoxDeserializer(kryo);
 
         try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
-          consumer.subscribe(consumerConfigWorker.topicList());
+          consumer.subscribe(consumerDefinition.topicList());
           while (working.get() && workers.containsKey(id)) {
             try {
               ConsumerRecords<byte[], Box> records = consumer.poll(consumerConfigWorker.pollDuration());

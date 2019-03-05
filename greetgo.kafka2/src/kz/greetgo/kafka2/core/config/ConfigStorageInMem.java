@@ -1,6 +1,11 @@
 package kz.greetgo.kafka2.core.config;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ConfigStorageInMem extends ConfigStorageAbstract {
 
@@ -27,4 +32,37 @@ public class ConfigStorageInMem extends ConfigStorageAbstract {
 
   @Override
   public void ensureLookingFor(String path) {}
+
+  public List<String> getLinesWithoutSpaces(String path) {
+    byte[] bytes = data.get(path);
+    if (bytes == null) {
+      return null;
+    }
+
+    return new ArrayList<>(Arrays.asList(new String(bytes, UTF_8).replaceAll("\\s+", "").split("\\n")));
+  }
+
+  private static byte[] addLines(byte[] bytes, String[] lines) {
+    List<String> lineList = bytes == null ? new ArrayList<>() : Arrays.asList(new String(bytes, UTF_8).split("\\n"));
+    lineList.addAll(Arrays.asList(lines));
+    return String.join("\n", lineList).getBytes(UTF_8);
+  }
+
+  public void addLines(String path, String... lines) {
+    while (true) {
+      byte[] bytes = data.get(path);
+
+      byte[] newBytes = addLines(bytes, lines);
+
+      if (bytes == null) {
+        if (data.putIfAbsent(path, newBytes) == null) {
+          return;
+        }
+        continue;
+      }
+      if (data.replace(path, bytes, newBytes)) {
+        return;
+      }
+    }
+  }
 }

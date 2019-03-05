@@ -4,8 +4,8 @@ import kz.greetgo.kafka.consumer.AbstractConsumerManager;
 import kz.greetgo.kafka.consumer.Consume;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.core.StrConverterPreparationBased;
-import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
+import kz.greetgo.strconverter.StrConverter;
 
 import java.util.ArrayList;
 import java.util.List;

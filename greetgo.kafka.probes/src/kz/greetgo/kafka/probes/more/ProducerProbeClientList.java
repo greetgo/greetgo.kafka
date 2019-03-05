@@ -3,8 +3,8 @@ package kz.greetgo.kafka.probes.more;
 import kz.greetgo.kafka.core.StrConverterPreparationBased;
 import kz.greetgo.kafka.producer.AbstractKafkaSender;
 import kz.greetgo.kafka.producer.KafkaSending;
-import kz.greetgo.kafka.str.StrConverter;
 import kz.greetgo.kafka.str.StrConverterXml;
+import kz.greetgo.strconverter.StrConverter;
 
 import java.util.ArrayList;
 import java.util.List;

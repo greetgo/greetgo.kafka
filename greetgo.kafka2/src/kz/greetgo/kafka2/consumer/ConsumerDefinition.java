@@ -7,6 +7,7 @@ import kz.greetgo.kafka2.model.Box;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Objects;
 
 public class ConsumerDefinition {
@@ -102,5 +103,9 @@ public class ConsumerDefinition {
 
   public String getConsumerName() {
     return invoker.getConsumerName();
+  }
+
+  public List<String> topicList() {
+    throw new RuntimeException("Реализовать это");
   }
 }
