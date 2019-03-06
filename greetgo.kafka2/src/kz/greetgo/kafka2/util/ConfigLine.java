@@ -45,18 +45,20 @@ public class ConfigLine {
 
   private ConfigLine(String line) {
 
-    if (line.trim().startsWith("##")) {
+    String trimmedLine = line.trim();
+
+    if (trimmedLine.isEmpty() || trimmedLine.startsWith("##")) {
       this.line = line;
       key = null;
       keyPart = null;
       value = null;
       valuePart = null;
       command = null;
-      commented = true;
+      commented = !trimmedLine.isEmpty();
       return;
     }
 
-    commented = line.trim().startsWith("#");
+    commented = trimmedLine.startsWith("#");
 
     int index = line.indexOf('=');
     int ppIndex = line.indexOf(':');
@@ -186,6 +188,37 @@ public class ConfigLine {
         keyPart = "#" + keyPart;
       }
 
+    }
+  }
+
+  public void setCommand(ConfigLineCommand command) {
+    if (command == null) {
+      throw new IllegalArgumentException("command == null");
+    }
+
+    if (this.command == command) {
+      return;
+    }
+
+    this.command = command;
+    this.value = null;
+
+    int startSpaceCount = 0;
+
+    if (valuePart != null) {
+      char[] chars = valuePart.substring(1).toCharArray();
+      for (int i = 0; i < chars.length; i++) {
+        if (!Character.isWhitespace(chars[i])) {
+          startSpaceCount = i;
+          break;
+        }
+      }
+    }
+
+    valuePart = ":" + StrUtil.spaces(startSpaceCount) + command.name().toLowerCase();
+
+    if (command == ConfigLineCommand.UNKNOWN) {
+      addError("Command is UNKNOWN");
     }
   }
 }

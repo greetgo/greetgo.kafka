@@ -206,4 +206,131 @@ public class ConfigLineTest {
     assertThat(line.key()).isEqualTo("key76");
     assertThat(line.keyPart()).isEqualTo(" key76");
   }
+
+  @Test
+  public void setCommand_commented_NULL() {
+    ConfigLine line = ConfigLine.parse("#key76=hello");
+
+    //
+    //
+    line.setCommand(ConfigLineCommand.NULL);
+    //
+    //
+
+    assertThat(line.line()).isEqualTo("#key76:null");
+    assertThat(line.value()).isNull();
+    assertThat(line.command()).isEqualTo(ConfigLineCommand.NULL);
+    assertThat(line.errors()).isEmpty();
+
+  }
+
+  @Test
+  public void setCommand_withSpaces_NULL() {
+    ConfigLine line = ConfigLine.parse(" # key80 =   hello ");
+
+    //
+    //
+    line.setCommand(ConfigLineCommand.NULL);
+    //
+    //
+
+    assertThat(line.line()).isEqualTo(" # key80 :   null");
+    assertThat(line.value()).isNull();
+    assertThat(line.command()).isEqualTo(ConfigLineCommand.NULL);
+    assertThat(line.errors()).isEmpty();
+
+  }
+
+  @Test
+  public void setCommand_withSpaces_INHERITS() {
+    ConfigLine line = ConfigLine.parse(" # key80 =   hello ");
+
+    //
+    //
+    line.setCommand(ConfigLineCommand.INHERITS);
+    //
+    //
+
+    assertThat(line.line()).isEqualTo(" # key80 :   inherits");
+    assertThat(line.value()).isNull();
+    assertThat(line.command()).isEqualTo(ConfigLineCommand.INHERITS);
+    assertThat(line.errors()).isEmpty();
+
+  }
+
+  @Test
+  public void setCommand_withSpaces_UNKNOWN() {
+    ConfigLine line = ConfigLine.parse(" # key80 =   hello ");
+
+    //
+    //
+    line.setCommand(ConfigLineCommand.UNKNOWN);
+    //
+    //
+
+    assertThat(line.line()).isEqualTo(" # key80 :   unknown");
+    assertThat(line.value()).isNull();
+    assertThat(line.command()).isEqualTo(ConfigLineCommand.UNKNOWN);
+    assertThat(line.errors()).isNotEmpty();
+
+  }
+
+  @Test
+  public void parse_unknownCommand() {
+    ConfigLine line = ConfigLine.parse(" # key80 : left_command ");
+
+    assertThat(line.line()).isEqualTo(" # key80 : left_command ");
+    assertThat(line.value()).isNull();
+    assertThat(line.command()).isEqualTo(ConfigLineCommand.UNKNOWN);
+    assertThat(line.errors()).isNotEmpty();
+
+  }
+
+  @Test
+  public void parse_unknownLineFormat() {
+    ConfigLine line = ConfigLine.parse(" hello world ");
+
+    assertThat(line.line()).isEqualTo(" hello world ");
+    assertThat(line.value()).isNull();
+    assertThat(line.key()).isNull();
+    assertThat(line.command()).isNull();
+    assertThat(line.isCommented()).isFalse();
+    assertThat(line.errors()).isNotEmpty();
+  }
+
+  @Test
+  public void parse_unknownLineFormat_commented() {
+    ConfigLine line = ConfigLine.parse(" # hello world ");
+
+    assertThat(line.line()).isEqualTo(" # hello world ");
+    assertThat(line.value()).isNull();
+    assertThat(line.key()).isNull();
+    assertThat(line.command()).isNull();
+    assertThat(line.isCommented()).isTrue();
+    assertThat(line.errors()).isEmpty();
+  }
+
+  @Test
+  public void parse_doubleCommented() {
+    ConfigLine line = ConfigLine.parse(" ## hello world ");
+
+    assertThat(line.line()).isEqualTo(" ## hello world ");
+    assertThat(line.value()).isNull();
+    assertThat(line.key()).isNull();
+    assertThat(line.command()).isNull();
+    assertThat(line.isCommented()).isTrue();
+    assertThat(line.errors()).isEmpty();
+  }
+
+  @Test
+  public void parse_isEmpty() {
+    ConfigLine line = ConfigLine.parse("    ");
+
+    assertThat(line.line()).isEqualTo("    ");
+    assertThat(line.value()).isNull();
+    assertThat(line.key()).isNull();
+    assertThat(line.command()).isNull();
+    assertThat(line.isCommented()).isFalse();
+    assertThat(line.errors()).isEmpty();
+  }
 }
