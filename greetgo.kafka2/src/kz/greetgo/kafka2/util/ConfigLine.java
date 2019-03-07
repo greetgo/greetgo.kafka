@@ -221,4 +221,69 @@ public class ConfigLine {
       addError("Command is UNKNOWN");
     }
   }
+
+  public void setKey(String key) {
+
+    if (keyPart == null) {
+      this.key = key;
+      keyPart = "#" + key + " ";
+      commented = true;
+      valuePart = ": null";
+      command = ConfigLineCommand.NULL;
+      line = null;
+      return;
+    }
+
+    if (keyPart.trim().startsWith("#")) {
+
+      int sharpIndex = keyPart.indexOf('#');
+      int keyStartIndex = -1;
+
+      for (int i = sharpIndex + 1; i < keyPart.length(); i++) {
+        if (!Character.isWhitespace(keyPart.charAt(i))) {
+          keyStartIndex = i;
+          break;
+        }
+      }
+
+      {
+        StringBuilder sb = new StringBuilder();
+        sb.append(spaces(sharpIndex)).append('#');
+        if (keyStartIndex >= 0) {
+          sb.append(spaces(keyStartIndex - sharpIndex - 1));
+        }
+        sb.append(key);
+        while (sb.length() < keyPart.length()) {
+          sb.append(' ');
+        }
+
+        keyPart = sb.toString();
+        this.key = key;
+        commented = true;
+      }
+
+      return;
+    }
+
+    {
+      int keyStartIndex = -1;
+
+      for (int i = 0; i < keyPart.length(); i++) {
+        if (!Character.isWhitespace(keyPart.charAt(i))) {
+          keyStartIndex = i;
+          break;
+        }
+      }
+
+      StringBuilder sb = new StringBuilder();
+      sb.append(spaces(keyStartIndex)).append(key);
+      while (sb.length() < keyPart.length()) {
+        sb.append(' ');
+      }
+
+      keyPart = sb.toString();
+      this.key = key;
+      commented = false;
+    }
+  }
 }

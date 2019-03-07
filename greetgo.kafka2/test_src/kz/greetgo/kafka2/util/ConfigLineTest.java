@@ -333,4 +333,60 @@ public class ConfigLineTest {
     assertThat(line.isCommented()).isFalse();
     assertThat(line.errors()).isEmpty();
   }
+
+  @Test
+  public void setKey_withSpaces_commented() {
+
+    ConfigLine line = ConfigLine.parse("  #   c3p0      =   line size wow   ");
+
+    //
+    //
+    line.setKey("station");
+    //
+    //
+
+    assertThat(line.line()).isEqualTo("  #   station   =   line size wow   ");
+  }
+
+  @Test
+  public void setKey_withSpaces() {
+
+    ConfigLine line = ConfigLine.parse("    c3p0      =   line size wow   ");
+
+    //
+    //
+    line.setKey("station");
+    //
+    //
+
+    assertThat(line.line()).isEqualTo("    station   =   line size wow   ");
+  }
+
+  @Test
+  public void setKey_noSpaces() {
+
+    ConfigLine line = ConfigLine.parse("c3p0=line size wow");
+
+    //
+    //
+    line.setKey("station");
+    //
+    //
+
+    assertThat(line.line()).isEqualTo("station=line size wow");
+  }
+
+  @Test
+  public void setKey_commented() {
+
+    ConfigLine line = ConfigLine.parse("## comment");
+
+    //
+    //
+    line.setKey("station");
+    //
+    //
+
+    assertThat(line.line()).isEqualTo("#station : null");
+  }
 }

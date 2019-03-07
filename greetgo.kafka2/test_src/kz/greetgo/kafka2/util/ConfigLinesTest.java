@@ -10,6 +10,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static kz.greetgo.kafka2.util.TestUtil.linesToBytes;
 import static org.fest.assertions.api.Assertions.assertThat;
 
+@SuppressWarnings("ConstantConditions")
 public class ConfigLinesTest {
 
   @Test
@@ -30,38 +31,427 @@ public class ConfigLinesTest {
 
   }
 
+  private void addValueVariant_testCore(List<String> startLines,
+                                        String key, String value, boolean expectedModified,
+                                        List<String> expected) {
+
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(startLines), "wow/config.txt");
+
+    //
+    //
+    configLines.addValueVariant(key, value);
+    boolean actualIsModified = configLines.isModified();
+    //
+    //
+
+    assertThat(actualIsModified).isEqualTo(expectedModified);
+
+    List<String> actual = Arrays.asList(new String(configLines.toBytes(), UTF_8).split("\n"));
+
+    for (int i = 0; i < expected.size(); i++) {
+      assertThat(actual.get(i)).describedAs("Line " + i).isEqualTo(expected.get(i));
+    }
+
+    assertThat(actual).hasSameSizeAs(expected);
+  }
+
+  private void put_testCore(List<String> startLines,
+                            String key, String value, boolean expectedModified,
+                            List<String> expected) {
+
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(startLines), "wow/config.txt");
+
+    //
+    //
+    configLines.put(key, value);
+    boolean actualIsModified = configLines.isModified();
+    //
+    //
+
+    assertThat(actualIsModified).isEqualTo(expectedModified);
+
+    List<String> actual = Arrays.asList(new String(configLines.toBytes(), UTF_8).split("\n"));
+
+    for (int i = 0; i < expected.size(); i++) {
+      assertThat(actual.get(i)).describedAs("Line " + i).isEqualTo(expected.get(i));
+    }
+
+    assertThat(actual).hasSameSizeAs(expected);
+  }
+
   @Test
-  public void addValueVariant() {
+  public void addValueVariant_1() {
 
-    List<String> lines = new ArrayList<>();
-    lines.add("  key001  = 123    ");
-    lines.add("# key002  = 321    ");
-    lines.add("  key002  = 334455 ");
-    lines.add("  key003  = oops   ");
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = 321    ");
+    startLines.add("  key002  = 334455 ");
+    startLines.add("  key003  = oops   ");
 
-    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(lines), "wow/config.txt");
+    String key = "key002";
+    String value = "321";
 
-    assertThat(configLines.isModified()).isFalse();
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = 321    ");
+    expected.add("  key002  = 334455 ");
+    expected.add("  key003  = oops   ");
 
-    configLines.addValueVariant("key002", "321");
+    boolean expectedModified = false;
 
-    assertThat(configLines.isModified()).isFalse();
+    addValueVariant_testCore(startLines, key, value, expectedModified, expected);
 
-    configLines.addValueVariant("key002", "variant1");
+  }
 
-    assertThat(configLines.isModified()).isTrue();
+  @Test
+  public void addValueVariant_2() {
 
-    configLines.addValueVariant("key002", "variant2");
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = 321    ");
+    startLines.add("  key002  = 334455 ");
+    startLines.add("  key003  = oops   ");
 
-    assertThat(configLines.isModified()).isTrue();
+    String key = "key002";
+    String value = "334455";
 
-    List<String> list = Arrays.asList(new String(configLines.toBytes(), UTF_8).split("\n"));
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = 321    ");
+    expected.add("  key002  = 334455 ");
+    expected.add("  key003  = oops   ");
 
-    assertThat(list.get(0)).isEqualTo("  key001  = 123    ");
-    assertThat(list.get(1)).isEqualTo("# key002  = 321    ");
-    assertThat(list.get(2)).isEqualTo("  key002  = 334455 ");
-    assertThat(list.get(3)).isEqualTo("#key002=variant1");
-    assertThat(list.get(4)).isEqualTo("#key002=variant2");
-    assertThat(list.get(5)).isEqualTo("  key003  = oops   ");
+    boolean expectedModified = false;
+
+    addValueVariant_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void addValueVariant_3() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = 321    ");
+    startLines.add("  key002  = 334455 ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "variant1";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = 321    ");
+    expected.add("  key002  = 334455 ");
+    expected.add("# key002  = variant1");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    addValueVariant_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void addValueVariant_4() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = 321    ");
+    startLines.add("  key002  = 334455 ");
+    startLines.add("# key002  = variant1");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "variant2";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = 321    ");
+    expected.add("  key002  = 334455 ");
+    expected.add("# key002  = variant1");
+    expected.add("# key002  = variant2");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    addValueVariant_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void addValueVariant_5() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = 321    ");
+    startLines.add("  key002  = 334455 ");
+    startLines.add("# key002  = variant1");
+    startLines.add("# key002  = variant2");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "x";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = 321    ");
+    expected.add("  key002  = 334455 ");
+    expected.add("# key002  = variant1");
+    expected.add("# key002  = variant2");
+    expected.add("# key002  = x       ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    addValueVariant_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void addValueVariant_6() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = 321    ");
+    startLines.add("  key002  = 334455 ");
+    startLines.add("# key002  = variant1");
+    startLines.add("# key002  = variant2");
+    startLines.add("  key003  = oops   ");
+
+    String key = "left-key";
+    String value = "x";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = 321    ");
+    expected.add("  key002  = 334455 ");
+    expected.add("# key002  = variant1");
+    expected.add("# key002  = variant2");
+    expected.add("  key003  = oops   ");
+    expected.add("# left-key= x      ");
+
+    boolean expectedModified = true;
+
+    addValueVariant_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void addValueVariant_7() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = 321    ");
+    startLines.add("  key002  = 334455 ");
+    startLines.add("# key002  = variant1");
+    startLines.add("# key002  = variant2");
+    startLines.add("  key003  = oops   ");
+
+    String key = "x";
+    String value = "y";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = 321    ");
+    expected.add("  key002  = 334455 ");
+    expected.add("# key002  = variant1");
+    expected.add("# key002  = variant2");
+    expected.add("  key003  = oops   ");
+    expected.add("# x       = y      ");
+
+    boolean expectedModified = true;
+
+    addValueVariant_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void put_1() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = one    ");
+    startLines.add("  key002  = two    ");
+    startLines.add("# key002  = three  ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "one";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("  key002  = one    ");
+    expected.add("# key002  = two    ");
+    expected.add("# key002  = three  ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    put_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void put_2() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = one    ");
+    startLines.add("  key002  = two    ");
+    startLines.add("# key002  = three  ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "two";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = one    ");
+    expected.add("  key002  = two    ");
+    expected.add("# key002  = three  ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = false;
+
+    put_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void put_3() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = one    ");
+    startLines.add("  key002  = two    ");
+    startLines.add("# key002  = three  ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "three";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = one    ");
+    expected.add("# key002  = two    ");
+    expected.add("  key002  = three  ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    put_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void put_4() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = one    ");
+    startLines.add("  key002  = two    ");
+    startLines.add("# key002  = three  ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "four";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = one    ");
+    expected.add("# key002  = two    ");
+    expected.add("# key002  = three  ");
+    expected.add("  key002  = four   ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    put_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void put_5() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = one    ");
+    startLines.add("  key002  = two    ");
+    startLines.add("# key002  = three  ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = null;
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = one    ");
+    expected.add("# key002  = two    ");
+    expected.add("# key002  = three  ");
+    expected.add("  key002  : null   ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    put_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void put_6() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = one    ");
+    startLines.add("# key002  = two    ");
+    startLines.add("# key002  = three  ");
+    startLines.add("  key002  : null   ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "two";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = one    ");
+    expected.add("  key002  = two    ");
+    expected.add("# key002  = three  ");
+    expected.add("# key002  : null   ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    put_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
+  public void put_7() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key001  = 123    ");
+    startLines.add("# key002  = one    ");
+    startLines.add("# key002  = two    ");
+    startLines.add("# key002  = three  ");
+    startLines.add("  key002  : null   ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002";
+    String value = "four";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("  key001  = 123    ");
+    expected.add("# key002  = one    ");
+    expected.add("# key002  = two    ");
+    expected.add("# key002  = three  ");
+    expected.add("# key002  : null   ");
+    expected.add("  key002  = four   ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    put_testCore(startLines, key, value, expectedModified, expected);
+
   }
 }

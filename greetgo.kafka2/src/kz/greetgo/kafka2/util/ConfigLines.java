@@ -26,10 +26,10 @@ public class ConfigLines {
     ConfigLines ret = new ConfigLines();
     ret.configPath = configPath;
     ret.lines.addAll(
-        Arrays.stream(new String(bytes, UTF_8)
-            .split("\n"))
-            .map(ConfigLine::parse)
-            .collect(toList())
+      Arrays.stream(new String(bytes, UTF_8)
+        .split("\n"))
+        .map(ConfigLine::parse)
+        .collect(toList())
     );
     ret.originLines.clear();
     ret.originLines.addAll(ret.lines.stream().map(ConfigLine::line).collect(toList()));
@@ -92,6 +92,46 @@ public class ConfigLines {
   }
 
   public void addValueVariant(String key, String valueVariant) {
+    if (key == null) {
+      throw new IllegalArgumentException("key == null");
+    }
+
+    int lastKey = -1;
+    int lastDefined = -1;
+    for (int i = 0; i < lines.size(); i++) {
+      ConfigLine line = lines.get(i);
+      if (line.key() != null) {
+        lastDefined = i;
+      }
+      if (key.equals(line.key())) {
+        lastKey = i;
+        if (Objects.equals(line.value(), valueVariant)) {
+          return;
+        }
+      }
+    }
+
+    if (lastKey >= 0) {
+      ConfigLine lastKeyLine = lines.get(lastKey).copy();
+      lastKeyLine.setValue(valueVariant);
+      lastKeyLine.setCommented(true);
+      lines.add(lastKey + 1, lastKeyLine);
+      return;
+    }
+
+    if (lastDefined >= 0) {
+      ConfigLine lastDefinedLine = lines.get(lastDefined).copy();
+      lastDefinedLine.setKey(key);
+      lastDefinedLine.setValue(valueVariant);
+      lastDefinedLine.setCommented(true);
+      lines.add(lastDefined + 1, lastDefinedLine);
+      return;
+    }
+
+    lines.add(ConfigLine.parse("#" + key + " = " + valueVariant));
+  }
+
+  public void put(String key, String value) {
 
   }
 }
