@@ -70,8 +70,6 @@ public class ConfigLines {
         return parent.getValue(key);
       }
 
-      line.addError("Unknown command: " + command);
-
       return null;
     }
 
@@ -141,7 +139,7 @@ public class ConfigLines {
     lines.add(ConfigLine.parse("#" + key + " = " + valueVariant));
   }
 
-  public void put(String key, String value) {
+  public void putValue(String key, String value) {
 
     if (key == null) {
       throw new IllegalArgumentException("key == null");
@@ -157,5 +155,23 @@ public class ConfigLines {
       }
     }
 
+  }
+
+  public List<String> errors() {
+    List<String> ret = new ArrayList<>();
+    if (errors.size() > 0) {
+      ret.addAll(errors);
+      ret.add("");
+    }
+
+    int lineNo = 0;
+    for (ConfigLine line : lines) {
+      lineNo++;
+      for (String lineError : line.errors()) {
+        ret.add("LINE " + lineNo + " : " + lineError);
+      }
+    }
+
+    return ret;
   }
 }

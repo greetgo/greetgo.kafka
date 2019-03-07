@@ -88,15 +88,15 @@ public class ConfigLinesTest {
     return sb.toString();
   }
 
-  private void put_testCore(List<String> startLines,
-                            String key, String value, boolean expectedModified,
-                            List<String> expected) {
+  private void putValue_testCore(List<String> startLines,
+                                 String key, String value, boolean expectedModified,
+                                 List<String> expected) {
 
     ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(startLines), "wow/config.txt");
 
     //
     //
-    configLines.put(key, value);
+    configLines.putValue(key, value);
     boolean actualIsModified = configLines.isModified();
     //
     //
@@ -374,7 +374,7 @@ public class ConfigLinesTest {
   }
 
   @Test
-  public void put_1() {
+  public void putValue_1() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key001  = 123    ");
@@ -395,12 +395,12 @@ public class ConfigLinesTest {
 
     boolean expectedModified = true;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
 
   @Test
-  public void put_2() {
+  public void putValue_2() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key001  = 123    ");
@@ -421,12 +421,12 @@ public class ConfigLinesTest {
 
     boolean expectedModified = false;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
 
   @Test
-  public void put_3() {
+  public void putValue_3() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key001  = 123    ");
@@ -447,12 +447,12 @@ public class ConfigLinesTest {
 
     boolean expectedModified = true;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
 
   @Test
-  public void put_4() {
+  public void putValue_4() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key001  = 123    ");
@@ -474,12 +474,12 @@ public class ConfigLinesTest {
 
     boolean expectedModified = true;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
 
   @Test
-  public void put_5() {
+  public void putValue_5() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key001  = 123    ");
@@ -501,12 +501,12 @@ public class ConfigLinesTest {
 
     boolean expectedModified = true;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
 
   @Test
-  public void put_6() {
+  public void putValue_6() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key001  = 123    ");
@@ -529,12 +529,12 @@ public class ConfigLinesTest {
 
     boolean expectedModified = true;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
 
   @Test
-  public void put_7() {
+  public void putValue_7() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key001  = 123    ");
@@ -558,12 +558,12 @@ public class ConfigLinesTest {
 
     boolean expectedModified = true;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
 
   @Test
-  public void put_8() {
+  public void putValue_8() {
 
     List<String> startLines = new ArrayList<>();
     startLines.add("  key002  : null   ");
@@ -579,7 +579,154 @@ public class ConfigLinesTest {
 
     boolean expectedModified = true;
 
-    put_testCore(startLines, key, value, expectedModified, expected);
+    putValue_testCore(startLines, key, value, expectedModified, expected);
 
   }
+
+  @Test
+  public void getValue_actual() {
+
+    List<String> lines = new ArrayList<>();
+    lines.add("   key001   =   hello world    ");
+    lines.add("#  key002   =   left value 1   ");
+    lines.add("   key002   =   by by world    ");
+    lines.add("#  key002   =   left value 2   ");
+
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(lines), "wow/config.txt");
+
+    //
+    //
+    String value = configLines.getValue("key002");
+    //
+    //
+
+    assertThat(value).isEqualTo("by by world");
+    assertThat(configLines.errors()).isEmpty();
+  }
+
+  @Test
+  public void getValue_absent() {
+
+    List<String> lines = new ArrayList<>();
+    lines.add("  key001  =  hello world   ");
+
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(lines), "wow/config.txt");
+
+    //
+    //
+    String value = configLines.getValue("key002");
+    //
+    //
+
+    assertThat(value).isNull();
+    assertThat(configLines.errors()).isEmpty();
+  }
+
+  @Test
+  public void getValue_nullCommand() {
+
+    List<String> lines = new ArrayList<>();
+    lines.add("   key001   =   hello world    ");
+    lines.add("#  key002   =   left value 1   ");
+    lines.add("   key002   :   null           ");
+    lines.add("#  key002   =   left value 2   ");
+
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(lines), "wow/config.txt");
+
+    //
+    //
+    String value = configLines.getValue("key002");
+    //
+    //
+
+    assertThat(value).isNull();
+    assertThat(configLines.errors()).isEmpty();
+  }
+
+  @Test
+  public void getValue_leftCommand() {
+
+    List<String> lines = new ArrayList<>();
+    lines.add("   key001   =   hello world    ");
+    lines.add("#  key002   =   left value 1   ");
+    lines.add("   key002   :   parent         ");
+    lines.add("#  key002   =   left value 2   ");
+
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(lines), "wow/config.txt");
+
+    //
+    //
+    String value = configLines.getValue("key002");
+    //
+    //
+
+    for (String error : configLines.errors()) {
+      System.out.println("ERR: " + error);
+    }
+
+    assertThat(value).isNull();
+    assertThat(configLines.errors()).isNotEmpty();
+  }
+
+  @Test
+  public void getValue_inherits_noParent() {
+
+    List<String> lines = new ArrayList<>();
+    lines.add("   key001   =   hello world    ");
+    lines.add("#  key002   =   left value 1   ");
+    lines.add("   key002   :   inherits       ");
+    lines.add("#  key002   =   left value 2   ");
+
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(lines), "wow/config.txt");
+
+    //
+    //
+    String value = configLines.getValue("key002");
+    //
+    //
+
+    for (String error : configLines.errors()) {
+      System.out.println("ERR: " + error);
+    }
+
+    assertThat(value).isNull();
+    assertThat(configLines.errors()).isNotEmpty();
+
+  }
+
+  @Test
+  public void getValue_inherits() {
+    List<String> parentLines = new ArrayList<>();
+    parentLines.add("   key001   =   some value     ");
+    parentLines.add("#  key002   =   left value 1   ");
+    parentLines.add("   key002   =   hello world    ");
+    parentLines.add("#  key002   =   left value 2   ");
+
+
+    List<String> lines = new ArrayList<>();
+    lines.add("   key001   =   hello world    ");
+    lines.add("#  key002   =   left value 1   ");
+    lines.add("   key002   :   inherits       ");
+    lines.add("#  key002   =   left value 2   ");
+
+    ConfigLines parentConfigLines = ConfigLines.fromBytes(linesToBytes(parentLines), "wow/parent.txt");
+    ConfigLines configLines = ConfigLines.fromBytes(linesToBytes(lines), "wow/config.txt");
+
+    configLines.parent = parentConfigLines;
+
+    //
+    //
+    String value = configLines.getValue("key002");
+    //
+    //
+
+    for (String error : configLines.errors()) {
+      System.out.println("ERR: " + error);
+    }
+
+    assertThat(value).isEqualTo("hello world");
+    assertThat(configLines.errors()).isEmpty();
+
+  }
+
 }
