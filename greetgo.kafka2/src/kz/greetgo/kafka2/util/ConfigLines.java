@@ -14,7 +14,7 @@ public class ConfigLines {
   private String configPath;
   public ConfigLines parent = null;
 
-  private final List<ConfigLine> lines = new ArrayList<>();
+  final List<ConfigLine> lines = new ArrayList<>();
   private final List<String> originLines = new ArrayList<>();
 
   private final List<String> errors = new ArrayList<>();
@@ -105,15 +105,25 @@ public class ConfigLines {
       }
       if (key.equals(line.key())) {
         lastKey = i;
-        if (Objects.equals(line.value(), valueVariant)) {
-          return;
+        if (line.command() == null) {
+          if (Objects.equals(line.value(), valueVariant)) {
+            return;
+          }
+        } else {
+
+          if (line.command() == ConfigLineCommand.NULL && valueVariant == null) {
+            return;
+          }
+
         }
+
       }
     }
 
     if (lastKey >= 0) {
       ConfigLine lastKeyLine = lines.get(lastKey).copy();
       lastKeyLine.setValue(valueVariant);
+
       lastKeyLine.setCommented(true);
       lines.add(lastKey + 1, lastKeyLine);
       return;
@@ -132,6 +142,20 @@ public class ConfigLines {
   }
 
   public void put(String key, String value) {
+
+    if (key == null) {
+      throw new IllegalArgumentException("key == null");
+    }
+
+    addValueVariant(key, value);
+
+    for (ConfigLine line : lines) {
+      if (key.equals(line.key())) {
+
+        line.setCommented(!line.isValueEqualsTo(value));
+
+      }
+    }
 
   }
 }

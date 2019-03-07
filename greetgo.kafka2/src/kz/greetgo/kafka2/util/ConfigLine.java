@@ -2,7 +2,6 @@ package kz.greetgo.kafka2.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.Collections.unmodifiableList;
 import static kz.greetgo.kafka2.util.StrUtil.expandStr;
@@ -116,7 +115,7 @@ public class ConfigLine {
   }
 
   public String value() {
-    return command == null ? value : null;
+    return value;
   }
 
   public void addError(String message) {
@@ -136,8 +135,12 @@ public class ConfigLine {
   }
 
   public void setValue(String newValue) {
-    newValue = newValue.trim();
-    if (Objects.equals(value, newValue)) {
+    if (isValueEqualsTo(newValue)) {
+      return;
+    }
+
+    if (newValue == null) {
+      setCommand(ConfigLineCommand.NULL);
       return;
     }
 
@@ -147,6 +150,19 @@ public class ConfigLine {
 
     valuePart = "=" + spaces(startSpaces) + expandStr(newValue, valueSpace);
     value = newValue;
+
+    command = null;
+
+    checkState();
+  }
+
+  private void checkState() {
+    if (value == null && command == null) {
+      throw new IllegalStateException("value == null && command == null");
+    }
+    if (value != null && command != null) {
+      throw new IllegalStateException("value == `" + value + "` && command == " + command);
+    }
   }
 
   public void setCommented(boolean commented) {
@@ -189,6 +205,8 @@ public class ConfigLine {
       }
 
     }
+
+    checkState();
   }
 
   public void setCommand(ConfigLineCommand command) {
@@ -220,6 +238,8 @@ public class ConfigLine {
     if (command == ConfigLineCommand.UNKNOWN) {
       addError("Command is UNKNOWN");
     }
+
+    checkState();
   }
 
   public void setKey(String key) {
@@ -231,6 +251,7 @@ public class ConfigLine {
       valuePart = ": null";
       command = ConfigLineCommand.NULL;
       line = null;
+      checkState();
       return;
     }
 
@@ -262,6 +283,7 @@ public class ConfigLine {
         commented = true;
       }
 
+      checkState();
       return;
     }
 
@@ -284,6 +306,20 @@ public class ConfigLine {
       keyPart = sb.toString();
       this.key = key;
       commented = false;
+
+      checkState();
     }
+  }
+
+  public boolean isValueEqualsTo(String value) {
+    if (command == ConfigLineCommand.NULL) {
+      return value == null;
+    }
+    return this.value.equals(value);
+  }
+
+  @Override
+  public String toString() {
+    return line();
   }
 }
