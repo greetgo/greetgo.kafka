@@ -25,7 +25,7 @@ import static kz.greetgo.kafka2.consumer.RecordUtil.recordWithOffset;
 import static kz.greetgo.kafka2.consumer.RecordUtil.recordWithPartition;
 import static kz.greetgo.kafka2.consumer.RecordUtil.recordWithTimestamp;
 import static kz.greetgo.kafka2.consumer.RecordUtil.recordsOf;
-import static kz.greetgo.kafka2.util.ReflectionUtil.findMethod;
+import static kz.greetgo.kafka2.util_for_tests.ReflectionUtil.findMethod;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class InvokerBuilderTest {

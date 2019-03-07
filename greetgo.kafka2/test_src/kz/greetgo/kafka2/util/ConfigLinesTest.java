@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static kz.greetgo.kafka2.util.TestUtil.linesToBytes;
+import static kz.greetgo.kafka2.util_for_tests.TestUtil.linesToBytes;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 @SuppressWarnings("ConstantConditions")

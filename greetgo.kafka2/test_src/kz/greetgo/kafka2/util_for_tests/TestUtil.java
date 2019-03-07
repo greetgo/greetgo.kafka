@@ -1,4 +1,4 @@
-package kz.greetgo.kafka2.util;
+package kz.greetgo.kafka2.util_for_tests;
 
 import java.util.List;
 

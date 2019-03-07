@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import static kz.greetgo.kafka2.util.GenericUtil.isOfClass;
-import static kz.greetgo.kafka2.util.ReflectionUtil.findMethod;
+import static kz.greetgo.kafka2.util_for_tests.ReflectionUtil.findMethod;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 public class GenericUtilTest {
