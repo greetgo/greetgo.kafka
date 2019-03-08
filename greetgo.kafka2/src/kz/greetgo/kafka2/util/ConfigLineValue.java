@@ -2,6 +2,7 @@ package kz.greetgo.kafka2.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static kz.greetgo.kafka2.util.StrUtil.spaces;
 import static kz.greetgo.kafka2.util.StrUtil.startSpacesCount;
@@ -10,7 +11,7 @@ public class ConfigLineValue {
 
   private final List<String> errors = new ArrayList<>();
 
-  public static ConfigLineValue parseLine(String line) {
+  public static ConfigLineValue parse(String line) {
 
     if (line == null) {
       return null;
@@ -68,6 +69,17 @@ public class ConfigLineValue {
   private int width;
   private String command;
 
+  private ConfigLineValue() {}
+
+  public ConfigLineValue copy() {
+    ConfigLineValue ret = new ConfigLineValue();
+    ret.value = value;
+    ret.paddingLeft = paddingLeft;
+    ret.width = width;
+    ret.command = command;
+    return ret;
+  }
+
   public String value() {
     return value;
   }
@@ -118,6 +130,9 @@ public class ConfigLineValue {
     this.command = command.name().toLowerCase();
     value = null;
     updateWidth();
+    if (command == ConfigLineCommand.UNKNOWN) {
+      errors.add("Added unknown command");
+    }
   }
 
   @Override
@@ -141,5 +156,12 @@ public class ConfigLineValue {
     }
 
     return sb.toString();
+  }
+
+  public boolean isValueEqualTo(String value) {
+    if (ConfigLineCommand.valueOrUnknown(command) == ConfigLineCommand.NULL) {
+      return value == null;
+    }
+    return Objects.equals(this.value, value);
   }
 }

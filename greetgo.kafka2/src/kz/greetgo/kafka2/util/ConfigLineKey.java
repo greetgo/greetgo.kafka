@@ -45,11 +45,23 @@ public class ConfigLineKey {
 
   }
 
-  String key;
-  int paddingLeft1;
-  int paddingLeft2;
-  int width;
-  boolean commented;
+  private ConfigLineKey() {}
+
+  private String key;
+  private int paddingLeft1;
+  private int paddingLeft2;
+  private int width;
+  private boolean commented;
+
+  public ConfigLineKey copy() {
+    ConfigLineKey ret = new ConfigLineKey();
+    ret.key = key;
+    ret.paddingLeft1 = paddingLeft1;
+    ret.paddingLeft2 = paddingLeft2;
+    ret.width = width;
+    ret.commented = commented;
+    return ret;
+  }
 
   public String key() {
     return key;

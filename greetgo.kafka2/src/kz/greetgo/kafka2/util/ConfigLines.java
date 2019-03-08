@@ -156,7 +156,7 @@ public class ConfigLines {
     for (ConfigLine line : lines) {
       if (key.equals(line.key())) {
 
-        line.setCommented(!line.isValueEqualsTo(value));
+        line.setCommented(!line.isValueEqualTo(value));
 
       }
     }

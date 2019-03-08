@@ -44,7 +44,6 @@ public class ConfigLinesTest {
     //
     //
 
-
     List<String> actual = Arrays.asList(new String(configLines.toBytes(), UTF_8).split("\n"));
 
     String displayedLists = "\n\nActual lines:" + printLines(actual)
@@ -337,7 +336,7 @@ public class ConfigLinesTest {
     expected.add("  key001  = 123    ");
     expected.add("# key002  = 321    ");
     expected.add("  key002  = 334455 ");
-    expected.add("# key002  : null");
+    expected.add("# key002  : null   ");
     expected.add("  key003  = oops   ");
 
     boolean expectedModified = true;
@@ -496,7 +495,7 @@ public class ConfigLinesTest {
     expected.add("# key002  = one    ");
     expected.add("# key002  = two    ");
     expected.add("# key002  = three  ");
-    expected.add("  key002  : null");
+    expected.add("  key002  : null   ");
     expected.add("  key003  = oops   ");
 
     boolean expectedModified = true;

@@ -7,11 +7,11 @@ import static org.fest.assertions.api.Assertions.assertThat;
 public class ConfigLineValueTest {
 
   @Test
-  public void parseLine_value() {
+  public void parse_value() {
 
     //
     //
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus =   hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus =   hello world     ");
     //
     //
 
@@ -25,11 +25,29 @@ public class ConfigLineValueTest {
   }
 
   @Test
-  public void parseLine_command_null() {
+  public void parse_value_noAnySpaces() {
 
     //
     //
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus :   null     ");
+    ConfigLineValue clv = ConfigLineValue.parse("#key76=hello");
+    //
+    //
+
+    assertThat(clv.command()).isNull();
+    assertThat(clv.value()).isEqualTo("hello");
+    assertThat(clv.paddingLeft()).isEqualTo(0);
+    assertThat(clv.width()).isEqualTo(5);
+    assertThat(clv.toString()).isEqualTo("=hello");
+    assertThat(clv.errors()).isEmpty();
+
+  }
+
+  @Test
+  public void parse_command_null() {
+
+    //
+    //
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus :   null     ");
     //
     //
 
@@ -44,11 +62,11 @@ public class ConfigLineValueTest {
 
 
   @Test
-  public void parseLine_command_inherits() {
+  public void parse_command_inherits() {
 
     //
     //
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus :     inherits     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus :     inherits     ");
     //
     //
 
@@ -63,11 +81,11 @@ public class ConfigLineValueTest {
 
 
   @Test
-  public void parseLine_error() {
+  public void parse_error() {
 
     //
     //
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus :   hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus :   hello world     ");
     //
     //
 
@@ -82,11 +100,11 @@ public class ConfigLineValueTest {
   }
 
   @Test
-  public void parseLine_returnsNull() {
+  public void parse_returnsNull() {
 
     //
     //
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus hello world     ");
     //
     //
 
@@ -97,11 +115,11 @@ public class ConfigLineValueTest {
 
   @SuppressWarnings("ConstantConditions")
   @Test
-  public void parseLine_nullReturnsNull() {
+  public void parse_nullReturnsNull() {
 
     //
     //
-    ConfigLineValue clv = ConfigLineValue.parseLine(null);
+    ConfigLineValue clv = ConfigLineValue.parse(null);
     //
     //
 
@@ -111,11 +129,11 @@ public class ConfigLineValueTest {
 
 
   @Test
-  public void parseLine_returnsNull_sharps() {
+  public void parse_returnsNull_sharps() {
 
     //
     //
-    ConfigLineValue clv = ConfigLineValue.parseLine("   ##  sinus hello : world     ");
+    ConfigLineValue clv = ConfigLineValue.parse("   ##  sinus hello : world     ");
     //
     //
 
@@ -126,7 +144,7 @@ public class ConfigLineValueTest {
 
   @Test
   public void setValue_longer() {
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus =   hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus =   hello world     ");
 
     //
     //
@@ -144,7 +162,7 @@ public class ConfigLineValueTest {
 
   @Test
   public void setValue_shorter() {
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus =   hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus =   hello world     ");
 
     //
     //
@@ -162,7 +180,7 @@ public class ConfigLineValueTest {
 
   @Test
   public void setValue_null() {
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus =   hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus =   hello world     ");
 
     //
     //
@@ -180,7 +198,7 @@ public class ConfigLineValueTest {
 
   @Test
   public void setCommand_NULL() {
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus =   hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus =   hello world     ");
 
     //
     //
@@ -196,10 +214,28 @@ public class ConfigLineValueTest {
     assertThat(clv.errors()).isEmpty();
   }
 
+  @Test
+  public void setCommand_UNKNOWN() {
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus =   hello world     ");
+
+    //
+    //
+    clv.setCommand(ConfigLineCommand.UNKNOWN);
+    //
+    //
+
+    assertThat(clv.command()).isEqualTo(ConfigLineCommand.UNKNOWN);
+    assertThat(clv.value()).isNull();
+    assertThat(clv.paddingLeft()).isEqualTo(3);
+    assertThat(clv.width()).isEqualTo(16);
+    assertThat(clv.toString()).isEqualTo(":   unknown         ");
+    assertThat(clv.errors()).isNotEmpty();
+  }
+
 
   @Test
   public void setCommand_INHERITS() {
-    ConfigLineValue clv = ConfigLineValue.parseLine(" sinus =   hello world     ");
+    ConfigLineValue clv = ConfigLineValue.parse(" sinus =   hello world     ");
 
     //
     //

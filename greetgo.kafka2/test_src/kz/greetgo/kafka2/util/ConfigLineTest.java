@@ -166,7 +166,7 @@ public class ConfigLineTest {
     line.setCommented(true);
 
     assertThat(line.key()).isEqualTo("key76");
-    assertThat(line.keyPart()).isEqualTo("#       key76  ");
+    assertThat(line.keyPart()).isEqualTo("   #    key76  ");
   }
 
   @Test
@@ -217,7 +217,7 @@ public class ConfigLineTest {
     //
     //
 
-    assertThat(line.line()).isEqualTo("#key76:null");
+    assertThat(line.line()).isEqualTo("#key76:null ");
     assertThat(line.value()).isNull();
     assertThat(line.command()).isEqualTo(ConfigLineCommand.NULL);
     assertThat(line.errors()).isEmpty();
@@ -234,7 +234,7 @@ public class ConfigLineTest {
     //
     //
 
-    assertThat(line.line()).isEqualTo(" # key80 :   null");
+    assertThat(line.line()).isEqualTo(" # key80 :   null  ");
     assertThat(line.value()).isNull();
     assertThat(line.command()).isEqualTo(ConfigLineCommand.NULL);
     assertThat(line.errors()).isEmpty();
@@ -294,7 +294,7 @@ public class ConfigLineTest {
     assertThat(line.value()).isNull();
     assertThat(line.key()).isNull();
     assertThat(line.command()).isNull();
-    assertThat(line.isCommented()).isFalse();
+    assertThat(line.isCommented()).isTrue();
     assertThat(line.errors()).isNotEmpty();
   }
 
@@ -307,7 +307,7 @@ public class ConfigLineTest {
     assertThat(line.key()).isNull();
     assertThat(line.command()).isNull();
     assertThat(line.isCommented()).isTrue();
-    assertThat(line.errors()).isEmpty();
+    assertThat(line.errors()).isNotEmpty();
   }
 
   @Test
@@ -330,7 +330,7 @@ public class ConfigLineTest {
     assertThat(line.value()).isNull();
     assertThat(line.key()).isNull();
     assertThat(line.command()).isNull();
-    assertThat(line.isCommented()).isFalse();
+    assertThat(line.isCommented()).isTrue();
     assertThat(line.errors()).isEmpty();
   }
 
