@@ -8,15 +8,10 @@ import kz.greetgo.kafka2.util.ConfigLines;
 import kz.greetgo.kafka2.util.Handler;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 
 public class ConsumerConfigWorker implements AutoCloseable {
   private Supplier<ConfigStorage> configStorage;
@@ -57,70 +52,92 @@ public class ConsumerConfigWorker implements AutoCloseable {
     }
   }
 
+  ConfigLines configLines;
+
   public void start() {
 
-    if (configPath.get() == null) {
+    prepareConfigLines();
+
+    setDefaultValues();
+
+    {
+      ConfigStorage configStorage = this.configStorage.get();
+      configStorage.writeContent(configLines.getConfigPath(), configLines.toBytes());
+
+      ConfigLines parent = configLines.parent;
+      if (parent != null) {
+        configStorage.writeContent(parent.getConfigPath(), parent.toBytes());
+      }
+    }
+  }
+
+  private void prepareConfigLines() {
+    String configPath = this.configPath.get();
+
+    if (configPath == null) {
       throw new IllegalStateException("configPath == null");
     }
 
-    String configPath = this.configPath.get();
-
     ConfigStorage configStorage = this.configStorage.get();
-
-    final ConfigLines configLines;
-
-    {
-      ConfigLines itConfigLines = ConfigLines.fromBytes(configStorage.readContent(configPath), configPath);
-      if (itConfigLines == null) {
-        itConfigLines = new ConfigLines(configPath);
-        String parentPath = this.parentPath.get();
-        if (parentPath != null) {
-          itConfigLines.putValue("extends", parentPath);
-        }
-      }
-
-      String parentPath = itConfigLines.getValue("extends");
+    ConfigLines itConfigLines = ConfigLines.fromBytes(configStorage.readContent(configPath), configPath);
+    if (itConfigLines == null) {
+      itConfigLines = new ConfigLines(configPath);
+      String parentPath = this.parentPath.get();
       if (parentPath != null) {
-        itConfigLines.parent = ConfigLines.fromBytes(configStorage.readContent(parentPath), parentPath);
-        if (itConfigLines.parent == null) {
-          itConfigLines.parent = new ConfigLines(parentPath);
-        }
+        itConfigLines.putValue("extends", parentPath);
       }
-
-      configLines = itConfigLines;
     }
 
+    String parentPath = itConfigLines.getValue("extends");
+    if (parentPath != null) {
+      itConfigLines.parent = ConfigLines.fromBytes(configStorage.readContent(parentPath), parentPath);
+      if (itConfigLines.parent == null) {
+        itConfigLines.parent = new ConfigLines(parentPath);
+      }
+    }
+
+    configLines = itConfigLines;
+  }
+
+  private void setDefaultValues() {
     ConsumerConfigDefaults defaults = new ConsumerConfigDefaults();
-    for (Map.Entry<String, String> e : defaults.values.entrySet()) {
+
+    for (Map.Entry<String, String> e : defaults.patentableValues.entrySet()) {
+
+      ConfigLines parent = configLines.parent;
+
+      if (configLines.existsValueOrCommand(e.getKey())) {
+
+        if (parent != null) {
+          if (!parent.existsValueOrCommand(e.getKey())) {
+            parent.putValue(e.getKey(), e.getValue());
+          }
+        }
+
+        continue;
+      }
+
+      if (parent != null) {
+        if (!parent.existsValueOrCommand(e.getKey())) {
+          parent.putValue(e.getKey(), e.getValue());
+        }
+
+        configLines.putCommand(e.getKey(), ConfigLineCommand.INHERITS);
+      } else {
+        configLines.putValue(e.getKey(), e.getValue());
+      }
+
+    }
+
+    for (Map.Entry<String, String> e : defaults.ownValues.entrySet()) {
 
       if (configLines.existsValueOrCommand(e.getKey())) {
         continue;
       }
 
-      if (configLines.parent != null) {
-        if (!configLines.parent.existsValueOrCommand(e.getKey())) {
-          configLines.parent.putValue(e.getKey(), e.getValue());
-        }
-
-        configLines.putCommand(e.getKey(), ConfigLineCommand.INHERITS);
-      }
+      configLines.putValue(e.getKey(), e.getValue());
 
     }
-
-    if (configStorage.exists(configPath)) {
-      ConfigLines lines = ConfigLines.fromBytes(configStorage.readContent(configPath), configPath);
-      if (lines != null) {
-        String extendsValue = lines.getValue("extends");
-
-
-      }
-    } else {
-
-    }
-  }
-
-  private static List<String> contentToLines(byte[] content) {
-    return new ArrayList<>(asList(new String(content, UTF_8).split("\n")));
   }
 
   /**

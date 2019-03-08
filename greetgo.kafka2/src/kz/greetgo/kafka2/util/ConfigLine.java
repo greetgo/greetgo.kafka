@@ -138,8 +138,51 @@ public class ConfigLine {
     return this.value.isValueEqualTo(value);
   }
 
+  public boolean isEqualTo(ValueSelect valueSelect) {
+    if (valueSelect == null) {
+      return false;
+    }
+
+    return valueSelect.equals(get());
+  }
+
   @Override
   public String toString() {
     return line();
+  }
+
+  public void set(ValueSelect valueSelect) {
+    if (valueSelect == null) {
+      throw new IllegalArgumentException("valueSelect == null");
+    }
+
+    String value = valueSelect.value();
+    if (value != null) {
+      setValue(value);
+      return;
+    }
+
+    ConfigLineCommand command = valueSelect.command();
+    if (command != null) {
+      setCommand(command);
+    }
+  }
+
+  public ValueSelect get() {
+    {
+      String value = value();
+      if (value != null) {
+        return ValueSelect.of(value);
+      }
+    }
+
+    {
+      ConfigLineCommand command = command();
+      if (command != null) {
+        return ValueSelect.of(command);
+      }
+    }
+
+    throw new IllegalStateException("ConfigLineValue.value() == null && ConfigLineValue.command() == null");
   }
 }

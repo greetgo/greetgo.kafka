@@ -54,6 +54,11 @@ public class ConsumerConfigWorkerTest {
     assertThat(parentLines).contains("con.fetch.max.wait.ms=500");
 
     List<String> itKeyValues = configStorage.getLinesWithoutSpaces("root/controller/method.txt");
+
+    for (String itKeyValue : itKeyValues) {
+      System.out.println("itKeyValue : " + itKeyValue);
+    }
+
     assertThat(itKeyValues).isNotNull();
     assertThat(itKeyValues).contains("extends=root/parent.txt");
     assertThat(itKeyValues).contains("con.auto.commit.interval.ms:inherits");
@@ -81,14 +86,15 @@ public class ConsumerConfigWorkerTest {
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
-      "session.timeout.ms=44444",
-      "max.poll.interval.ms=77777"
+        "con.session.timeout.ms=44444",
+        "con.max.poll.interval.ms=77777"
     );
 
     configStorage.addLines("root/controller/method.txt",
-      "fetch.max.wait.ms=111",
-      "send.buffer.bytes=222",
-      "out.worker.count=17"
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms=111",
+        "con.send.buffer.bytes=222",
+        "out.worker.count=17"
     );
 
     ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
@@ -103,6 +109,10 @@ public class ConsumerConfigWorkerTest {
 
     List<String> parentLines = configStorage.getLinesWithoutSpaces("root/parent.txt");
 
+    for (String parentLine : parentLines) {
+      System.out.println("parentLine : " + parentLine);
+    }
+
     assertThat(parentLines).isNotNull();
     assertThat(parentLines).contains("con.auto.commit.interval.ms=1000");
     assertThat(parentLines).contains("con.session.timeout.ms=44444");
@@ -115,10 +125,8 @@ public class ConsumerConfigWorkerTest {
     assertThat(parentLines).contains("con.max.poll.interval.ms=77777");
     assertThat(parentLines).contains("con.max.poll.records=500");
     assertThat(parentLines).contains("con.receive.buffer.bytes=65536");
-    assertThat(parentLines).contains("#con.receive.buffer.bytes=-1");
     assertThat(parentLines).contains("con.request.timeout.ms=30000");
     assertThat(parentLines).contains("con.send.buffer.bytes=131072");
-    assertThat(parentLines).contains("#con.send.buffer.bytes=-1");
     assertThat(parentLines).contains("con.fetch.max.wait.ms=500");
 
     List<String> itKeyValues = configStorage.getLinesWithoutSpaces("root/controller/method.txt");

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 
 public class ConfigStorageInMem extends ConfigStorageAbstract {
 
@@ -39,7 +40,11 @@ public class ConfigStorageInMem extends ConfigStorageAbstract {
       return null;
     }
 
-    return new ArrayList<>(Arrays.asList(new String(bytes, UTF_8).replaceAll("\\s+", "").split("\\n")));
+    return new ArrayList<>(Arrays.asList(new String(bytes, UTF_8)
+        .split("\\n")))
+        .stream()
+        .map(s -> s.replaceAll("\\s+", ""))
+        .collect(toList());
   }
 
   private static byte[] addLines(byte[] bytes, String[] lines) {

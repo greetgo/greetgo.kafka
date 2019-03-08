@@ -39,7 +39,7 @@ public class ConfigLinesTest {
 
     //
     //
-    configLines.addValueVariant(key, value);
+    configLines.addValueVariant(key, ValueSelect.of(value));
     boolean actualIsModified = configLines.isModified();
     //
     //

@@ -25,6 +25,10 @@ public class ConfigLines {
     this.configPath = configPath;
   }
 
+  public String getConfigPath() {
+    return configPath;
+  }
+
   public static ConfigLines fromBytes(byte[] bytes, String configPath) {
     if (bytes == null) {
       return null;
@@ -43,7 +47,11 @@ public class ConfigLines {
   }
 
   public byte[] toBytes() {
-    return lines.stream().map(ConfigLine::line).collect(Collectors.joining("\n")).getBytes(UTF_8);
+    return lines
+        .stream()
+        .map(ConfigLine::line)
+        .collect(Collectors.joining("\n"))
+        .getBytes(UTF_8);
   }
 
   public String getValue(String key) {
@@ -95,7 +103,7 @@ public class ConfigLines {
     return false;
   }
 
-  public void addValueVariant(String key, String valueVariant) {
+  public void addValueVariant(String key, ValueSelect valueVariant) {
     if (key == null) {
       throw new IllegalArgumentException("key == null");
     }
@@ -109,24 +117,15 @@ public class ConfigLines {
       }
       if (key.equals(line.key())) {
         lastKey = i;
-        if (line.command() == null) {
-          if (Objects.equals(line.value(), valueVariant)) {
-            return;
-          }
-        } else {
-
-          if (line.command() == ConfigLineCommand.NULL && valueVariant == null) {
-            return;
-          }
-
+        if (line.isEqualTo(valueVariant)) {
+          return;
         }
-
       }
     }
 
     if (lastKey >= 0) {
       ConfigLine lastKeyLine = lines.get(lastKey).copy();
-      lastKeyLine.setValue(valueVariant);
+      lastKeyLine.set(valueVariant);
 
       lastKeyLine.setCommented(true);
       lines.add(lastKey + 1, lastKeyLine);
@@ -136,31 +135,33 @@ public class ConfigLines {
     if (lastDefined >= 0) {
       ConfigLine lastDefinedLine = lines.get(lastDefined).copy();
       lastDefinedLine.setKey(key);
-      lastDefinedLine.setValue(valueVariant);
+      lastDefinedLine.set(valueVariant);
       lastDefinedLine.setCommented(true);
       lines.add(lastDefined + 1, lastDefinedLine);
       return;
     }
 
-    lines.add(ConfigLine.parse("#" + key + " = " + valueVariant));
+    lines.add(ConfigLine.parse("#" + key + " " + valueVariant.toString()));
   }
 
   public void putValue(String key, String value) {
+    put(key, ValueSelect.of(value));
+  }
 
+  public void put(String key, ValueSelect valueSelect) {
     if (key == null) {
       throw new IllegalArgumentException("key == null");
     }
 
-    addValueVariant(key, value);
+    addValueVariant(key, valueSelect);
 
     for (ConfigLine line : lines) {
       if (key.equals(line.key())) {
 
-        line.setCommented(!line.isValueEqualTo(value));
+        line.setCommented(!line.isEqualTo(valueSelect));
 
       }
     }
-
   }
 
   public List<String> errors() {
@@ -202,10 +203,6 @@ public class ConfigLines {
   }
 
   public void putCommand(String key, ConfigLineCommand command) {
-    if (command == null) {
-      throw new IllegalArgumentException("command == null");
-    }
-
-
+    put(key, ValueSelect.of(command));
   }
 }
