@@ -6,7 +6,7 @@ import java.util.List;
 import static java.util.Collections.unmodifiableList;
 import static kz.greetgo.kafka2.util.StrUtil.expandStr;
 import static kz.greetgo.kafka2.util.StrUtil.spaces;
-import static kz.greetgo.kafka2.util.StrUtil.startSpaces;
+import static kz.greetgo.kafka2.util.StrUtil.startSpacesCount;
 
 public class ConfigLine {
 
@@ -144,7 +144,7 @@ public class ConfigLine {
       return;
     }
 
-    int startSpaces = startSpaces(valuePart.substring(1));
+    int startSpaces = startSpacesCount(valuePart.substring(1));
 
     int valueSpace = valuePart.length() - startSpaces - 1;
 

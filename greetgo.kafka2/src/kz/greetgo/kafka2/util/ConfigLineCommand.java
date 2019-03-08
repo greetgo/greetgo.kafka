@@ -8,7 +8,7 @@ public enum ConfigLineCommand {
       return UNKNOWN;
     }
 
-    String STR = str.toUpperCase();
+    String STR = str.trim().toUpperCase();
 
     for (ConfigLineCommand value : values()) {
       if (value.name().toUpperCase().equals(STR)) {
