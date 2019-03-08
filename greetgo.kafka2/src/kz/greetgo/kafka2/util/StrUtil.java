@@ -1,5 +1,7 @@
 package kz.greetgo.kafka2.util;
 
+import java.util.Arrays;
+
 public class StrUtil {
   public static int startSpaces(String str) {
     for (int i = 0; i < str.length(); i++) {
@@ -31,5 +33,18 @@ public class StrUtil {
       ret[i] = ' ';
     }
     return new String(ret);
+  }
+
+  public static int firstIndexOf(String str, char... chars) {
+    if (str == null) {
+      return -1;
+    }
+
+    int[] indexes = new int[chars.length];
+    for (int i = 0; i < chars.length; i++) {
+      indexes[i] = str.indexOf(chars[i]);
+    }
+
+    return Arrays.stream(indexes).filter(x -> x >= 0).min().orElse(-1);
   }
 }
