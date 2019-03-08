@@ -3,6 +3,7 @@ package kz.greetgo.kafka2.consumer;
 import kz.greetgo.kafka2.core.config.ConfigEventRegistration;
 import kz.greetgo.kafka2.core.config.ConfigEventType;
 import kz.greetgo.kafka2.core.config.ConfigStorage;
+import kz.greetgo.kafka2.util.ConfigLineCommand;
 import kz.greetgo.kafka2.util.ConfigLines;
 import kz.greetgo.kafka2.util.Handler;
 
@@ -66,14 +67,55 @@ public class ConsumerConfigWorker implements AutoCloseable {
 
     ConfigStorage configStorage = this.configStorage.get();
 
+    final ConfigLines configLines;
+
+    {
+      ConfigLines itConfigLines = ConfigLines.fromBytes(configStorage.readContent(configPath), configPath);
+      if (itConfigLines == null) {
+        itConfigLines = new ConfigLines(configPath);
+        String parentPath = this.parentPath.get();
+        if (parentPath != null) {
+          itConfigLines.putValue("extends", parentPath);
+        }
+      }
+
+      String parentPath = itConfigLines.getValue("extends");
+      if (parentPath != null) {
+        itConfigLines.parent = ConfigLines.fromBytes(configStorage.readContent(parentPath), parentPath);
+        if (itConfigLines.parent == null) {
+          itConfigLines.parent = new ConfigLines(parentPath);
+        }
+      }
+
+      configLines = itConfigLines;
+    }
+
+    ConsumerConfigDefaults defaults = new ConsumerConfigDefaults();
+    for (Map.Entry<String, String> e : defaults.values.entrySet()) {
+
+      if (configLines.existsValueOrCommand(e.getKey())) {
+        continue;
+      }
+
+      if (configLines.parent != null) {
+        if (!configLines.parent.existsValueOrCommand(e.getKey())) {
+          configLines.parent.putValue(e.getKey(), e.getValue());
+        }
+
+        configLines.putCommand(e.getKey(), ConfigLineCommand.INHERITS);
+      }
+
+    }
+
     if (configStorage.exists(configPath)) {
       ConfigLines lines = ConfigLines.fromBytes(configStorage.readContent(configPath), configPath);
       if (lines != null) {
         String extendsValue = lines.getValue("extends");
 
 
-
       }
+    } else {
+
     }
   }
 

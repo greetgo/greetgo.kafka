@@ -19,6 +19,12 @@ public class ConfigLines {
 
   private final List<String> errors = new ArrayList<>();
 
+  private ConfigLines() {}
+
+  public ConfigLines(String configPath) {
+    this.configPath = configPath;
+  }
+
   public static ConfigLines fromBytes(byte[] bytes, String configPath) {
     if (bytes == null) {
       return null;
@@ -26,10 +32,10 @@ public class ConfigLines {
     ConfigLines ret = new ConfigLines();
     ret.configPath = configPath;
     ret.lines.addAll(
-      Arrays.stream(new String(bytes, UTF_8)
-        .split("\n"))
-        .map(ConfigLine::parse)
-        .collect(toList())
+        Arrays.stream(new String(bytes, UTF_8)
+            .split("\n"))
+            .map(ConfigLine::parse)
+            .collect(toList())
     );
     ret.originLines.clear();
     ret.originLines.addAll(ret.lines.stream().map(ConfigLine::line).collect(toList()));
@@ -173,5 +179,33 @@ public class ConfigLines {
     }
 
     return ret;
+  }
+
+  public boolean existsValueOrCommand(String key) {
+
+    for (ConfigLine line : lines) {
+      if (line.isCommented()) {
+        continue;
+      }
+      String lineKey = line.key();
+      if (lineKey == null) {
+        continue;
+      }
+      if (!lineKey.equals(key)) {
+        continue;
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  public void putCommand(String key, ConfigLineCommand command) {
+    if (command == null) {
+      throw new IllegalArgumentException("command == null");
+    }
+
+
   }
 }

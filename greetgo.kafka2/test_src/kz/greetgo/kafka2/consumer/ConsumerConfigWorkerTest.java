@@ -49,10 +49,8 @@ public class ConsumerConfigWorkerTest {
     assertThat(parentLines).contains("con.max.poll.interval.ms=300000");
     assertThat(parentLines).contains("con.max.poll.records=500");
     assertThat(parentLines).contains("con.receive.buffer.bytes=65536");
-    assertThat(parentLines).contains("#con.receive.buffer.bytes=-1");
     assertThat(parentLines).contains("con.request.timeout.ms=30000");
     assertThat(parentLines).contains("con.send.buffer.bytes=131072");
-    assertThat(parentLines).contains("#con.send.buffer.bytes=-1");
     assertThat(parentLines).contains("con.fetch.max.wait.ms=500");
 
     List<String> itKeyValues = configStorage.getLinesWithoutSpaces("root/controller/method.txt");
