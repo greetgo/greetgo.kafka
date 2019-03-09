@@ -2,7 +2,9 @@ package kz.greetgo.kafka2.core.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -31,8 +33,45 @@ public class ConfigStorageInMem extends ConfigStorageAbstract {
     }
   }
 
+  private final Map<String, byte[]> state = new HashMap<>();
+
+  public void rememberState() {
+    state.clear();
+    for (Map.Entry<String, byte[]> e : data.entrySet()) {
+      state.put(e.getKey(), e.getValue());
+    }
+  }
+
+  public void fireEvents() {
+
+    for (String path : lookingForPaths.keySet()) {
+      byte[] nowBytes = data.get(path);
+      byte[] oldBytes = state.get(path);
+      if (nowBytes != null && oldBytes != null) {
+        if (!Arrays.equals(nowBytes, oldBytes)) {
+          fireConfigEventHandler(path, nowBytes, ConfigEventType.UPDATE);
+        }
+        continue;
+      }
+      //noinspection ConstantConditions
+      if (nowBytes != null && oldBytes == null) {
+        fireConfigEventHandler(path, nowBytes, ConfigEventType.CREATE);
+        continue;
+      }
+      //noinspection ConstantConditions
+      if (nowBytes == null && oldBytes != null) {
+        fireConfigEventHandler(path, oldBytes, ConfigEventType.DELETE);
+        continue;
+      }
+    }
+  }
+
+  private final ConcurrentHashMap<String, Boolean> lookingForPaths = new ConcurrentHashMap<>();
+
   @Override
-  public void ensureLookingFor(String path) {}
+  public void ensureLookingFor(String path) {
+    lookingForPaths.put(path, true);
+  }
 
   public List<String> getLinesWithoutSpaces(String path) {
     byte[] bytes = data.get(path);
@@ -48,11 +87,25 @@ public class ConfigStorageInMem extends ConfigStorageAbstract {
   }
 
   private static byte[] addLines(byte[] bytes, String[] lines) {
-    List<String> lineList = bytes == null ? new ArrayList<>() : Arrays.asList(new String(bytes, UTF_8).split("\\n"));
+    List<String> lineList = bytes == null
+        ? new ArrayList<>() :
+        new ArrayList<>(Arrays.asList(new String(bytes, UTF_8).split("\\n")));
+
     lineList.addAll(Arrays.asList(lines));
+
     return String.join("\n", lineList).getBytes(UTF_8);
   }
 
+  private static byte[] removeLines(byte[] bytes, String[] lines) {
+    if (bytes == null) {
+      return null;
+    }
+    List<String> lineList = new ArrayList<>(Arrays.asList(new String(bytes, UTF_8).split("\\n")));
+    lineList.removeAll(Arrays.asList(lines));
+    return lineList.isEmpty() ? null : String.join("\n", lineList).getBytes(UTF_8);
+  }
+
+  @SuppressWarnings("Duplicates")
   public void addLines(String path, String... lines) {
     while (true) {
       byte[] bytes = data.get(path);
@@ -65,6 +118,30 @@ public class ConfigStorageInMem extends ConfigStorageAbstract {
         }
         continue;
       }
+      if (data.replace(path, bytes, newBytes)) {
+        return;
+      }
+    }
+  }
+
+  @SuppressWarnings("Duplicates")
+  public void removeLines(String path, String... lines) {
+    while (true) {
+      byte[] bytes = data.get(path);
+
+      byte[] newBytes = removeLines(bytes, lines);
+
+      if (Arrays.equals(bytes, newBytes)) {
+        return;
+      }
+
+      if (newBytes == null) {
+        if (data.remove(path, bytes)) {
+          return;
+        }
+        continue;
+      }
+
       if (data.replace(path, bytes, newBytes)) {
         return;
       }

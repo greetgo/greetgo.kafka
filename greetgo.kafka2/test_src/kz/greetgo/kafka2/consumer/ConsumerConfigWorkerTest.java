@@ -394,4 +394,72 @@ public class ConsumerConfigWorkerTest {
     assertThat(error.toLowerCase()).contains("line 3");
   }
 
+  @Test
+  public void changedConfigStateAfterStart_fromParents() {
+    //Надо проверить что если файл изменился, то система автоматически обновилась
+
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    //Начальное состояние файлов
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms = 44444",
+        "con.max.poll.interval.ms = 77777",
+        "out.worker.count = 37"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms = 111",
+        "con.send.buffer.bytes = 222",
+        "out.worker.count : inherits"
+    );
+
+    // Запускается система
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    // Проверяем, что всё прочиталось
+
+    {
+      int workerCount = consumerConfigWorker.getWorkerCount();
+      assertThat(workerCount).isEqualTo(37);
+
+      String maxPollIntervalMs = (String) consumerConfigWorker.getConfigMap().get("max.poll.interval.ms");
+      assertThat(maxPollIntervalMs).isEqualTo("77777");
+    }
+
+    // Теперь меняем конфиги
+
+    configStorage.rememberState();
+
+    configStorage.removeLines("root/parent.txt",
+        "con.max.poll.interval.ms = 77777",
+        "out.worker.count = 37"
+    );
+    configStorage.addLines("root/parent.txt",
+        "con.max.poll.interval.ms = 454545",
+        "out.worker.count = 987"
+    );
+
+    configStorage.fireEvents();
+
+    // И смотрим, что система обновила значения на новые из конфигов
+
+    {
+      int workerCount = consumerConfigWorker.getWorkerCount();
+      assertThat(workerCount).isEqualTo(987);
+
+      String maxPollIntervalMs = (String) consumerConfigWorker.getConfigMap().get("max.poll.interval.ms");
+      assertThat(maxPollIntervalMs).isEqualTo("454545");
+    }
+
+  }
+
 }
