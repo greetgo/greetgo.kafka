@@ -38,14 +38,10 @@ public class ConsumerConfigWorker implements AutoCloseable {
     this.configDataChanged = configDataChanged;
 
     configEventRegistration.set(configStorage.get().addEventHandler((path, newContent, type) -> {
-      if (Objects.equals(configPath.get(), path)) {
-        performConfigEvent(newContent, type);
+      if (type == ConfigEventType.UPDATE) {
+        configUpdates(path, newContent);
       }
     }));
-  }
-
-  private void performConfigEvent(byte[] newContent, ConfigEventType type) {
-    throw new RuntimeException("Надо сделать");
   }
 
   @Override
@@ -75,6 +71,12 @@ public class ConsumerConfigWorker implements AutoCloseable {
     }
 
     updateErrorFiles();
+
+    configStorage.get().ensureLookingFor(configLines.getConfigPath());
+    ConfigLines parent = configLines.parent;
+    if (parent != null) {
+      configStorage.get().ensureLookingFor(parent.getConfigPath());
+    }
   }
 
   private void updateErrorFiles() {
@@ -180,6 +182,46 @@ public class ConsumerConfigWorker implements AutoCloseable {
     }
   }
 
+  private void configUpdates(String path, byte[] newContent) {
+
+    ConfigLines configLines = this.configLines;
+    if (configLines == null) {
+      return;
+    }
+
+    if (Objects.equals(path, configLines.getConfigPath())) {
+
+      configLines.setBytes(newContent);
+
+      updateErrorFileFor(configLines);
+
+      fireConfigDataChanged();
+
+      return;
+    }
+
+    ConfigLines parent = configLines.parent;
+    if (parent == null) {
+      return;
+    }
+
+    if (Objects.equals(path, parent.getConfigPath())) {
+
+      parent.setBytes(newContent);
+
+      updateErrorFileFor(parent);
+
+      fireConfigDataChanged();
+    }
+  }
+
+  private void fireConfigDataChanged() {
+    Handler cdc = this.configDataChanged;
+    if (cdc != null) {
+      cdc.handler();
+    }
+  }
+
   /**
    * @return Количество необходимых воркеров. 0 - консюмер не работает. 1 - значение по-умолчанию
    */
@@ -208,4 +250,5 @@ public class ConsumerConfigWorker implements AutoCloseable {
   public Duration pollDuration() {
     return Duration.ofMillis(getNumber("out.poll.duration.ms", 800));
   }
+
 }

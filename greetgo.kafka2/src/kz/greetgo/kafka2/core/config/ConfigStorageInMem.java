@@ -64,6 +64,8 @@ public class ConfigStorageInMem extends ConfigStorageAbstract {
         continue;
       }
     }
+
+    rememberState();
   }
 
   private final ConcurrentHashMap<String, Boolean> lookingForPaths = new ConcurrentHashMap<>();

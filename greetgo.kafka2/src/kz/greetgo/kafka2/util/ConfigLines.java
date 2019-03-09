@@ -42,15 +42,25 @@ public class ConfigLines {
     }
     ConfigLines ret = new ConfigLines();
     ret.configPath = configPath;
-    ret.lines.addAll(
+    ret.setBytes(bytes);
+    return ret;
+  }
+
+  public void setBytes(byte[] bytes) {
+    if (bytes == null) {
+      throw new IllegalArgumentException("bytes == null in ConfigLines.setBytes()");
+    }
+
+    lines.clear();
+    lines.addAll(
         Arrays.stream(new String(bytes, UTF_8)
             .split("\n"))
             .map(ConfigLine::parse)
             .collect(toList())
     );
-    ret.originLines.clear();
-    ret.originLines.addAll(ret.lines.stream().map(ConfigLine::line).collect(toList()));
-    return ret;
+    originLines.clear();
+    originLines.addAll(lines.stream().map(ConfigLine::line).collect(toList()));
+    errors.clear();
   }
 
   public byte[] toBytes() {
