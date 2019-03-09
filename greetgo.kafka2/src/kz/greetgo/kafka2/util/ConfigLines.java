@@ -2,12 +2,15 @@ package kz.greetgo.kafka2.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
+import static kz.greetgo.kafka2.util.StrUtil.addIfAbsent;
 
 public class ConfigLines {
 
@@ -27,6 +30,10 @@ public class ConfigLines {
 
   public String getConfigPath() {
     return configPath;
+  }
+
+  public String errorPath() {
+    return configPath + ".errors.txt";
   }
 
   public static ConfigLines fromBytes(byte[] bytes, String configPath) {
@@ -52,6 +59,23 @@ public class ConfigLines {
         .map(ConfigLine::line)
         .collect(Collectors.joining("\n"))
         .getBytes(UTF_8);
+  }
+
+  public ConfigLine findFirstUncommentedLine(String key) {
+
+    for (ConfigLine line : lines) {
+      if (line.isCommented()) {
+        continue;
+      }
+
+      if (!Objects.equals(key, line.key())) {
+        continue;
+      }
+
+      return line;
+    }
+
+    return null;
   }
 
   public String getValue(String key) {
@@ -204,5 +228,71 @@ public class ConfigLines {
 
   public void putCommand(String key, ConfigLineCommand command) {
     put(key, ValueSelect.of(command));
+  }
+
+  public Set<String> keys() {
+    Set<String> ret = new HashSet<>();
+    for (ConfigLine line : lines) {
+      if (line.isCommented()) {
+        continue;
+      }
+      if (line.key() == null) {
+        continue;
+      }
+      ret.add(line.key());
+    }
+    return ret;
+  }
+
+  public void ensureError(String error) {
+    addIfAbsent(errors, error);
+  }
+
+  public int getValueAsInt(String key, int defaultValue) {
+
+    for (ConfigLine line : lines) {
+
+      if (!Objects.equals(key, line.key())) {
+        continue;
+      }
+
+      if (line.isCommented()) {
+        continue;
+      }
+
+      ConfigLineCommand command = line.command();
+
+      if (command == null) {
+        try {
+          return Integer.parseInt(line.value());
+        } catch (NumberFormatException e) {
+          line.ensureError("Illegal int format for int parameter " + key
+              + ", error message : " + e.getClass().getSimpleName() + " : " + e.getMessage());
+          return defaultValue;
+        }
+      }
+
+      if (command == ConfigLineCommand.NULL) {
+        line.ensureError("Null for int parameter " + key);
+        return defaultValue;
+      }
+
+      if (command == ConfigLineCommand.INHERITS) {
+
+        ConfigLines parent = this.parent;
+        if (parent == null) {
+          line.ensureError("No extends for int parameter " + key);
+          return defaultValue;
+        }
+
+        return parent.getValueAsInt(key, defaultValue);
+      }
+
+      line.ensureError("Unknown command for reading int parameter " + key);
+      return defaultValue;
+    }
+
+    ensureError("Not found int parameter " + key);
+    return defaultValue;
   }
 }

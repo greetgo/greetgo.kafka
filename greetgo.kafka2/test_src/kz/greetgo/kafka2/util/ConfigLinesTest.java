@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static kz.greetgo.kafka2.util_for_tests.TestUtil.linesToBytes;
+import static kz.greetgo.kafka2.util.StrUtil.linesToBytes;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 @SuppressWarnings("ConstantConditions")
@@ -47,15 +47,15 @@ public class ConfigLinesTest {
     List<String> actual = Arrays.asList(new String(configLines.toBytes(), UTF_8).split("\n"));
 
     String displayedLists = "\n\nActual lines:" + printLines(actual)
-      + "\n\nExpected lines:" + printLines(expected) + "\n\n";
+        + "\n\nExpected lines:" + printLines(expected) + "\n\n";
 
     for (int i = 0; i < expected.size(); i++) {
       assertThat(actual.size())
-        .describedAs("actual.size = " + actual.size() + ", expected.size = " + expected.size() + displayedLists)
-        .isGreaterThan(i);
+          .describedAs("actual.size = " + actual.size() + ", expected.size = " + expected.size() + displayedLists)
+          .isGreaterThan(i);
       assertThat(actual.get(i))
-        .describedAs("Line " + (i + 1) + displayedLists)
-        .isEqualTo(expected.get(i));
+          .describedAs("Line " + (i + 1) + displayedLists)
+          .isEqualTo(expected.get(i));
     }
 
     assertThat(actual).hasSameSizeAs(expected);
@@ -66,14 +66,14 @@ public class ConfigLinesTest {
       ConfigLine line = configLines.lines.get(i);
       if (line.command() != null) {
         assertThat(line.value())
-          .describedAs("Line " + (i + 1) + displayedLists)
-          .isNull();
+            .describedAs("Line " + (i + 1) + displayedLists)
+            .isNull();
       }
 
       if (line.value() != null) {
         assertThat(line.command())
-          .describedAs("Line " + (i + 1) + displayedLists)
-          .isNull();
+            .describedAs("Line " + (i + 1) + displayedLists)
+            .isNull();
       }
     }
   }
@@ -103,27 +103,27 @@ public class ConfigLinesTest {
     List<String> actual = Arrays.asList(new String(configLines.toBytes(), UTF_8).split("\n"));
 
     String displayedLists = "\n\nActual lines:" + printLines(actual)
-      + "\n\nExpected lines:" + printLines(expected) + "\n\n";
+        + "\n\nExpected lines:" + printLines(expected) + "\n\n";
 
     for (int i = 0; i < configLines.lines.size(); i++) {
       ConfigLine line = configLines.lines.get(i);
       if (line.command() != null) {
         assertThat(line.value())
-          .describedAs("Line " + (i + 1) + displayedLists)
-          .isNull();
+            .describedAs("Line " + (i + 1) + displayedLists)
+            .isNull();
       }
 
       if (line.value() != null) {
         assertThat(line.command())
-          .describedAs("Line " + (i + 1) + displayedLists)
-          .isNull();
+            .describedAs("Line " + (i + 1) + displayedLists)
+            .isNull();
       }
     }
 
     for (int i = 0; i < expected.size(); i++) {
       assertThat(actual.get(i))
-        .describedAs("Line " + (i + 1) + displayedLists)
-        .isEqualTo(expected.get(i));
+          .describedAs("Line " + (i + 1) + displayedLists)
+          .isEqualTo(expected.get(i));
     }
 
     assertThat(actual).hasSameSizeAs(expected);

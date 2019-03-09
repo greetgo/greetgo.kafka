@@ -5,8 +5,12 @@ import kz.greetgo.kafka2.util.Handler;
 import org.testng.annotations.Test;
 
 import java.util.List;
+import java.util.Map;
 
+import static kz.greetgo.kafka2.util.StrUtil.bytesToLines;
+import static kz.greetgo.kafka2.util.StrUtil.findFirstContains;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.data.MapEntry.entry;
 
 public class ConsumerConfigWorkerTest {
 
@@ -150,4 +154,244 @@ public class ConsumerConfigWorkerTest {
     assertThat(itKeyValues).contains("out.worker.count=17");
     assertThat(itKeyValues).contains("out.poll.duration.ms=800");
   }
+
+  @Test
+  public void getConfigMap() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms=44444",
+        "con.max.poll.interval.ms=77777",
+        "con.example.variable = navigator of life"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms=111",
+        "con.send.buffer.bytes=222",
+        "out.worker.count=17",
+        "con.example.variable : inherits"
+    );
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    //
+    //
+    Map<String, Object> configMap = consumerConfigWorker.getConfigMap();
+    //
+    //
+
+    assertThat(configMap).isNotNull();
+    assert configMap != null;
+
+    assertThat(configMap).contains(entry("example.variable", "navigator of life"));
+  }
+
+  @Test
+  public void getWorkerCount_direct() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms=44444",
+        "con.max.poll.interval.ms=77777"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms=111",
+        "con.send.buffer.bytes=222",
+        "out.worker.count = 173"
+    );
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    //
+    //
+    int workerCount = consumerConfigWorker.getWorkerCount();
+    //
+    //
+
+    assertThat(workerCount).isEqualTo(173);
+  }
+
+  @Test
+  public void getWorkerCount_inherits() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms=44444",
+        "con.max.poll.interval.ms=77777",
+        "out.worker.count = 728"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms=111",
+        "con.send.buffer.bytes=222",
+        "out.worker.count : inherits"
+    );
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    //
+    //
+    int workerCount = consumerConfigWorker.getWorkerCount();
+    //
+    //
+
+    assertThat(workerCount).isEqualTo(728);
+  }
+
+
+  @Test
+  public void getWorkerCount_defaultValue() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms=44444",
+        "con.max.poll.interval.ms=77777",
+        "out.worker.count = 728"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms=111",
+        "con.send.buffer.bytes=222"
+    );
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    //
+    //
+    int workerCount = consumerConfigWorker.getWorkerCount();
+    //
+    //
+
+    assertThat(workerCount).isEqualTo(1);
+  }
+
+  @Test
+  public void getWorkerCount_errorValue_direct() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms=44444",
+        "con.max.poll.interval.ms=77777",
+        "out.worker.count = 728"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms=111",
+        "con.send.buffer.bytes=222",
+        "out.worker.count = left value"
+    );
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    //
+    //
+    int workerCount = consumerConfigWorker.getWorkerCount();
+    //
+    //
+
+    assertThat(workerCount).isEqualTo(0);
+
+    String errorsPath = "root/controller/method.txt.errors.txt";
+
+    assertThat(configStorage.exists(errorsPath)).isTrue();
+
+    List<String> list = bytesToLines(configStorage.readContent(errorsPath));
+
+    assertThat(list).isNotEmpty();
+
+    String error = findFirstContains(list, "out.worker.count");
+
+    assertThat(error).isNotNull();
+    assert error != null;
+    assertThat(error.toLowerCase()).contains("line 4");
+  }
+
+  @Test
+  public void getWorkerCount_errorValue_parent() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms=44444",
+        "con.max.poll.interval.ms=77777",
+        "out.worker.count = left value"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.fetch.max.wait.ms=111",
+        "con.send.buffer.bytes=222",
+        "out.worker.count : inherits"
+    );
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    //
+    //
+    int workerCount = consumerConfigWorker.getWorkerCount();
+    //
+    //
+
+    assertThat(workerCount).isEqualTo(0);
+
+    String errorsPath = "root/controller/method.txt.errors.txt";
+
+    assertThat(configStorage.exists(errorsPath)).isFalse();
+
+    String parentErrorsPath = "root/parent.txt.errors.txt";
+
+    assertThat(configStorage.exists(parentErrorsPath)).isTrue();
+
+    List<String> list = bytesToLines(configStorage.readContent(parentErrorsPath));
+
+    assertThat(list).isNotEmpty();
+
+    String error = findFirstContains(list, "out.worker.count");
+
+    assertThat(error).isNotNull();
+    assert error != null;
+    assertThat(error.toLowerCase()).contains("line 3");
+  }
+
 }

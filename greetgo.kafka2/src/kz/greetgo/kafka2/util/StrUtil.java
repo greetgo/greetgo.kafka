@@ -1,6 +1,10 @@
 package kz.greetgo.kafka2.util;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class StrUtil {
 
@@ -52,5 +56,41 @@ public class StrUtil {
     }
 
     return str.length();
+  }
+
+  public static String findFirstContains(List<String> list, String strPart) {
+    for (String str : list) {
+      if (str.contains(strPart)) {
+        return str;
+      }
+    }
+    return null;
+  }
+
+  public static byte[] linesToBytes(List<String> lines) {
+    if (lines == null) {
+      return null;
+    }
+    return String.join("\n", lines).getBytes(UTF_8);
+  }
+
+  public static List<String> bytesToLines(byte[] bytes) {
+    if (bytes == null) {
+      return null;
+    }
+
+    return Arrays.stream(new String(bytes, UTF_8).split("\n")).collect(Collectors.toList());
+  }
+
+  public static void addIfAbsent(List<String> list, String str) {
+    if (str == null) {
+      return;
+    }
+    for (String element : list) {
+      if (str.equals(element)) {
+        return;
+      }
+    }
+    list.add(str);
   }
 }

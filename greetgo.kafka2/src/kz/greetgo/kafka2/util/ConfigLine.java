@@ -3,6 +3,8 @@ package kz.greetgo.kafka2.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import static kz.greetgo.kafka2.util.StrUtil.addIfAbsent;
+
 public class ConfigLine {
 
   public static ConfigLine parse(String line) {
@@ -184,5 +186,9 @@ public class ConfigLine {
     }
 
     throw new IllegalStateException("ConfigLineValue.value() == null && ConfigLineValue.command() == null");
+  }
+
+  public void ensureError(String error) {
+    addIfAbsent(errors, error);
   }
 }
