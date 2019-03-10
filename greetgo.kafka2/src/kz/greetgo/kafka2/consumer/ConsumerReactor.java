@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 public class ConsumerReactor {
 
   //
-  // Setting from output
+  // Input values for reactor
   //
 
   public Kryo kryo;
@@ -32,6 +32,10 @@ public class ConsumerReactor {
   public String storageRootPath;
   public String storageParentConfigPath;
 
+
+  /**
+   * Start reactor
+   */
   public void start() {
     if (!working.get()) {
       throw new IllegalStateException("Cannot start closed ConsumerReactor");
@@ -63,6 +67,17 @@ public class ConsumerReactor {
     refresh();
   }
 
+  /**
+   * Stops reactor
+   */
+  public void stop() {
+    if (working.get()) {
+      if (working.compareAndSet(true, false)) {
+        consumerConfigWorker.close();
+      }
+    }
+  }
+
   //
   // Working mechanism
   //
@@ -70,11 +85,6 @@ public class ConsumerReactor {
   private final ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, this::refresh);
 
   private final AtomicBoolean working = new AtomicBoolean(true);
-
-  public void stop() {
-    consumerConfigWorker.close();
-    working.set(false);
-  }
 
   private void refresh() {
     Set<Long> toDelete = new HashSet<>();
@@ -182,4 +192,5 @@ public class ConsumerReactor {
       }
     }
   }
+
 }
