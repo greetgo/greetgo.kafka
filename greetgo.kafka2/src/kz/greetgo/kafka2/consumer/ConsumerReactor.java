@@ -32,7 +32,6 @@ public class ConsumerReactor {
   public String storageRootPath;
   public String storageParentConfigPath;
 
-
   /**
    * Start reactor
    */
