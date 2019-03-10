@@ -403,9 +403,11 @@ public class ConsumerConfigWorkerTest {
     consumerConfigWorker.close();
   }
 
+  /**
+   * Надо проверить, что если файл изменился, то система автоматически обновилась
+   */
   @Test
   public void changedConfigStateAfterStart_fromParents() {
-    //Надо проверить, что если файл изменился, то система автоматически обновилась
 
     ConfigStorageInMem configStorage = new ConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
@@ -477,15 +479,17 @@ public class ConsumerConfigWorkerTest {
     consumerConfigWorker.close();
   }
 
+  /**
+   * Надо проверить, что если файл изменился, то система автоматически обновилась
+   */
   @Test
   public void changedConfigStateAfterStart_direct() {
-    //Надо проверить, что если файл изменился, то система автоматически обновилась
 
     ConfigStorageInMem configStorage = new ConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
     testHandler.happenCount = 0;
 
-    //Начальное состояние файлов
+    //Начальное состояние файлов-конфигов
 
     configStorage.addLines("root/parent.txt",
         "con.session.timeout.ms = 44444",
@@ -549,14 +553,15 @@ public class ConsumerConfigWorkerTest {
     consumerConfigWorker.close();
   }
 
+  /**
+   * Нужно проверить, что если вначале файл был без ошибок, а потом ошибки появились - должен создаться файл ошибок
+   */
   @Test
   public void checkCreatesErrorFileAfterBadUpdate_parent() {
-    // Нужно проверить, что если вначале файл был без ошибок, а потом ошибки появились - должен создаться файл ошибок
-
     ConfigStorageInMem configStorage = new ConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
-    // Начальное состояние файлов - ошибок нет
+    // Вначале в файле-конфиге ошибок нет
 
     configStorage.addLines("root/parent.txt",
         "con.session.timeout.ms = 44444",
@@ -605,16 +610,26 @@ public class ConsumerConfigWorkerTest {
 
     String errorsText = new String(configStorage.readContent("root/parent.txt.errors.txt"), UTF_8);
     System.out.println(errorsText);
+
+    // содержимое файла-ошибок здесь проверять не надо, так как это должно быть в отдельных тестах
+
+    // Ну и проверим, что хэндлер отработал
+
+    assertThat(testHandler.happenCount).isEqualTo(1);
+
+    consumerConfigWorker.close();
   }
 
+  /**
+   * Нужно проверить, что если вначале файл был без ошибок, а потом ошибки появились - должен создаться файл ошибок
+   */
   @Test
   public void checkCreatesErrorFileAfterBadUpdate_direct() {
-    // Нужно проверить, что если вначале файл был без ошибок, а потом ошибки появились - должен создаться файл ошибок
 
     ConfigStorageInMem configStorage = new ConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
-    // Начальное состояние файлов - ошибок нет
+    // В начале в файлах-конфигах ошибок нет
 
     configStorage.addLines("root/parent.txt",
         "con.session.timeout.ms = 44444",
@@ -636,7 +651,7 @@ public class ConsumerConfigWorkerTest {
 
     consumerConfigWorker.start();
 
-    // Ошибок нет - смотрим, что файла тоже нет
+    // Ошибок нет - смотрим, что файла ошибок тоже нет
 
     assertThat(configStorage.exists("root/controller/method.txt.errors.txt")).isFalse();
 
@@ -663,5 +678,149 @@ public class ConsumerConfigWorkerTest {
 
     String errorsText = new String(configStorage.readContent("root/controller/method.txt.errors.txt"), UTF_8);
     System.out.println(errorsText);
+
+    // содержимое файла-ошибок здесь проверять не надо, так как это должно быть в отдельных тестах
+
+    // Ну и проверим, что хэндлер отработал
+
+    assertThat(testHandler.happenCount).isEqualTo(1);
+
+    consumerConfigWorker.close();
+  }
+
+  /**
+   * Нужно проверить, что файл ошибок удаляется, если ошибки исправлены
+   */
+  @Test
+  public void errorFilesDeletesAfterErrorDeleted_parents() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    // В начале в файлах-конфигах делаем ошибки
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms = 44444",
+        "out.worker.count = err"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.session.timeout.ms : inherits",
+        "out.worker.count : inherits"
+    );
+
+    // Стартуем приложение
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    consumerConfigWorker.getWorkerCount();
+
+    // Должен быть файл ошибок - проверим это
+
+    assertThat(configStorage.exists("root/parent.txt.errors.txt")).isTrue();
+
+    // Меняем файл, исправляя ошибки
+
+    configStorage.rememberState();
+
+    configStorage.removeLines("root/parent.txt",
+        "out.worker.count = err"
+    );
+    configStorage.addLines("root/parent.txt",
+        "out.worker.count = 117"
+    );
+
+    configStorage.fireEvents();
+
+    // Надо что-то прочитать
+
+    consumerConfigWorker.getWorkerCount();
+
+    // Смотрим, что файл ошибок исчез
+
+    if (configStorage.exists("root/parent.txt.errors.txt")) {
+      String errorsText = new String(configStorage.readContent("root/parent.txt.errors.txt"), UTF_8);
+      System.out.println(errorsText);
+    }
+
+    assertThat(configStorage.exists("root/parent.txt.errors.txt")).isFalse();
+
+    // Ну и проверим, что хэндлер отработал
+
+    assertThat(testHandler.happenCount).isEqualTo(1);
+
+    consumerConfigWorker.close();
+  }
+
+  /**
+   * Нужно проверить, что файл ошибок удаляется, если ошибки исправлены
+   */
+  @Test
+  public void errorFilesDeletesAfterErrorDeleted_direct() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    TestHandler testHandler = new TestHandler();
+
+    // В начале в файлах-конфигах делаем ошибки
+
+    configStorage.addLines("root/parent.txt",
+        "con.session.timeout.ms = 44444",
+        "out.worker.count = 331"
+    );
+
+    configStorage.addLines("root/controller/method.txt",
+        "extends=root/parent.txt",
+        "con.session.timeout.ms : inherits",
+        "out.worker.count : err"
+    );
+
+    // Стартуем приложение
+
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+
+    consumerConfigWorker.setParentPath("root/parent.txt");
+    consumerConfigWorker.setConfigPath("root/controller/method.txt");
+
+    consumerConfigWorker.start();
+
+    // Должен быть файл ошибок - проверим это
+
+    assertThat(configStorage.exists("root/controller/method.txt.errors.txt")).isTrue();
+
+    // Меняем файл, исправляя ошибки
+
+    configStorage.rememberState();
+
+    configStorage.removeLines("root/controller/method.txt",
+        "out.worker.count : err"
+    );
+    configStorage.addLines("root/controller/method.txt",
+        "out.worker.count = 223"
+    );
+
+    configStorage.fireEvents();
+
+    // Надо что-то прочитать
+
+    consumerConfigWorker.getWorkerCount();
+
+    // Смотрим, что файл ошибок исчез
+
+    if (configStorage.exists("root/controller/method.txt.errors.txt")) {
+      String errorsText = new String(configStorage.readContent("root/controller/method.txt.errors.txt"), UTF_8);
+      System.out.println(errorsText);
+    }
+
+    assertThat(configStorage.exists("root/controller/method.txt.errors.txt")).isFalse();
+
+    // Ну и проверим, что хэндлер отработал
+
+    assertThat(testHandler.happenCount).isEqualTo(1);
+
+    consumerConfigWorker.close();
   }
 }
