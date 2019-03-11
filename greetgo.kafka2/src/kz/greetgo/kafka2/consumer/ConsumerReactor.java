@@ -29,10 +29,22 @@ public class ConsumerReactor {
   public ConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
   public ConsumerLogger consumerLogger;
+  public String storageRootPath;
+  public String storageParentConfigPath;
 
   public void start() {
     if (!working.get()) {
       throw new IllegalStateException("Cannot start closed ConsumerReactor");
+    }
+
+    consumerConfigWorker.setParentPath(storageParentConfigPath);
+
+    {
+      String configPath = consumerDefinition.getConfigPath();
+      if (storageRootPath != null) {
+        configPath = storageRootPath + "/" + configPath;
+      }
+      consumerConfigWorker.setConfigPath(configPath);
     }
 
     consumerConfigWorker.start();

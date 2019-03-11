@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -36,12 +37,6 @@ public class ConsumerConfigWorker implements AutoCloseable {
   public ConsumerConfigWorker(Supplier<ConfigStorage> configStorage, Handler configDataChanged) {
     this.configStorage = configStorage;
     this.configDataChanged = configDataChanged;
-
-    configEventRegistration.set(configStorage.get().addEventHandler((path, newContent, type) -> {
-      if (type == ConfigEventType.UPDATE) {
-        configUpdates(path, newContent);
-      }
-    }));
   }
 
   @Override
@@ -54,7 +49,18 @@ public class ConsumerConfigWorker implements AutoCloseable {
 
   ConfigLines configLines;
 
+  private final AtomicBoolean started = new AtomicBoolean(false);
+
   public void start() {
+    if (started.getAndSet(true)) {
+      return;
+    }
+
+    configEventRegistration.set(configStorage.get().addEventHandler((path, newContent, type) -> {
+      if (type == ConfigEventType.UPDATE) {
+        configUpdates(path, newContent);
+      }
+    }));
 
     prepareConfigLines();
 

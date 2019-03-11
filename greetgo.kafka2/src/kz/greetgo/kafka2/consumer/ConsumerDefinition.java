@@ -108,4 +108,16 @@ public class ConsumerDefinition {
   public List<String> topicList() {
     throw new RuntimeException("Реализовать это");
   }
+
+  public String getConfigPath() {
+
+    String configName = getConsumerName() + ".txt";
+
+    if (folderPath == null) {
+      return configName;
+    } else {
+      return folderPath + "/" + configName;
+    }
+
+  }
 }

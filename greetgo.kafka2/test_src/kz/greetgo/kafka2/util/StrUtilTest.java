@@ -11,12 +11,12 @@ public class StrUtilTest {
   @DataProvider
   public Object[][] firstIndexOf_DataProvider() {
     return new Object[][]{
-        {"sinus = pool : hello", 6},
-        {"status = hello", 7},
-        {"# stone : sinus = hello", 8},
-        {"# stone : sinus", 8},
-        {"# oops", -1},
-        {null, -1},
+      {"sinus = pool : hello", 6},
+      {"status = hello", 7},
+      {"# stone : sinus = hello", 8},
+      {"# stone : sinus", 8},
+      {"# oops", -1},
+      {null, -1},
     };
   }
 
@@ -27,5 +27,17 @@ public class StrUtilTest {
 
     assertThat(index).isEqualTo(expectedIndex);
 
+  }
+
+  @Test
+  public void intToStrLen_1() {
+
+    //
+    //
+    String str = StrUtil.intToStrLen(13, 4);
+    //
+    //
+
+    assertThat(str).isEqualTo("0013");
   }
 }

@@ -93,4 +93,13 @@ public class StrUtil {
     }
     list.add(str);
   }
+
+  public static String intToStrLen(int intValue, int strLen) {
+    StringBuilder sb = new StringBuilder(strLen);
+    sb.append(intValue);
+    while (sb.length() < strLen) {
+      sb.insert(0, '0');
+    }
+    return sb.toString();
+  }
 }

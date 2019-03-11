@@ -79,8 +79,12 @@ public class KafkaReactorImpl implements KafkaReactor {
 
     List<ConsumerDefinition> consumerDefinitionList = new ArrayList<>();
 
+    ConsumerDefinitionExtractor cde = new ConsumerDefinitionExtractor();
+    cde.consumerLogger = consumerLogger;
+    cde.hostId = "test";
+
     for (Object controller : controllerList) {
-      consumerDefinitionList.addAll(ConsumerDefinitionExtractor.extract(controller, consumerLogger));
+      consumerDefinitionList.addAll(cde.extract(controller));
     }
 
     if (consumerDefinitionList.isEmpty()) {
