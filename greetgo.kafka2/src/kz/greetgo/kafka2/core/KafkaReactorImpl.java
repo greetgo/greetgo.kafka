@@ -26,6 +26,7 @@ public class KafkaReactorImpl implements KafkaReactor {
   private Supplier<String> authorGetter = null;
   private ConsumerLogger consumerLogger = new EmptyConsumerLogger();
 
+  @Override
   public void setAuthorGetter(Supplier<String> authorGetter) {
     this.authorGetter = authorGetter;
   }
@@ -65,6 +66,13 @@ public class KafkaReactorImpl implements KafkaReactor {
 
   private final List<ConsumerReactor> consumerReactorList = new ArrayList<>();
 
+  private String hostId;
+
+  @Override
+  public void setHostId(String hostId) {
+    this.hostId = hostId;
+  }
+
   @Override
   public void startConsumers() {
     if (configStorage == null) {
@@ -81,7 +89,7 @@ public class KafkaReactorImpl implements KafkaReactor {
 
     ConsumerDefinitionExtractor cde = new ConsumerDefinitionExtractor();
     cde.consumerLogger = consumerLogger;
-    cde.hostId = "test";
+    cde.hostId = hostId;
 
     for (Object controller : controllerList) {
       consumerDefinitionList.addAll(cde.extract(controller));

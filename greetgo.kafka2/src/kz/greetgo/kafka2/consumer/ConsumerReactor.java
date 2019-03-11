@@ -159,7 +159,7 @@ public class ConsumerReactor {
         consumerLogger.startWorker(consumerDefinition.logDisplay(), id);
         Map<String, Object> configMap = consumerConfigWorker.getConfigMap();
         configMap.put("bootstrap.servers", bootstrapServers.get());
-        configMap.put("auto.offset.reset", consumerDefinition.getAutoOffsetReset());
+        configMap.put("auto.offset.reset", consumerDefinition.getAutoOffsetReset().name().toLowerCase());
         configMap.put("group.id", consumerDefinition.getGroupId());
         configMap.put("enable.auto.commit", consumerDefinition.isAutoCommit() ? "true" : "false");
 
@@ -167,6 +167,10 @@ public class ConsumerReactor {
 
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
         BoxDeserializer forValue = new BoxDeserializer(kryo);
+
+        for (Map.Entry<String, Object> e : configMap.entrySet()) {
+          System.out.println("CONSUMER PARAM " + e.getKey() + " = " + e.getValue());
+        }
 
         try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
           consumer.subscribe(consumerDefinition.topicList());

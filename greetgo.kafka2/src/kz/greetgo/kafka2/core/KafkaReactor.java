@@ -8,6 +8,8 @@ import java.util.function.Supplier;
 
 public interface KafkaReactor {
 
+  void setAuthorGetter(Supplier<String> authorGetter);
+
   void setConfigStorage(ConfigStorage configStorage);
 
   void setConsumerLogger(ConsumerLogger consumerLogger);
@@ -25,6 +27,8 @@ public interface KafkaReactor {
   }
 
   void registerModel(Class<?> modelClass);
+
+  void setHostId(String hostId);
 
   void startConsumers();
 
