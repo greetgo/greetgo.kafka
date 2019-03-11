@@ -73,4 +73,65 @@ public class ProducerConfigWorkerTest {
     assertThat(config).contains(MapEntry.entry("param3", "value 1003"));
     assertThat(config).contains(MapEntry.entry("param4", "value 1004"));
   }
+
+  @Test
+  public void updatesDataAfterConfigChanged() {
+
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+
+    configStorage.addLines("producer/root/testProducer.txt",
+        "prod.param1=started value"
+    );
+
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> "producer/root", () -> configStorage);
+
+    Map<String, Object> startedConfig = producerConfigWorker.getConfigFor("testProducer");
+
+    assertThat(startedConfig).contains(MapEntry.entry("param1", "started value"));
+
+    configStorage.rememberState();
+
+    configStorage.removeLines("producer/root/testProducer.txt",
+        "prod.param1=started value"
+    );
+    configStorage.addLines("producer/root/testProducer.txt",
+        "prod.param1=another value"
+    );
+
+    configStorage.fireEvents();
+
+    //
+    //
+    Map<String, Object> config = producerConfigWorker.getConfigFor("testProducer");
+    //
+    //
+
+    assertThat(config).contains(MapEntry.entry("param1", "another value"));
+
+    //
+    //
+    producerConfigWorker.close();
+    //
+    //
+
+    configStorage.rememberState();
+
+
+    configStorage.removeLines("producer/root/testProducer.txt",
+        "prod.param1=another value"
+    );
+    configStorage.removeLines("producer/root/testProducer.txt",
+        "prod.param1=last value"
+    );
+
+    configStorage.fireEvents();
+
+    //
+    //
+    Map<String, Object> last = producerConfigWorker.getConfigFor("testProducer");
+    //
+    //
+
+    assertThat(last).contains(MapEntry.entry("param1", "another value"));
+  }
 }

@@ -1,10 +1,15 @@
 package kz.greetgo.kafka2.producer;
 
+import kz.greetgo.kafka2.core.config.ConfigEventRegistration;
+import kz.greetgo.kafka2.core.config.ConfigEventType;
 import kz.greetgo.kafka2.core.config.ConfigStorage;
 import kz.greetgo.kafka2.util.ConfigLines;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public class ProducerConfigWorker {
@@ -45,8 +50,41 @@ public class ProducerConfigWorker {
     return configLines.getWithPrefix("prod.");
   }
 
+  private final AtomicReference<ConfigEventRegistration> registration = new AtomicReference<>(null);
+
   private void ensureRegisteredHandler() {
 
+    if (this.registration.get() == null) {
+      ConfigEventRegistration registration = configStorage.get().addEventHandler(this::configEventHappened);
+
+      if (!this.registration.compareAndSet(null, registration)) {
+        registration.unregister();
+      }
+    }
+
+  }
+
+  public void close() {
+    ConfigEventRegistration registration = this.registration.getAndSet(null);
+    if (registration != null) {
+      registration.unregister();
+    }
+  }
+
+  private void configEventHappened(String path, byte[] newContent, ConfigEventType type) {
+    if (type != ConfigEventType.UPDATE) {
+      return;
+    }
+
+    for (String key : new ArrayList<>(configLinesMap.keySet())) {
+      if (Objects.equals(key, path)) {
+
+        ConfigLines configLines = ConfigLines.fromBytes(newContent, key);
+
+        configLinesMap.put(key, configLines);
+
+      }
+    }
   }
 
   private ConfigLines createConfigLines(String configPath) {
