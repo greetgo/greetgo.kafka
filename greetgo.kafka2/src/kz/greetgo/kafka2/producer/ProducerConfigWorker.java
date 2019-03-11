@@ -50,17 +50,30 @@ public class ProducerConfigWorker {
   }
 
   private ConfigLines createConfigLines(String configPath) {
-    ConfigLines ret = new ConfigLines(configPath);
-    ret.putValue("prod.acts                    ", "all");
-    ret.putValue("prod.buffer.memory           ", "33554432");
-    ret.putValue("prod.retries                 ", "2147483647");
-    ret.putValue("prod.compression.type        ", "none");
-    ret.putValue("prod.batch.size              ", "16384");
-    ret.putValue("prod.connections.max.idle.ms ", "540000");
-    ret.putValue("prod.delivery.timeout.ms     ", "35000");
-    ret.putValue("prod.request.timeout.ms      ", "30000");
-    ret.putValue("prod.linger.ms               ", "1");
-    ret.putValue("prod.batch.size              ", "16384");
-    return ret;
+
+    final byte[] configBytes;
+
+    if (configStorage.get().exists(configPath)) {
+      configBytes = configStorage.get().readContent(configPath);
+    } else {
+      configBytes = null;
+    }
+
+    if (configBytes == null) {
+      ConfigLines ret = new ConfigLines(configPath);
+      ret.putValue("prod.acts                    ", "all");
+      ret.putValue("prod.buffer.memory           ", "33554432");
+      ret.putValue("prod.retries                 ", "2147483647");
+      ret.putValue("prod.compression.type        ", "none");
+      ret.putValue("prod.batch.size              ", "16384");
+      ret.putValue("prod.connections.max.idle.ms ", "540000");
+      ret.putValue("prod.delivery.timeout.ms     ", "35000");
+      ret.putValue("prod.request.timeout.ms      ", "30000");
+      ret.putValue("prod.linger.ms               ", "1");
+      ret.putValue("prod.batch.size              ", "16384");
+      return ret;
+    }
+
+    return ConfigLines.fromBytes(configBytes, configPath);
   }
 }

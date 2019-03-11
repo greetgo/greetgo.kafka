@@ -48,4 +48,29 @@ public class ProducerConfigWorkerTest {
     assertThat(lines).contains("prod.linger.ms=1");
     assertThat(lines).contains("prod.batch.size=16384");
   }
+
+  @Test
+  public void readingFromConfigFile() {
+    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+
+    configStorage.addLines("producer/root/testProducer.txt",
+        "prod.param1=value 1001",
+        "prod.param2=value 1002",
+        "prod.param3=value 1003",
+        "prod.param4=value 1004"
+    );
+
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> "producer/root", () -> configStorage);
+
+    //
+    //
+    Map<String, Object> config = producerConfigWorker.getConfigFor("testProducer");
+    //
+    //
+
+    assertThat(config).contains(MapEntry.entry("param1", "value 1001"));
+    assertThat(config).contains(MapEntry.entry("param2", "value 1002"));
+    assertThat(config).contains(MapEntry.entry("param3", "value 1003"));
+    assertThat(config).contains(MapEntry.entry("param4", "value 1004"));
+  }
 }
