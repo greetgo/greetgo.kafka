@@ -8,6 +8,8 @@ import java.util.function.Supplier;
 
 public interface KafkaReactor {
 
+  void setProducerConfigRootPath(String producerConfigRootPath);
+
   void setAuthorGetter(Supplier<String> authorGetter);
 
   void setConfigStorage(ConfigStorage configStorage);

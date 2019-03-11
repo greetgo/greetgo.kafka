@@ -25,6 +25,12 @@ public class KafkaReactorImpl implements KafkaReactor {
   private Supplier<String> bootstrapServers;
   private Supplier<String> authorGetter = null;
   private ConsumerLogger consumerLogger = new EmptyConsumerLogger();
+  private String producerConfigRootPath;
+
+  @Override
+  public void setProducerConfigRootPath(String producerConfigRootPath) {
+    this.producerConfigRootPath = producerConfigRootPath;
+  }
 
   @Override
   public void setAuthorGetter(Supplier<String> authorGetter) {
@@ -143,7 +149,9 @@ public class KafkaReactorImpl implements KafkaReactor {
       return authorGetter == null ? null : authorGetter.get();
     }
 
-    private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage);
+    private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(
+        () -> producerConfigRootPath, () -> configStorage
+    );
 
     @Override
     public Map<String, Object> producerConfig(String producerName) {

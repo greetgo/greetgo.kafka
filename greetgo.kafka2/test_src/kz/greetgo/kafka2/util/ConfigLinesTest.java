@@ -583,6 +583,27 @@ public class ConfigLinesTest {
   }
 
   @Test
+  public void putValue_9() {
+
+    List<String> startLines = new ArrayList<>();
+    startLines.add("  key002  : null   ");
+    startLines.add("  key003  = oops   ");
+
+    String key = "key002     ";
+    String value = "four";
+
+    List<String> expected = new ArrayList<>();
+    expected.add("# key002  : null   ");
+    expected.add("  key002  = four   ");
+    expected.add("  key003  = oops   ");
+
+    boolean expectedModified = true;
+
+    putValue_testCore(startLines, key, value, expectedModified, expected);
+
+  }
+
+  @Test
   public void getValue_actual() {
 
     List<String> lines = new ArrayList<>();

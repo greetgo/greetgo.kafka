@@ -2,8 +2,10 @@ package kz.greetgo.kafka2.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -69,23 +71,6 @@ public class ConfigLines {
         .map(ConfigLine::line)
         .collect(Collectors.joining("\n"))
         .getBytes(UTF_8);
-  }
-
-  public ConfigLine findFirstUncommentedLine(String key) {
-
-    for (ConfigLine line : lines) {
-      if (line.isCommented()) {
-        continue;
-      }
-
-      if (!Objects.equals(key, line.key())) {
-        continue;
-      }
-
-      return line;
-    }
-
-    return null;
   }
 
   public String getValue(String key) {
@@ -186,6 +171,8 @@ public class ConfigLines {
     if (key == null) {
       throw new IllegalArgumentException("key == null");
     }
+
+    key = key.trim();
 
     addValueVariant(key, valueSelect);
 
@@ -304,5 +291,23 @@ public class ConfigLines {
 
     ensureError("Not found int parameter " + key);
     return defaultValue;
+  }
+
+  public Map<String, Object> getWithPrefix(String keyPrefix) {
+    Map<String, Object> ret = new HashMap<>();
+    for (ConfigLine line : lines) {
+      if (line.isCommented()) {
+        continue;
+      }
+      if (line.key() == null) {
+        continue;
+      }
+      if (keyPrefix == null) {
+        ret.put(line.key(), line.value());
+      } else if (line.key().startsWith(keyPrefix)) {
+        ret.put(line.key().substring(keyPrefix.length()), line.value());
+      }
+    }
+    return ret;
   }
 }
