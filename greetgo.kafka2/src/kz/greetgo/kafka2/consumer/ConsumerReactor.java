@@ -168,9 +168,9 @@ public class ConsumerReactor {
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
         BoxDeserializer forValue = new BoxDeserializer(kryo);
 
-        for (Map.Entry<String, Object> e : configMap.entrySet()) {
-          System.out.println("CONSUMER PARAM " + e.getKey() + " = " + e.getValue());
-        }
+//        for (Map.Entry<String, Object> e : configMap.entrySet()) {
+//          System.out.println("CONSUMER PARAM " + e.getKey() + " = " + e.getValue());
+//        }
 
         try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
           consumer.subscribe(consumerDefinition.topicList());

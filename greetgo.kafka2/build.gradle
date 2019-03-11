@@ -5,6 +5,7 @@ dependencies {
   compile 'com.esotericsoftware:kryo:5.0.0-RC2'
 
   testCompile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
+  testCompile 'ch.qos.logback:logback-classic:1.2.3'
 }
 
 task consumerProbe(type: JavaExec) {

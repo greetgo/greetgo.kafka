@@ -1,0 +1,33 @@
+<configuration>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <target>System.err</target>
+    <encoder>
+      <pattern>
+        [%d{yyyy-MM-dd'T'HH:mm:ss.SSS}] [%mdc{LID}] [%logger{15}] [%-5level] %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <appender name="SERVER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>build/logs/server.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <fileNamePattern>${user.home}/my_bpm.d/logs/server.%i.log</fileNamePattern>
+      <minIndex>1</minIndex>
+      <maxIndex>21</maxIndex>
+    </rollingPolicy>
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>5MB</maxFileSize>
+    </triggeringPolicy>
+    <encoder>
+      <pattern>
+        [%d{yyyy-MM-dd'T'HH:mm:ss.SSS}] [%mdc{LID}] [%logger{15}] [%-5level] %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <root level="info">
+    <appender-ref ref="SERVER"/>
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>
