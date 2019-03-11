@@ -10,6 +10,7 @@ import kz.greetgo.util.RND;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static kz.greetgo.kafka2.util_for_tests.ReflectionUtil.findMethod;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -276,5 +277,52 @@ public class ConsumerDefinitionTest {
     //
 
     assertThat(logDisplay).isEqualTo("C2_logDisplay.[coolMethodName]");
+  }
+
+  static class ClassFor_topicList {
+
+    @Topic("topicHelloWorld")
+    @SuppressWarnings("unused")
+    public void method1() {}
+
+    @Topic({"topicA1", "topicB2"})
+    @SuppressWarnings("unused")
+    public void method2() {}
+
+  }
+
+  @Test
+  public void topicList_oneTopic() {
+    ClassFor_topicList controller = new ClassFor_topicList();
+    Method method = findMethod(controller, "method1");
+
+    ConsumerDefinition consumerDefinition = new ConsumerDefinition(controller, method, null, null);
+
+    //
+    //
+    List<String> topicList = consumerDefinition.topicList();
+    //
+    //
+
+    assertThat(topicList).hasSize(1);
+    assertThat(topicList.get(0)).isEqualTo("topicHelloWorld");
+  }
+
+  @Test
+  public void topicList_twoTopics() {
+    ClassFor_topicList controller = new ClassFor_topicList();
+    Method method = findMethod(controller, "method2");
+
+    ConsumerDefinition consumerDefinition = new ConsumerDefinition(controller, method, null, null);
+
+    //
+    //
+    List<String> topicList = consumerDefinition.topicList();
+    //
+    //
+
+    assertThat(topicList).hasSize(2);
+    assertThat(topicList.get(0)).isEqualTo("topicA1");
+    assertThat(topicList.get(1)).isEqualTo("topicB2");
   }
 }

@@ -3,12 +3,15 @@ package kz.greetgo.kafka2.consumer;
 import kz.greetgo.kafka2.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka2.consumer.annotations.GroupId;
 import kz.greetgo.kafka2.consumer.annotations.KafkaNotifier;
+import kz.greetgo.kafka2.consumer.annotations.Topic;
 import kz.greetgo.kafka2.model.Box;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ConsumerDefinition {
 
@@ -32,7 +35,7 @@ public class ConsumerDefinition {
 
     {
       autoOffsetReset = method.getAnnotation(KafkaNotifier.class) == null
-        ? AutoOffsetReset.EARLIEST : AutoOffsetReset.LATEST;
+          ? AutoOffsetReset.EARLIEST : AutoOffsetReset.LATEST;
     }
 
     {
@@ -106,7 +109,11 @@ public class ConsumerDefinition {
   }
 
   public List<String> topicList() {
-    throw new RuntimeException("Реализовать это");
+    return Arrays.stream(
+        method
+            .getAnnotation(Topic.class)
+            .value()
+    ).collect(Collectors.toList());
   }
 
   public String getConfigPath() {
