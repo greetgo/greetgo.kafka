@@ -79,7 +79,7 @@ public class KafkaReactorImplTest {
 
     File currentKeepRunningFile = new File(baseDir + "/currentKeepRunningFile.txt");
     File keepRunningFile = new File(baseDir + "/keepRunning.txt");
-    File keepRunningFile2 = new File(baseDir + "/keepRunning2.txt");
+    File keepRunningFile2 = new File(baseDir + "/keepRunning__removeThisSuffix.txt");
 
     keepRunningFile2.getParentFile().mkdirs();
     keepRunningFile2.createNewFile();
@@ -94,9 +94,9 @@ public class KafkaReactorImplTest {
     ProducerFacade producer = kafkaReactor.createProducer("main");
 
     ProducerThread producerThread1 = new ProducerThread(producer, working,
-        ModelKryo.class, test_topic1_dir, "test_topic1");
+      ModelKryo.class, test_topic1_dir, "test_topic1");
     ProducerThread producerThread2 = new ProducerThread(producer, working,
-        ModelKryo2.class, test_topic2_dir, "test_topic2");
+      ModelKryo2.class, test_topic2_dir, "test_topic2");
 
     producerThread1.start();
     producerThread2.start();
@@ -154,10 +154,10 @@ public class KafkaReactorImplTest {
             Object object = readFromFile(aClass, file);
 
             producer
-                .sending(object)
-                .toTopic(topic)
-                .go()
-                .get();
+              .sending(object)
+              .toTopic(topic)
+              .go()
+              .get();
 
             System.out.println("Object " + object + " sent to " + topic);
           }

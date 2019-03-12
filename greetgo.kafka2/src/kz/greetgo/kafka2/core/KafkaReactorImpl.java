@@ -63,6 +63,7 @@ public class KafkaReactorImpl implements KafkaReactor {
 
   {
     kryo.register(Box.class);
+    kryo.register(ArrayList.class);
   }
 
   @Override
@@ -150,7 +151,7 @@ public class KafkaReactorImpl implements KafkaReactor {
     }
 
     private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(
-        () -> producerConfigRootPath, () -> configStorage
+      () -> producerConfigRootPath, () -> configStorage
     );
 
     @Override
