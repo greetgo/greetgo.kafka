@@ -33,7 +33,9 @@ public class ConfigStorageZooKeeperTest {
   @Test
   public void testStartStop() throws Exception {
 
-    try (ConfigStorageZooKeeper configStorage = new ConfigStorageZooKeeper("test/root", zookeeperServers)) {
+    try (ConfigStorageZooKeeper configStorage = new ConfigStorageZooKeeper(
+      "test/root", () -> zookeeperServers, () -> 3000)
+    ) {
 
       configStorage.addEventHandler((path, type)
         -> System.out.println("***   ***   ***   : Event happened: " + type + " " + path));
@@ -81,8 +83,8 @@ public class ConfigStorageZooKeeperTest {
       readContentThread.start();
 
       for (int i = 0; workingFile.exists(); i++) {
-        Thread.sleep(800);
-        if (i > 5 && !lockWorkingFile.exists()) {
+        Thread.sleep(600);
+        if (!lockWorkingFile.exists()) {
           break;
         }
       }

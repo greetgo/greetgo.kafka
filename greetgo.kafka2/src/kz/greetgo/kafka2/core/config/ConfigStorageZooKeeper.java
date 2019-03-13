@@ -15,17 +15,32 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements AutoCloseable {
 
-  private final String zookeeperServers;
+  private final Supplier<String> zookeeperServers;
   private final String rootPath;
+  private final IntSupplier sessionTimeout;
 
   private final AtomicReference<ZooKeeper> zkHolder = new AtomicReference<>(null);
 
-  public ConfigStorageZooKeeper(String rootPath, String zookeeperServers) {
+  public ConfigStorageZooKeeper(String rootPath, Supplier<String> zookeeperServers, IntSupplier sessionTimeout) {
     this.zookeeperServers = zookeeperServers;
     this.rootPath = rootPath;
+    this.sessionTimeout = sessionTimeout;
+  }
+
+  public void reset() {
+    ZooKeeper current = zkHolder.getAndSet(null);
+    if (current != null) {
+      try {
+        current.close();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   public ZooKeeper zk() {
@@ -58,7 +73,7 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
         }
 
         final CountDownLatch connSignal = new CountDownLatch(0);
-        newZK = new ZooKeeper(zookeeperServers, 3000, (WatchedEvent event) -> {
+        newZK = new ZooKeeper(zookeeperServers.get(), sessionTimeout.getAsInt(), (WatchedEvent event) -> {
           if (event.getState() == Watcher.Event.KeeperState.SyncConnected) {
             connSignal.countDown();
           }
@@ -87,14 +102,7 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
   @Override
   public void close() {
     opened.set(false);
-    ZooKeeper current = zkHolder.getAndSet(null);
-    if (current != null) {
-      try {
-        current.close();
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
+    reset();
   }
 
   private String slashRootPath() {
@@ -157,9 +165,7 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
 
     try {
 
-      Stat stat = zk().exists(zNode(path), true);
-
-      return stat != null;
+      return null != zk().exists(zNode(path), null);
 
     } catch (KeeperException | InterruptedException e) {
       throw new RuntimeException(e);
@@ -206,7 +212,7 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
           return;
         }
 
-        incrementSkipping(path);
+        nodesData.remove(path);
 
         zk.delete(zNode, stat.getVersion());
 
@@ -215,12 +221,12 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
         Stat stat = zk.exists(zNode, null);
         if (stat == null) {
 
-          incrementSkipping(path);
+          nodesData.put(path, content);
 
           zk.create(zNode, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         } else {
 
-          incrementSkipping(path);
+          nodesData.put(path, content);
 
           zk.setData(zNode, content, stat.getVersion());
         }
@@ -316,75 +322,47 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
   }
 
   private final ConcurrentHashMap<String, byte[]> nodesData = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Integer> skipCount = new ConcurrentHashMap<>();
-
-  private boolean allowFire(String path) {
-    return null == skipCount.compute(path, (pathArg, currentCount) -> {
-      if (currentCount == null || currentCount == 0) {
-        return null;
-      }
-      return currentCount - 1;
-    });
-  }
-
-  private void incrementSkipping(String path) {
-
-    Integer result = skipCount.compute(path, (pathArg, currentCount) -> {
-      if (currentCount == null) {
-        return 1;
-      }
-      return currentCount + 1;
-    });
-
-    System.out.println("km32m4m6 :: incrementSkipping " + path + " to " + result);
-  }
 
   private void fireConfigEventHandlerLocal(String path, ConfigEventType eventType) {
 
     System.out.println("3j24jn5 :: fireConfigEventHandlerLocal : " + path + " " + eventType);
 
-    if (eventType == ConfigEventType.CREATE) {
-      nodesData.put(path, readContent(path));
-      if (allowFire(path)) {
-        fireConfigEventHandler(path, eventType);
+    if (eventType == ConfigEventType.CREATE || eventType == ConfigEventType.UPDATE) {
+
+      while (true) {
+        byte[] current = readContent(path);
+        if (current == null) {
+          return;
+        }
+        byte[] cached = nodesData.get(path);
+        if (Arrays.equals(current, cached)) {
+          return;
+        }
+        if (nodesData.replace(path, cached, current)) {
+          fireConfigEventHandler(path, eventType);
+          return;
+        }
       }
-      return;
+
     }
 
     if (eventType == ConfigEventType.DELETE) {
+      while (true) {
+        byte[] current = readContent(path);
+        if (current != null) {
+          return;
+        }
 
-      byte[] bytes = nodesData.remove(path);
-      if (bytes != null) {
-        if (allowFire(path)) {
+        byte[] cached = nodesData.get(path);
+        if (cached == null) {
+          return;
+        }
+
+        if (nodesData.remove(path, cached)) {
           fireConfigEventHandler(path, eventType);
         }
       }
-      return;
     }
 
-    if (eventType == ConfigEventType.UPDATE) {
-
-      while (true) {
-        byte[] cachedBytes = nodesData.get(path);
-        byte[] currentBytes = readContent(path);
-
-        if (currentBytes == null) {
-          return;
-        }
-
-        if (Arrays.equals(cachedBytes, currentBytes)) {
-          return;
-        }
-
-        if (nodesData.replace(path, cachedBytes, currentBytes)) {
-          if (allowFire(path)) {
-            fireConfigEventHandler(path, eventType);
-          }
-          return;
-        }
-
-      }
-
-    }
   }
 }
