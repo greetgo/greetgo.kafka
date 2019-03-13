@@ -201,7 +201,7 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
 
       if (content == null) {
 
-        Stat stat = zk.exists(zNode, this::processEvent);
+        Stat stat = zk.exists(zNode, null);
         if (stat == null) {
           return;
         }
@@ -209,16 +209,19 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
         incrementSkipping(path);
 
         zk.delete(zNode, stat.getVersion());
-        zk.exists(zNode, this::processEvent);
 
       } else {
 
-        Stat stat = zk.exists(zNode, this::processEvent);
+        Stat stat = zk.exists(zNode, null);
         if (stat == null) {
+
           incrementSkipping(path);
+
           zk.create(zNode, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         } else {
+
           incrementSkipping(path);
+
           zk.setData(zNode, content, stat.getVersion());
         }
 
