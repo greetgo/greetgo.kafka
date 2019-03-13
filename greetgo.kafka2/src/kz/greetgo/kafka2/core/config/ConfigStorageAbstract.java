@@ -17,9 +17,9 @@ public abstract class ConfigStorageAbstract implements ConfigStorage {
     return () -> map.remove(id);
   }
 
-  protected void fireConfigEventHandler(String path, byte[] newContent, ConfigEventType type) {
+  protected void fireConfigEventHandler(String path, ConfigEventType type) {
     for (ConfigEventHandler configEventHandler : new ArrayList<>(map.values())) {
-      configEventHandler.configEventHappened(path, newContent, type);
+      configEventHandler.configEventHappened(path, type);
     }
   }
 }

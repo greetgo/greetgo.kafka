@@ -51,18 +51,18 @@ public class ConfigStorageInMem extends ConfigStorageAbstract {
       byte[] oldBytes = state.get(path);
       if (nowBytes != null && oldBytes != null) {
         if (!Arrays.equals(nowBytes, oldBytes)) {
-          fireConfigEventHandler(path, nowBytes, ConfigEventType.UPDATE);
+          fireConfigEventHandler(path, ConfigEventType.UPDATE);
         }
         continue;
       }
       //noinspection ConstantConditions
       if (nowBytes != null && oldBytes == null) {
-        fireConfigEventHandler(path, nowBytes, ConfigEventType.CREATE);
+        fireConfigEventHandler(path, ConfigEventType.CREATE);
         continue;
       }
       //noinspection ConstantConditions
       if (nowBytes == null && oldBytes != null) {
-        fireConfigEventHandler(path, oldBytes, ConfigEventType.DELETE);
+        fireConfigEventHandler(path, ConfigEventType.DELETE);
         continue;
       }
     }

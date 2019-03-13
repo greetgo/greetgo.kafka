@@ -95,15 +95,15 @@ public class ConfigStorageInDir extends ConfigStorageAbstract {
     }
 
     if (real == null) {
-      fireConfigEventHandler(path, null, ConfigEventType.DELETE);
+      fireConfigEventHandler(path, ConfigEventType.DELETE);
       return;
     }
 
     if (current == null) {
-      fireConfigEventHandler(path, real, ConfigEventType.CREATE);
+      fireConfigEventHandler(path, ConfigEventType.CREATE);
       return;
     }
 
-    fireConfigEventHandler(path, real, ConfigEventType.UPDATE);
+    fireConfigEventHandler(path, ConfigEventType.UPDATE);
   }
 }

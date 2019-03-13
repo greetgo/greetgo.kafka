@@ -71,7 +71,7 @@ public class ProducerConfigWorker {
     }
   }
 
-  private void configEventHappened(String path, byte[] newContent, ConfigEventType type) {
+  private void configEventHappened(String path, ConfigEventType type) {
     if (type != ConfigEventType.UPDATE) {
       return;
     }
@@ -79,7 +79,7 @@ public class ProducerConfigWorker {
     for (String key : new ArrayList<>(configLinesMap.keySet())) {
       if (Objects.equals(key, path)) {
 
-        ConfigLines configLines = ConfigLines.fromBytes(newContent, key);
+        ConfigLines configLines = ConfigLines.fromBytes(configStorage.get().readContent(path), key);
 
         configLinesMap.put(key, configLines);
 

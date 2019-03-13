@@ -56,9 +56,9 @@ public class ConsumerConfigWorker implements AutoCloseable {
       return;
     }
 
-    configEventRegistration.set(configStorage.get().addEventHandler((path, newContent, type) -> {
+    configEventRegistration.set(configStorage.get().addEventHandler((path, type) -> {
       if (type == ConfigEventType.UPDATE) {
-        configUpdates(path, newContent);
+        configUpdates(path);
       }
     }));
 
@@ -188,7 +188,7 @@ public class ConsumerConfigWorker implements AutoCloseable {
     }
   }
 
-  private void configUpdates(String path, byte[] newContent) {
+  private void configUpdates(String path) {
 
     ConfigLines configLines = this.configLines;
     if (configLines == null) {
@@ -197,7 +197,7 @@ public class ConsumerConfigWorker implements AutoCloseable {
 
     if (Objects.equals(path, configLines.getConfigPath())) {
 
-      configLines.setBytes(newContent);
+      configLines.setBytes(configStorage.get().readContent(path));
 
       updateErrorFileFor(configLines);
 
@@ -213,7 +213,7 @@ public class ConsumerConfigWorker implements AutoCloseable {
 
     if (Objects.equals(path, parent.getConfigPath())) {
 
-      parent.setBytes(newContent);
+      parent.setBytes(configStorage.get().readContent(path));
 
       updateErrorFileFor(parent);
 
