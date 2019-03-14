@@ -3,7 +3,7 @@ package kz.greetgo.kafka.core.config;
 /**
  * Interface to access to file storage
  */
-public interface ConfigStorage {
+public interface EventConfigStorage {
 
   /**
    * Checks file to existence

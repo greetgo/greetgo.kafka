@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class ConfigStorageAbstract implements ConfigStorage {
+public abstract class EventConfigStorageAbstract implements EventConfigStorage {
 
   private final ConcurrentHashMap<Long, ConfigEventHandler> map = new ConcurrentHashMap<>();
 

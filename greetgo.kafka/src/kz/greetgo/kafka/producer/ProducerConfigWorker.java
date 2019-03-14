@@ -2,7 +2,7 @@ package kz.greetgo.kafka.producer;
 
 import kz.greetgo.kafka.core.config.ConfigEventRegistration;
 import kz.greetgo.kafka.core.config.ConfigEventType;
-import kz.greetgo.kafka.core.config.ConfigStorage;
+import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.util.ConfigLines;
 
 import java.util.ArrayList;
@@ -13,10 +13,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public class ProducerConfigWorker {
-  private final Supplier<ConfigStorage> configStorage;
+  private final Supplier<EventConfigStorage> configStorage;
   private final Supplier<String> configRootPath;
 
-  public ProducerConfigWorker(Supplier<String> configRootPath, Supplier<ConfigStorage> configStorage) {
+  public ProducerConfigWorker(Supplier<String> configRootPath, Supplier<EventConfigStorage> configStorage) {
     this.configStorage = configStorage;
     this.configRootPath = configRootPath;
   }
@@ -38,7 +38,7 @@ public class ProducerConfigWorker {
 
     ConfigLines configLines = configLinesMap.computeIfAbsent(configPath, this::createConfigLines);
 
-    ConfigStorage configStorage = this.configStorage.get();
+    EventConfigStorage configStorage = this.configStorage.get();
 
     if (!configStorage.exists(configPath)) {
       configStorage.writeContent(configPath, configLines.toBytes());

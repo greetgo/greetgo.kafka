@@ -1,7 +1,7 @@
 package kz.greetgo.kafka.core;
 
 import kz.greetgo.kafka.consumer.ConsumerLogger;
-import kz.greetgo.kafka.core.config.ConfigStorage;
+import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.producer.ProducerFacade;
 
 import java.util.function.Supplier;
@@ -12,7 +12,7 @@ public interface KafkaReactor {
 
   void setAuthorGetter(Supplier<String> authorGetter);
 
-  void setConfigStorage(ConfigStorage configStorage);
+  void setConfigStorage(EventConfigStorage configStorage);
 
   void setConsumerLogger(ConsumerLogger consumerLogger);
 

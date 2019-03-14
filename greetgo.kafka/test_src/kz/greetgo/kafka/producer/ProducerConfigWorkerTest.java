@@ -1,6 +1,6 @@
 package kz.greetgo.kafka.producer;
 
-import kz.greetgo.kafka.core.config.ConfigStorageInMem;
+import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
 import org.fest.assertions.data.MapEntry;
 import org.testng.annotations.Test;
 
@@ -14,7 +14,7 @@ public class ProducerConfigWorkerTest {
   @Test
   public void getConfigFor_defaultValues() {
 
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> "producer/root", () -> configStorage);
 
@@ -51,7 +51,7 @@ public class ProducerConfigWorkerTest {
 
   @Test
   public void readingFromConfigFile() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     configStorage.addLines("producer/root/testProducer.txt",
         "prod.param1=value 1001",
@@ -77,7 +77,7 @@ public class ProducerConfigWorkerTest {
   @Test
   public void updatesDataAfterConfigChanged() {
 
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     configStorage.addLines("producer/root/testProducer.txt",
         "prod.param1=started value"

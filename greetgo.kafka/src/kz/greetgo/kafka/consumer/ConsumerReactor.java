@@ -1,7 +1,7 @@
 package kz.greetgo.kafka.consumer;
 
 import com.esotericsoftware.kryo.Kryo;
-import kz.greetgo.kafka.core.config.ConfigStorage;
+import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.serializer.BoxDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -26,7 +26,7 @@ public class ConsumerReactor {
 
   public Kryo kryo;
   public ConsumerDefinition consumerDefinition;
-  public ConfigStorage configStorage;
+  public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
   public ConsumerLogger consumerLogger;
   public String storageRootPath;

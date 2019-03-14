@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements AutoCloseable {
+public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract implements AutoCloseable {
 
   private final Supplier<String> zookeeperServers;
   private final String rootPath;
@@ -26,7 +26,7 @@ public class ConfigStorageZooKeeper extends ConfigStorageAbstract implements Aut
 
   private final AtomicReference<ZooKeeper> zkHolder = new AtomicReference<>(null);
 
-  public ConfigStorageZooKeeper(String rootPath, Supplier<String> zookeeperServers, IntSupplier sessionTimeout) {
+  public EventConfigStorageZooKeeper(String rootPath, Supplier<String> zookeeperServers, IntSupplier sessionTimeout) {
     this.zookeeperServers = zookeeperServers;
     this.rootPath = rootPath;
     this.sessionTimeout = sessionTimeout;

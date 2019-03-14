@@ -12,7 +12,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static kz.greetgo.kafka.util.StrUtil.intToStrLen;
 
-public class ConfigStorageInMem extends ConfigStorageAbstract {
+public class EventConfigStorageInMem extends EventConfigStorageAbstract {
 
   private final ConcurrentHashMap<String, byte[]> data = new ConcurrentHashMap<>();
 

@@ -4,7 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerDefinitionExtractor;
 import kz.greetgo.kafka.consumer.ConsumerLogger;
-import kz.greetgo.kafka.core.config.ConfigStorage;
+import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.errors.NotDefined;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerFacade;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public abstract class KafkaReactorAbstract implements KafkaReactor {
-  protected ConfigStorage configStorage;
+  protected EventConfigStorage configStorage;
   protected Supplier<String> authorGetter;
   protected String producerConfigRootPath;
   protected ConsumerLogger consumerLogger = new EmptyConsumerLogger();
@@ -24,7 +24,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   protected Supplier<String> bootstrapServers;
 
   @Override
-  public void setConfigStorage(ConfigStorage configStorage) {
+  public void setConfigStorage(EventConfigStorage configStorage) {
     this.configStorage = configStorage;
   }
 

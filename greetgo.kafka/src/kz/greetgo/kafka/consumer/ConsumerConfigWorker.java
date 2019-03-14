@@ -2,7 +2,7 @@ package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.core.config.ConfigEventRegistration;
 import kz.greetgo.kafka.core.config.ConfigEventType;
-import kz.greetgo.kafka.core.config.ConfigStorage;
+import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.util.ConfigLineCommand;
 import kz.greetgo.kafka.util.ConfigLines;
 import kz.greetgo.kafka.util.Handler;
@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 import static kz.greetgo.kafka.util.StrUtil.linesToBytes;
 
 public class ConsumerConfigWorker implements AutoCloseable {
-  private Supplier<ConfigStorage> configStorage;
+  private Supplier<EventConfigStorage> configStorage;
   private Handler configDataChanged;
   private final AtomicReference<ConfigEventRegistration> configEventRegistration = new AtomicReference<>(null);
 
@@ -34,7 +34,7 @@ public class ConsumerConfigWorker implements AutoCloseable {
     this.configPath.set(configPath);
   }
 
-  public ConsumerConfigWorker(Supplier<ConfigStorage> configStorage, Handler configDataChanged) {
+  public ConsumerConfigWorker(Supplier<EventConfigStorage> configStorage, Handler configDataChanged) {
     this.configStorage = configStorage;
     this.configDataChanged = configDataChanged;
   }
@@ -67,7 +67,7 @@ public class ConsumerConfigWorker implements AutoCloseable {
     setDefaultValues();
 
     {
-      ConfigStorage configStorage = this.configStorage.get();
+      EventConfigStorage configStorage = this.configStorage.get();
       configStorage.writeContent(configLines.getConfigPath(), configLines.toBytes());
 
       ConfigLines parent = configLines.parent;
@@ -126,7 +126,7 @@ public class ConsumerConfigWorker implements AutoCloseable {
       throw new IllegalStateException("configPath == null");
     }
 
-    ConfigStorage configStorage = this.configStorage.get();
+    EventConfigStorage configStorage = this.configStorage.get();
     ConfigLines itConfigLines = ConfigLines.fromBytes(configStorage.readContent(configPath), configPath);
     if (itConfigLines == null) {
       itConfigLines = new ConfigLines(configPath);

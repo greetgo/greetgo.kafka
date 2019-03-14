@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class ConfigStorageZooKeeperTest {
+public class EventConfigStorageZooKeeperTest {
 
   String zookeeperServers;
 
@@ -33,7 +33,7 @@ public class ConfigStorageZooKeeperTest {
   @Test
   public void testStartStop() throws Exception {
 
-    try (ConfigStorageZooKeeper configStorage = new ConfigStorageZooKeeper(
+    try (EventConfigStorageZooKeeper configStorage = new EventConfigStorageZooKeeper(
       "test/root", () -> zookeeperServers, () -> 3000)
     ) {
 
@@ -97,7 +97,7 @@ public class ConfigStorageZooKeeperTest {
   }
 
   private void readContentCommandWorking(AtomicBoolean working,
-                                         ConfigStorageZooKeeper configStorage,
+                                         EventConfigStorageZooKeeper configStorage,
                                          String testDir) throws Exception {
 
     File cmdFile = new File(testDir + "/readContent.txt");
@@ -155,7 +155,7 @@ public class ConfigStorageZooKeeperTest {
   }
 
   private void writeContentCommandWorking(AtomicBoolean working,
-                                          ConfigStorageZooKeeper configStorage,
+                                          EventConfigStorageZooKeeper configStorage,
                                           String testDir) throws Exception {
 
     File cmdFile = new File(testDir + "/writeContent.txt");

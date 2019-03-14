@@ -6,7 +6,7 @@ import kz.greetgo.kafka.consumer.TestConsumerLogger;
 import kz.greetgo.kafka.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.Topic;
-import kz.greetgo.kafka.core.config.ConfigStorageInMem;
+import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.util.NetUtil;
 import org.testng.SkipException;
@@ -54,7 +54,7 @@ public class KafkaReactorImplTest {
 
     TestConsumerLogger testConsumerLogger = new TestConsumerLogger();
 
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     KafkaReactor kafkaReactor = new KafkaReactorImpl();
     kafkaReactor.setConfigStorage(configStorage);

@@ -1,6 +1,6 @@
 package kz.greetgo.kafka.consumer;
 
-import kz.greetgo.kafka.core.config.ConfigStorageInMem;
+import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
 import kz.greetgo.kafka.util.Handler;
 import org.testng.annotations.Test;
 
@@ -27,7 +27,7 @@ public class ConsumerConfigWorkerTest {
   @Test
   public void testInitialStateInConfigStorage() {
 
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
@@ -85,7 +85,7 @@ public class ConsumerConfigWorkerTest {
 
   @Test
   public void automaticallyAddAbsentConfigParameters() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
@@ -154,7 +154,7 @@ public class ConsumerConfigWorkerTest {
 
   @Test
   public void getConfigMap() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
@@ -194,7 +194,7 @@ public class ConsumerConfigWorkerTest {
 
   @Test
   public void getWorkerCount_direct() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
@@ -229,7 +229,7 @@ public class ConsumerConfigWorkerTest {
 
   @Test
   public void getWorkerCount_inherits() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
@@ -266,7 +266,7 @@ public class ConsumerConfigWorkerTest {
 
   @Test
   public void getWorkerCount_defaultValue() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
@@ -301,7 +301,7 @@ public class ConsumerConfigWorkerTest {
 
   @Test
   public void getWorkerCount_errorValue_direct() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
@@ -351,7 +351,7 @@ public class ConsumerConfigWorkerTest {
 
   @Test
   public void getWorkerCount_errorValue_parent() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     configStorage.addLines("root/parent.txt",
@@ -409,7 +409,7 @@ public class ConsumerConfigWorkerTest {
   @Test
   public void changedConfigStateAfterStart_fromParents() {
 
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
     testHandler.happenCount = 0;
 
@@ -485,7 +485,7 @@ public class ConsumerConfigWorkerTest {
   @Test
   public void changedConfigStateAfterStart_direct() {
 
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
     testHandler.happenCount = 0;
 
@@ -558,7 +558,7 @@ public class ConsumerConfigWorkerTest {
    */
   @Test
   public void checkCreatesErrorFileAfterBadUpdate_parent() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     // Вначале в файле-конфиге ошибок нет
@@ -626,7 +626,7 @@ public class ConsumerConfigWorkerTest {
   @Test
   public void checkCreatesErrorFileAfterBadUpdate_direct() {
 
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     // В начале в файлах-конфигах ошибок нет
@@ -693,7 +693,7 @@ public class ConsumerConfigWorkerTest {
    */
   @Test
   public void errorFilesDeletesAfterErrorDeleted_parents() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     // В начале в файлах-конфигах делаем ошибки
@@ -762,7 +762,7 @@ public class ConsumerConfigWorkerTest {
    */
   @Test
   public void errorFilesDeletesAfterErrorDeleted_direct() {
-    ConfigStorageInMem configStorage = new ConfigStorageInMem();
+    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
     // В начале в файлах-конфигах делаем ошибки
