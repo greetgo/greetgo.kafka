@@ -84,7 +84,7 @@ public class ConfigStorageZooKeeperTest {
 
       for (int i = 0; workingFile.exists(); i++) {
         Thread.sleep(600);
-        if (!lockWorkingFile.exists()) {
+        if (i >= 0 && !lockWorkingFile.exists()) {
           break;
         }
       }

@@ -2,17 +2,14 @@ package kz.greetgo.kafka2.producer;
 
 import kz.greetgo.kafka2.model.Box;
 import kz.greetgo.kafka2.serializer.BoxSerializer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -48,7 +45,7 @@ public class ProducerFacade {
   private Producer<byte[], Box> createProducer() {
     ByteArraySerializer keySerializer = new ByteArraySerializer();
     BoxSerializer valueSerializer = new BoxSerializer(source.getKryo());
-    return new KafkaProducer<>(source.producerConfig(producerName), keySerializer, valueSerializer);
+    return source.createProducer(producerName, keySerializer, valueSerializer);
   }
 
 
@@ -103,7 +100,7 @@ public class ProducerFacade {
       }
 
       @Override
-      public Future<RecordMetadata> go() {
+      public KafkaFuture go() {
         if (this.topic == null) {
           throw new RuntimeException("topic == null");
         }
@@ -115,7 +112,7 @@ public class ProducerFacade {
 
         byte[] key = source.extractKey(body);
 
-        return getProducer().send(new ProducerRecord<>(topic, partition, timestamp, key, box, headers));
+        return new KafkaFuture(getProducer().send(new ProducerRecord<>(topic, partition, timestamp, key, box, headers)));
       }
     };
   }

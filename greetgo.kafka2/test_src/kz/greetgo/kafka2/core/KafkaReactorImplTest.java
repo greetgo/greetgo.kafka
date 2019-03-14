@@ -157,7 +157,7 @@ public class KafkaReactorImplTest {
               .sending(object)
               .toTopic(topic)
               .go()
-              .get();
+              .awaitAndGet();
 
             System.out.println("Object " + object + " sent to " + topic);
           }

@@ -8,4 +8,12 @@ public class Box {
   public List<String> ignorableConsumers;
   public Object body;
 
+  @Override
+  public String toString() {
+    return "Box{" +
+      "author='" + author + '\'' +
+      ", ignorableConsumers=" + ignorableConsumers +
+      ", body=" + body +
+      '}';
+  }
 }
