@@ -63,7 +63,7 @@ public class AbstractKafkaSenderTest {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void sendFasting() throws Exception {
 
     MyKafkaSender sender = new MyKafkaSender();

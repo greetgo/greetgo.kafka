@@ -25,7 +25,7 @@ public class StrConverterTest {
     public Date birthDate;
   }
 
-  @Test
+  @Test(enabled = false)
   public void toStr_fromStr() {
     converter.useClass(Client.class, "Client123");
 

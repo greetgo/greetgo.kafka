@@ -1,10 +1,20 @@
 dependencies {
-  compile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
-  compile project(':greetgo.str-converter')
 
-  compile 'xstream:xstream:1.2.2'
-  compile 'org.apache.kafka:kafka_2.11:1.0.0'
-  compile group: 'org.scala-lang', name: 'scala-parser-combinators', version: '2.11.0-M4'
+  compile 'org.apache.kafka:kafka-clients:2.1.0'
 
-  testCompile 'com.101tec:zkclient:0.8'
+  compile 'com.esotericsoftware:kryo:5.0.0-RC2'
+
+  compile('org.apache.zookeeper:zookeeper:3.4.13') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
+
+  testCompile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
+  testCompile 'ch.qos.logback:logback-classic:1.2.3'
+
+}
+
+task consumerProbe(type: JavaExec) {
+  group "scripts"
+  main = "kz.greetgo.kafka2.probes.ConsumerProbe"
+  classpath = sourceSets.test.runtimeClasspath
 }

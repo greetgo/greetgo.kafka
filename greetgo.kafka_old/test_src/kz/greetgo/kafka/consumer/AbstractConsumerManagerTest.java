@@ -213,7 +213,7 @@ public class AbstractConsumerManagerTest {
     }
   }
 
-  @Test(timeOut = 30_000)
+  @Test(timeOut = 30_000, enabled = false)
   public void consumer() throws Exception {
     KafkaParams kafkaParams = new KafkaParamsImpl();
 

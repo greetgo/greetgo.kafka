@@ -66,7 +66,7 @@ public class CallerCreatorTest {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void test_listOfBoxes() throws Exception {
 
 
@@ -110,7 +110,7 @@ public class CallerCreatorTest {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void test_listOfObjects_hasDifferentIncludes() throws Exception {
 
     Testing2 testing = new Testing2();
@@ -143,7 +143,7 @@ public class CallerCreatorTest {
     return box;
   }
 
-  @Test
+  @Test(enabled = false)
   public void test_listOfObjects() throws Exception {
 
     Testing2 testing = new Testing2();
@@ -186,7 +186,7 @@ public class CallerCreatorTest {
 
   }
 
-  @Test
+  @Test(enabled = false)
   public void test_box() throws Exception {
 
     Testing3 testing = new Testing3();
@@ -241,7 +241,7 @@ public class CallerCreatorTest {
 
   }
 
-  @Test
+  @Test(enabled = false)
   public void test_object() throws Exception {
 
     Testing4 testing = new Testing4();
@@ -293,7 +293,7 @@ public class CallerCreatorTest {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void test_objectHead() throws Exception {
 
     Testing5 testing = new Testing5();
@@ -348,7 +348,7 @@ public class CallerCreatorTest {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void test_listOfBoxRecords() throws Exception {
 
     Testing6 testing = new Testing6();
