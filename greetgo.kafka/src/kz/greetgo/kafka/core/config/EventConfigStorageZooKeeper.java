@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core.config;
 
+import kz.greetgo.kafka.util.StrUtil;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -223,7 +224,7 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
 
           nodesData.put(path, content);
 
-          zk.create(zNode, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+          createZNode(zk, zNode, content);
         } else {
 
           nodesData.put(path, content);
@@ -236,8 +237,29 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
     } catch (InterruptedException | KeeperException e) {
       throw new RuntimeException(e);
     }
+  }
 
+  private void createDirectZNode(ZooKeeper zk, String zNode, byte[] content) throws KeeperException, InterruptedException {
+    zk.create(zNode, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+  }
 
+  private void createZNode(ZooKeeper zk, String zNode, byte[] content) throws KeeperException, InterruptedException {
+    try {
+      createDirectZNode(zk, zNode, content);
+    } catch (KeeperException.NoNodeException e) {
+      createParentZNode(zk, zNode);
+      createDirectZNode(zk, zNode, content);
+    }
+  }
+
+  private void createParentZNode(ZooKeeper zk, String zNode) throws KeeperException, InterruptedException {
+    String parentZNode = StrUtil.extractParentPath(zNode);
+
+    if (parentZNode == null) {
+      throw new IllegalArgumentException("No parent path for path = " + zNode);
+    }
+
+    createZNode(zk, parentZNode, null);
   }
 
   private final ConcurrentHashMap<String, ZooKeeper> lookingForMap = new ConcurrentHashMap<>();
@@ -282,6 +304,11 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
 
   @Override
   public void ensureLookingFor(String path) {
+
+    if (path == null) {
+      throw new IllegalArgumentException("path == null");
+    }
+
     ZooKeeper zk = zk();
     String zNode = zNode(path);
 
@@ -289,11 +316,17 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
       return;
     }
 
-    nodesData.put(path, readContent(path));
+    {
+      byte[] content = readContent(path);
+      if (content == null) {
+        nodesData.remove(path);
+      } else {
+        nodesData.put(path, content);
+      }
+    }
 
     installWatcherOn(zk, zNode);
   }
-
 
   private void processEvent(WatchedEvent event) {
 

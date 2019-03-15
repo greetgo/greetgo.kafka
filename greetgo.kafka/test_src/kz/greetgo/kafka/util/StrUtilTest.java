@@ -40,4 +40,37 @@ public class StrUtilTest {
 
     assertThat(str).isEqualTo("0013");
   }
+
+
+  @DataProvider
+  public Object[][] extractParentPathDataProvider() {
+    return new Object[][]{
+      {"qwe/ewq", "qwe"},
+      {"qwe/wow/123/www", "qwe/wow/123"},
+      {"/qwe/ewq", "/qwe"},
+      {"/qwe/wow/123/www", "/qwe/wow/123"},
+      {"/qwe/wow/123/////www", "/qwe/wow/123"},
+      {"/qwe", "/"},
+      {"qwe", null},
+      {"/", null},
+      {"/////", null},
+      {"hello/status/xxx/", "hello/status"},
+      {"hello/status/xxx/////", "hello/status"},
+
+      {null, null},
+    };
+  }
+
+  @Test(dataProvider = "extractParentPathDataProvider")
+  public void extractParentPath(String path, String parentPath) {
+
+    //
+    //
+    String actualParentPath = StrUtil.extractParentPath(path);
+    //
+    //
+
+    assertThat(actualParentPath).isEqualTo(parentPath);
+
+  }
 }

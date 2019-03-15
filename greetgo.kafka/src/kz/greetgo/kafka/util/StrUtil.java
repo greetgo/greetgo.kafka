@@ -102,4 +102,31 @@ public class StrUtil {
     }
     return sb.toString();
   }
+
+  public static String extractParentPath(String zNode) {
+    if (zNode == null) {
+      return null;
+    }
+
+    while (zNode.endsWith("/")) {
+      zNode = zNode.substring(0, zNode.length() - 1);
+    }
+
+    int idx = zNode.lastIndexOf('/');
+    if (idx < 0) {
+      return null;
+    }
+
+    if (idx == 0) {
+      return "/";
+    }
+
+    String ret = zNode.substring(0, idx);
+
+    while (ret.endsWith("/")) {
+      ret = ret.substring(0, ret.length() - 1);
+    }
+
+    return ret;
+  }
 }

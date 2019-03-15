@@ -78,9 +78,19 @@ public class EventConfigStorageZooKeeperTest {
           throw new RuntimeException(e);
         }
       });
+      Thread ensureLookingForThread = new Thread(() -> {
+        try {
+          ensureLookingForWorking(working, configStorage, testDir);
+        } catch (RuntimeException e) {
+          throw e;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      });
 
       writeContentThread.start();
       readContentThread.start();
+      ensureLookingForThread.start();
 
       for (int i = 0; workingFile.exists(); i++) {
         Thread.sleep(600);
@@ -93,6 +103,7 @@ public class EventConfigStorageZooKeeperTest {
 
       writeContentThread.join();
       readContentThread.join();
+      ensureLookingForThread.join();
     }
   }
 
@@ -144,9 +155,56 @@ public class EventConfigStorageZooKeeperTest {
         } else {
           String outFileName = cmdFile.getPath() + "-" + sdf.format(new Date()) + "-" + path + ".out.txt";
 
+          new File(outFileName).getParentFile().mkdirs();
           Files.write(Paths.get(outFileName), readContent);
         }
 
+
+      }
+
+    }
+
+  }
+
+
+  private void ensureLookingForWorking(AtomicBoolean working,
+                                       EventConfigStorageZooKeeper configStorage,
+                                       String testDir) throws Exception {
+
+    File cmdFile = new File(testDir + "/ensureLookingFor.txt");
+    File cmdFileOk = new File(testDir + "/ensureLookingFor-OK.txt");
+    cmdFileOk.getParentFile().mkdirs();
+    cmdFileOk.createNewFile();
+
+    while (working.get()) {
+
+      if (!cmdFile.exists()) {
+        Thread.sleep(800);
+        continue;
+      }
+
+      List<String> fileLines = Files.readAllLines(cmdFile.toPath());
+
+      if (cmdFileOk.exists()) {
+        cmdFileOk.delete();
+      }
+      cmdFile.renameTo(cmdFileOk);
+
+      for (String line : fileLines) {
+
+        String trimmedLine = line.trim();
+        if (trimmedLine.isEmpty()) {
+          continue;
+        }
+        if (trimmedLine.startsWith("#")) {
+          continue;
+        }
+
+        //noinspection UnnecessaryLocalVariable
+        String path = trimmedLine;
+
+        System.out.println("ensure looking for " + path);
+        configStorage.ensureLookingFor(path);
 
       }
 
