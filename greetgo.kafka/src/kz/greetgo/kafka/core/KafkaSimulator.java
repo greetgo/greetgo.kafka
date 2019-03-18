@@ -3,8 +3,10 @@ package kz.greetgo.kafka.core;
 import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.model.Box;
+import kz.greetgo.kafka.model.BoxHolder;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
+import kz.greetgo.kafka.util.BoxUtil;
 import kz.greetgo.kafka.util.KeyUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,12 +16,17 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
+import static java.util.Collections.synchronizedList;
+import static java.util.Collections.unmodifiableList;
 import static jdk.nashorn.internal.runtime.JSType.toLong;
 
 public class KafkaSimulator extends KafkaReactorAbstract {
@@ -87,8 +94,9 @@ public class KafkaSimulator extends KafkaReactorAbstract {
 
   }
 
+  private final List<ConsumerRecord<byte[], Box>> pushedRecords = synchronizedList(new ArrayList<>());
+
   private void pushRecord(ProducerRecord<byte[], Box> r, MockProducerHolder producer) {
-    System.out.println("4jn34n23j :: r = " + r);
 
     TopicPartition topicPartition = producer.topicPartition(r);
 
@@ -108,6 +116,28 @@ public class KafkaSimulator extends KafkaReactorAbstract {
           + " of record " + r.value());
       }
     }
+
+    pushedRecords.add(consumerRecord);
+  }
+
+  public void clearPushed() {
+    pushedRecords.clear();
+  }
+
+  public List<ConsumerRecord<byte[], Box>> allPushed() {
+    return unmodifiableList(new ArrayList<>(pushedRecords));
+  }
+
+  public <T> List<BoxHolder<T>> pushedOf(Class<T> aClass) {
+
+    return pushedRecords
+      .stream()
+      .map(rec -> BoxUtil.hold(rec.value(), aClass))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .collect(Collectors.toList())
+      ;
+
   }
 
   private List<ConsumerDefinition> consumerDefinitionList;
