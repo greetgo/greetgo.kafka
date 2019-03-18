@@ -78,10 +78,6 @@ public class KafkaSimulator extends KafkaReactorAbstract {
 
   public void push() {
 
-    if (consumerDefinitionList == null) {
-      throw new RuntimeException("consumerDefinitionList == null");
-    }
-
     for (MockProducerHolder producer : producers.values()) {
       producer.getProducer().flush();
       List<ProducerRecord<byte[], Box>> history = producer.getProducer().history();
@@ -105,29 +101,45 @@ public class KafkaSimulator extends KafkaReactorAbstract {
       toLong(r.timestamp()), TimestampType.CREATE_TIME, 1L, 1, 1, r.key(), r.value(), r.headers()
     );
 
-    Map<TopicPartition, List<ConsumerRecord<byte[], Box>>> map = new HashMap<>();
-    map.put(topicPartition, singletonList(consumerRecord));
+    List<ConsumerDefinition> consumerDefinitionList = this.consumerDefinitionList;
 
-    ConsumerRecords<byte[], Box> singleList = new ConsumerRecords<>(map);
+    if (consumerDefinitionList != null) {
 
-    for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {
-      if (!consumerDefinition.invoke(singleList)) {
-        throw new RuntimeException("Cannot invoke consumer " + consumerDefinition.logDisplay()
-          + " of record " + r.value());
+      Map<TopicPartition, List<ConsumerRecord<byte[], Box>>> map = new HashMap<>();
+      map.put(topicPartition, singletonList(consumerRecord));
+
+      ConsumerRecords<byte[], Box> singleList = new ConsumerRecords<>(map);
+
+      for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {
+        if (!consumerDefinition.invoke(singleList)) {
+          throw new RuntimeException("Cannot invoke consumer " + consumerDefinition.logDisplay()
+            + " of record " + r.value());
+        }
       }
+
     }
 
     pushedRecords.add(consumerRecord);
   }
 
+  @SuppressWarnings("unused")
+  public void clearAllProducers() {
+    for (MockProducerHolder producer : producers.values()) {
+      producer.getProducer().clear();
+    }
+  }
+
+  @SuppressWarnings("unused")
   public void clearPushed() {
     pushedRecords.clear();
   }
 
+  @SuppressWarnings("unused")
   public List<ConsumerRecord<byte[], Box>> allPushed() {
     return unmodifiableList(new ArrayList<>(pushedRecords));
   }
 
+  @SuppressWarnings("unused")
   public <T> List<BoxHolder<T>> pushedOf(Class<T> aClass) {
 
     return pushedRecords
