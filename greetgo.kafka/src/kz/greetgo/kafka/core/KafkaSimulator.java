@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -68,13 +69,17 @@ public class KafkaSimulator extends KafkaReactorAbstract {
       }
 
       MockProducerHolder mockProducerHolder = new MockProducerHolder(
-        producerName, keySerializer, valueSerializer
+        producerName, keySerializer, valueSerializer, getCluster()
       );
       producers.put(mockProducerHolder.getProducerName(), mockProducerHolder);
       return mockProducerHolder.getProducer();
 
     }
   };
+
+  protected Cluster getCluster() {
+    return Cluster.empty();
+  }
 
   public void push() {
 

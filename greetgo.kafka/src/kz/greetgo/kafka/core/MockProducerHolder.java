@@ -24,15 +24,16 @@ public class MockProducerHolder {
 
   public MockProducerHolder(final String producerName,
                             final ByteArraySerializer keySerializer,
-                            final BoxSerializer valueSerializer) {
+                            final BoxSerializer valueSerializer, Cluster cluster) {
     this.producerName = producerName;
     this.keySerializer = keySerializer;
     this.valueSerializer = valueSerializer;
 
-    cluster = Cluster.empty();
+    this.cluster = cluster == null ? Cluster.empty() : cluster;
+
     partitioner = new DefaultPartitioner();
 
-    producer = new MockProducer<>(cluster, true, partitioner, keySerializer, valueSerializer);
+    producer = new MockProducer<>(this.cluster, true, partitioner, keySerializer, valueSerializer);
   }
 
   public String getProducerName() {
