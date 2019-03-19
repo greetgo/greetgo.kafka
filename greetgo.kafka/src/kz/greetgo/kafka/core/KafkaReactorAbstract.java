@@ -1,6 +1,8 @@
 package kz.greetgo.kafka.core;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.serializers.CollectionSerializer;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerDefinitionExtractor;
 import kz.greetgo.kafka.consumer.ConsumerLogger;
@@ -12,6 +14,8 @@ import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.util.EmptyConsumerLogger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -58,8 +62,19 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   {
     kryo.register(Box.class);
     kryo.register(ArrayList.class);
+    //noinspection ArraysAsListWithZeroOrOneArgument
+    kryo.register(Arrays.asList().getClass(), new CollectionSerializer() {
+      @Override
+      protected Collection create(Kryo kryo, Input input, Class type, int size) {
+        return new ArrayList();
+      }
+    });
   }
 
+  @Override
+  public Kryo getKryo() {
+    return kryo;
+  }
 
   @Override
   public void registerModel(Class<?> modelClass) {

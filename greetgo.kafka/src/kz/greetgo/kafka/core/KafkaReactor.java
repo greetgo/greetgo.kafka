@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core;
 
+import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.consumer.ConsumerLogger;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.producer.ProducerFacade;
@@ -17,6 +18,8 @@ public interface KafkaReactor {
   void setConsumerLogger(ConsumerLogger consumerLogger);
 
   void setBootstrapServers(Supplier<String> bootstrapServers);
+
+  Kryo getKryo();
 
   default void addControllers(Iterable<Object> controllers) {
     controllers.forEach(this::addController);
