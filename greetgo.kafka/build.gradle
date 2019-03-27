@@ -1,3 +1,7 @@
+plugins {
+  id "kz.greetgo.upload-to-maven" version "0.0.5"
+}
+
 dependencies {
 
   compile 'org.apache.kafka:kafka-clients:2.1.0'
@@ -18,4 +22,15 @@ task consumerProbe(type: JavaExec) {
   group "scripts"
   main = "kz.greetgo.kafka2.probes.ConsumerProbe"
   classpath = sourceSets.test.runtimeClasspath
+}
+
+uploadToMavenCentral {
+  description = "Kafka greego library"
+  url = 'https://github.com/greetgo/greetgo.kafka'
+  scm.url = 'https://github.com/greetgo/greetgo.kafka.git'
+  developer {
+    id = 'pompei'
+    name = 'Evgeniy Kolpakov'
+    email = 'ekolpakov@greet-go.com'
+  }
 }

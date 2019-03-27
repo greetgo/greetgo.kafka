@@ -1,3 +1,18 @@
+plugins {
+  id "kz.greetgo.upload-to-maven" version "0.0.5"
+}
+
 dependencies {
   compile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
+}
+
+uploadToMavenCentral {
+  description = "greetgo str-converter for kafka library"
+  url = 'https://github.com/greetgo/greetgo.kafka'
+  scm.url = 'https://github.com/greetgo/greetgo.kafka.git'
+  developer {
+    id = 'pompei'
+    name = 'Evgeniy Kolpakov'
+    email = 'ekolpakov@greet-go.com'
+  }
 }
