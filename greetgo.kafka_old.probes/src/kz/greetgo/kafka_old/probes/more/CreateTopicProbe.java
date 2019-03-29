@@ -9,7 +9,7 @@ import org.I0Itec.zkclient.ZkConnection;
 
 import java.util.Properties;
 
-public class CreateTopic {
+public class CreateTopicProbe {
   public static void main(String[] args) throws Exception {
     ZkConnection zkConnection = new ZkConnection("localhost:2181", 3000);
     try {

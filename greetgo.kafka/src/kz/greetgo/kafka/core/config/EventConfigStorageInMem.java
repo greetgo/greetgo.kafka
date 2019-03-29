@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core.config;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -152,6 +153,11 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
     }
   }
 
+  private void writeLine(String line) {
+    PrintStream out = System.out;
+    out.println(line);
+  }
+
   public void printCurrentState() {
     List<Map.Entry<String, byte[]>> list
       = data
@@ -162,7 +168,7 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
 
     for (Map.Entry<String, byte[]> e : list) {
 
-      System.out.println("FILE " + e.getKey());
+      writeLine("FILE " + e.getKey());
 
       String[] lines = new String(e.getValue(), UTF_8).split("\n");
 
@@ -170,11 +176,11 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
         int len = ("" + (lines.length - 1)).length();
         int no = 1;
         for (String line : lines) {
-          System.out.println("LINE " + intToStrLen(no++, len) + " : " + line);
+          writeLine("LINE " + intToStrLen(no++, len) + " : " + line);
         }
       }
 
-      System.out.println();
+      writeLine("");
 
     }
   }

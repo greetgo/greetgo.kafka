@@ -277,8 +277,6 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
   private void installWatcherOn(ZooKeeper zk, String zNode) {
     lookingForMap.put(zNode, zk);
 
-    System.out.println("h32bb4 :: installing watcher on " + zNode);
-
     try {
       zk.exists(zNode, this::processEvent);
     } catch (KeeperException | InterruptedException e) {
@@ -330,8 +328,6 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
 
   private void processEvent(WatchedEvent event) {
 
-    System.out.println("jn2j4n :: processEvent : event = " + event);
-
     String zNode = event.getPath();
 
     String path = zNodeToPath(zNode);
@@ -357,8 +353,6 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
   private final ConcurrentHashMap<String, byte[]> nodesData = new ConcurrentHashMap<>();
 
   private void fireConfigEventHandlerLocal(String path, ConfigEventType eventType) {
-
-    System.out.println("3j24jn5 :: fireConfigEventHandlerLocal : " + path + " " + eventType);
 
     if (eventType == ConfigEventType.CREATE || eventType == ConfigEventType.UPDATE) {
 
