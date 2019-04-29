@@ -1,11 +1,12 @@
 package kz.greetgo.kafka.core.config;
 
-import kz.greetgo.kafka.util.StrUtil;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.curator.retry.RetryNTimes;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 
@@ -13,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntSupplier;
@@ -27,6 +27,8 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
 
   private final AtomicReference<ZooKeeper> zkHolder = new AtomicReference<>(null);
 
+  private final AtomicReference<CuratorFramework> clientHolder = new AtomicReference<>(null);
+
   public EventConfigStorageZooKeeper(String rootPath, Supplier<String> zookeeperServers, IntSupplier sessionTimeout) {
     this.zookeeperServers = zookeeperServers;
     this.rootPath = rootPath;
@@ -34,68 +36,45 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
   }
 
   public void reset() {
-    ZooKeeper current = zkHolder.getAndSet(null);
-    if (current != null) {
-      try {
+    {
+      ZooKeeper current = zkHolder.getAndSet(null);
+      if (current != null) {
+        try {
+          current.close();
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    }
+    {
+      CuratorFramework current = clientHolder.getAndSet(null);
+      if (current != null) {
         current.close();
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
       }
     }
   }
 
-  public ZooKeeper zk() {
+  public CuratorFramework client() {
     if (!opened.get()) {
-      throw new RuntimeException("ConfigStorageZooKeeper closed");
+      throw new RuntimeException(getClass().getSimpleName() + " closed");
     }
-    try {
+    return clientHolder.accumulateAndGet(null, (current, ignore) -> current != null ? current : createClient());
+  }
 
-      {
-        ZooKeeper zk = zkHolder.get();
-        if (zk != null) {
+  private CuratorFramework createClient() {
+    int sleepMsBetweenRetries = 100;
+    int maxRetries = 3;
+    RetryPolicy retryPolicy = new RetryNTimes(
+      maxRetries, sleepMsBetweenRetries);
 
-          if (zk.getState().isAlive()) {
-            return zk;
-          }
+    CuratorFramework client = CuratorFrameworkFactory
+      .newClient(zookeeperServers.get(), sessionTimeout.getAsInt(), 25000, retryPolicy);
 
-          zkHolder.set(null);
-        }
-      }
+    client.start();
 
-      final ZooKeeper newZK;
+    prepareWatchers(client);
 
-      synchronized (zkHolder) {
-
-        {
-          ZooKeeper zk = zkHolder.get();
-          if (zk != null && zk.getState().isAlive()) {
-            return zk;
-          }
-        }
-
-        final CountDownLatch connSignal = new CountDownLatch(0);
-        newZK = new ZooKeeper(zookeeperServers.get(), sessionTimeout.getAsInt(), (WatchedEvent event) -> {
-          if (event.getState() == Watcher.Event.KeeperState.SyncConnected) {
-            connSignal.countDown();
-          }
-        });
-
-        connSignal.await();
-
-        zkHolder.set(newZK);
-
-      }
-
-      prepareWatchers(newZK);
-
-      return newZK;
-
-
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return client;
   }
 
   private final AtomicBoolean opened = new AtomicBoolean(true);
@@ -166,9 +145,11 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
 
     try {
 
-      return null != zk().exists(zNode(path), null);
+      return client().checkExists().forPath(zNode(path)) != null;
 
-    } catch (KeeperException | InterruptedException e) {
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
 
@@ -177,16 +158,23 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
   @Override
   public byte[] readContent(String path) {
 
-    ZooKeeper zk = zk();
+    CuratorFramework client = client();
     String zNode = zNode(path);
 
     try {
-      Stat stat = zk.exists(zNode, null);
+
+      client.checkExists().forPath(zNode);
+
+      Stat stat = client.checkExists().forPath(zNode);
       if (stat == null) {
         return null;
       }
-      return zk.getData(zNode, null, stat);
-    } catch (KeeperException | InterruptedException e) {
+
+      return client.getData().forPath(zNode);
+
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
 
@@ -201,85 +189,69 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
       return;
     }
 
-    ZooKeeper zk = zk();
+    CuratorFramework client = client();
     String zNode = zNode(path);
 
     try {
 
       if (content == null) {
 
-        Stat stat = zk.exists(zNode, null);
+
+        Stat stat = client.checkExists().forPath(zNode);
         if (stat == null) {
           return;
         }
 
         nodesData.remove(path);
 
-        zk.delete(zNode, stat.getVersion());
+        client.delete().withVersion(stat.getVersion()).forPath(zNode);
 
       } else {
 
-        Stat stat = zk.exists(zNode, null);
+        Stat stat = client.checkExists().forPath(zNode);
         if (stat == null) {
 
           nodesData.put(path, content);
 
-          createZNode(zk, zNode, content);
+          client.create().creatingParentContainersIfNeeded().forPath(zNode, content);
+
         } else {
 
           nodesData.put(path, content);
 
-          zk.setData(zNode, content, stat.getVersion());
+          client.setData().withVersion(stat.getVersion()).forPath(zNode, content);
         }
 
       }
 
-    } catch (InterruptedException | KeeperException e) {
+
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
-  private void createDirectZNode(ZooKeeper zk, String zNode, byte[] content) throws KeeperException, InterruptedException {
-    zk.create(zNode, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-  }
+  private final ConcurrentHashMap<String, CuratorFramework> lookingForMap = new ConcurrentHashMap<>();
 
-  private void createZNode(ZooKeeper zk, String zNode, byte[] content) throws KeeperException, InterruptedException {
-    try {
-      createDirectZNode(zk, zNode, content);
-    } catch (KeeperException.NoNodeException e) {
-      createParentZNode(zk, zNode);
-      createDirectZNode(zk, zNode, content);
-    }
-  }
-
-  private void createParentZNode(ZooKeeper zk, String zNode) throws KeeperException, InterruptedException {
-    String parentZNode = StrUtil.extractParentPath(zNode);
-
-    if (parentZNode == null) {
-      throw new IllegalArgumentException("No parent path for path = " + zNode);
-    }
-
-    createZNode(zk, parentZNode, null);
-  }
-
-  private final ConcurrentHashMap<String, ZooKeeper> lookingForMap = new ConcurrentHashMap<>();
-
-  private void prepareWatchers(ZooKeeper newZK) {
+  private void prepareWatchers(CuratorFramework newClient) {
 
     List<String> zNodes = new ArrayList<>(lookingForMap.keySet());
 
     for (String zNode : zNodes) {
-      installWatcherOn(newZK, zNode);
+      installWatcherOn(newClient, zNode);
     }
 
   }
 
-  private void installWatcherOn(ZooKeeper zk, String zNode) {
-    lookingForMap.put(zNode, zk);
+  private void installWatcherOn(CuratorFramework client, String zNode) {
+    lookingForMap.put(zNode, client);
 
     try {
-      zk.exists(zNode, this::processEvent);
-    } catch (KeeperException | InterruptedException e) {
+      client.checkExists().usingWatcher((CuratorWatcher) this::processEvent).forPath(zNode);
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
@@ -307,10 +279,10 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
       throw new IllegalArgumentException("path == null");
     }
 
-    ZooKeeper zk = zk();
+    CuratorFramework client = client();
     String zNode = zNode(path);
 
-    if (zk == lookingForMap.get(zNode)) {
+    if (client == lookingForMap.get(zNode)) {
       return;
     }
 
@@ -323,7 +295,7 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
       }
     }
 
-    installWatcherOn(zk, zNode);
+    installWatcherOn(client, zNode);
   }
 
   private void processEvent(WatchedEvent event) {
@@ -342,8 +314,7 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
     }
 
     if (opened.get() && lookingForMap.containsKey(zNode)) {
-      ZooKeeper zk = zk();
-      installWatcherOn(zk, zNode);
+      installWatcherOn(client(), zNode);
     }
 
     fireConfigEventHandlerLocal(path, eventType);

@@ -1,8 +1,7 @@
 package kz.greetgo.kafka.core.config;
 
 import kz.greetgo.kafka.util.NetUtil;
-import org.apache.zookeeper.ZooKeeper;
-import org.testng.SkipException;
+import org.apache.curator.framework.CuratorFramework;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -26,7 +25,7 @@ public class EventConfigStorageZooKeeperTest {
     zookeeperServers = "localhost:2181";
 
     if (!NetUtil.canConnectToAnyBootstrapServer(zookeeperServers)) {
-      throw new SkipException("No zookeeper connection : " + zookeeperServers);
+      throw new RuntimeException("No zookeeper connection : " + zookeeperServers);
     }
   }
 
@@ -43,8 +42,8 @@ public class EventConfigStorageZooKeeperTest {
       configStorage.ensureLookingFor("asd.txt");
       configStorage.ensureLookingFor("status.txt");
 
-      ZooKeeper zk = configStorage.zk();
-      System.out.println("zk = " + zk);
+      CuratorFramework client = configStorage.client();
+      System.out.println("client = " + client);
 
       String testDir = "build/ConfigStorageZooKeeperTest";
       File workingFile = new File(testDir + "/working.txt");
