@@ -13,6 +13,10 @@ dependencies {
     exclude group: 'log4j', module: 'log4j'
   }
 
+  compile("org.apache.curator:curator-x-async:4.0.1") {
+    exclude group: "org.apache.zookeeper", module: "zookeeper"
+  }
+
   testCompile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
   testCompile 'ch.qos.logback:logback-classic:1.2.3'
 
