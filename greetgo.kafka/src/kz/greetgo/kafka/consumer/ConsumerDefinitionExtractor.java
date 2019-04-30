@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.consumer.annotations.Topic;
+import kz.greetgo.kafka.core.logger.Logger;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ import java.util.List;
 
 public class ConsumerDefinitionExtractor {
 
-  public ConsumerLogger consumerLogger;
+  public Logger logger;
   public String hostId;
 
   public List<ConsumerDefinition> extract(Object controller) {
@@ -23,7 +24,7 @@ public class ConsumerDefinitionExtractor {
       }
 
       {
-        ConsumerDefinition consumerDefinition = new ConsumerDefinition(controller, method, consumerLogger, hostId);
+        ConsumerDefinition consumerDefinition = new ConsumerDefinition(controller, method, logger, hostId);
 
         ret.add(consumerDefinition);
       }

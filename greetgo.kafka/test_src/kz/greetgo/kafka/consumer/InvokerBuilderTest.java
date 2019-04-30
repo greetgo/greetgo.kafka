@@ -7,6 +7,7 @@ import kz.greetgo.kafka.consumer.annotations.Offset;
 import kz.greetgo.kafka.consumer.annotations.Partition;
 import kz.greetgo.kafka.consumer.annotations.Timestamp;
 import kz.greetgo.kafka.consumer.annotations.Topic;
+import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.util.RND;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -265,16 +266,18 @@ public class InvokerBuilderTest {
     ConsumerRecord<byte[], Box> record = recordOf("test1", new byte[0], box);
     ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record));
 
-    TestConsumerLogger testConsumerLogger = new TestConsumerLogger();
+    TestLoggerDestination testLoggerDestination = new TestLoggerDestination();
+    Logger logger = new Logger();
+    logger.setDestination(testLoggerDestination);
 
     //
     //
-    boolean toCommit = new InvokerBuilder(c6, method, testConsumerLogger).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c6, method, logger).build().invoke(records);
     //
     //
 
-    assertThat(testConsumerLogger.errorList).hasSize(1);
-    assertThat(testConsumerLogger.errorList.get(0).getMessage()).isEqualTo(c6.errorMessage);
+    assertThat(testLoggerDestination.errorList).hasSize(1);
+    assertThat(testLoggerDestination.errorList.get(0).getMessage()).isEqualTo(c6.errorMessage);
 
     assertThat(toCommit).isFalse();
   }
@@ -309,17 +312,19 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2));
 
-    TestConsumerLogger testConsumerLogger = new TestConsumerLogger();
+    TestLoggerDestination testLoggerDestination = new TestLoggerDestination();
+    Logger logger = new Logger();
+    logger.setDestination(testLoggerDestination);
 
     //
     //
-    boolean toCommit = new InvokerBuilder(c7, method, testConsumerLogger).build().invoke(records);
+    boolean toCommit = new InvokerBuilder(c7, method, logger).build().invoke(records);
     //
     //
 
-    assertThat(testConsumerLogger.errorList).hasSize(2);
-    assertThat(testConsumerLogger.errorList.get(0)).isSameAs((Error1) box1.body);
-    assertThat(testConsumerLogger.errorList.get(1)).isSameAs((Error2) box2.body);
+    assertThat(testLoggerDestination.errorList).hasSize(2);
+    assertThat(testLoggerDestination.errorList.get(0)).isSameAs((Error1) box1.body);
+    assertThat(testLoggerDestination.errorList.get(1)).isSameAs((Error2) box2.body);
     assertThat(toCommit).isTrue();
   }
 

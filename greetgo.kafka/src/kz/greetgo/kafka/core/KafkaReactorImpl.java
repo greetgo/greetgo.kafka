@@ -3,7 +3,8 @@ package kz.greetgo.kafka.core;
 import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerReactor;
-import kz.greetgo.kafka.consumer.annotations.Topic;
+import kz.greetgo.kafka.core.logger.Logger;
+import kz.greetgo.kafka.core.logger.LoggerType;
 import kz.greetgo.kafka.errors.NotDefined;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerConfigWorker;
@@ -38,11 +39,11 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
     for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {
       ConsumerReactor consumerReactor = new ConsumerReactor();
       consumerReactorList.add(consumerReactor);
+      consumerReactor.logger = logger;
       consumerReactor.kryo = kryo;
       consumerReactor.bootstrapServers = bootstrapServers;
       consumerReactor.configStorage = configStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
-      consumerReactor.consumerLogger = consumerLogger;
       consumerReactor.start();
     }
   }
@@ -59,6 +60,12 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
   }
 
   private final ProducerSource producerSource = new ProducerSource() {
+
+    @Override
+    public Logger logger() {
+      return logger;
+    }
+
     @Override
     public Kryo getKryo() {
       return kryo;
@@ -85,6 +92,9 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
       Map<String, Object> configMap = producerConfigWorker.getConfigFor(producerName);
       configMap.put("bootstrap.servers", bootstrapServers.get());
+      if (logger.isShow(LoggerType.SHOW_PRODUCER_CONFIG)) {
+        logger.logProducerConfigOnCreating(producerName, configMap);
+      }
       return new KafkaProducer<>(configMap, keySerializer, valueSerializer);
 
     }

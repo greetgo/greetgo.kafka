@@ -1,21 +1,21 @@
 package kz.greetgo.kafka.core;
 
 import com.esotericsoftware.kryo.Kryo;
-import kz.greetgo.kafka.consumer.ConsumerLogger;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
+import kz.greetgo.kafka.core.logger.LoggerExternal;
 import kz.greetgo.kafka.producer.ProducerFacade;
 
 import java.util.function.Supplier;
 
 public interface KafkaReactor {
 
+  LoggerExternal logger();
+
   void setProducerConfigRootPath(String producerConfigRootPath);
 
   void setAuthorGetter(Supplier<String> authorGetter);
 
   void setConfigStorage(EventConfigStorage configStorage);
-
-  void setConsumerLogger(ConsumerLogger consumerLogger);
 
   void setBootstrapServers(Supplier<String> bootstrapServers);
 
@@ -40,4 +40,5 @@ public interface KafkaReactor {
   void stopConsumers();
 
   ProducerFacade createProducer(String producerName);
+
 }

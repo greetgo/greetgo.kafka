@@ -2,6 +2,7 @@ package kz.greetgo.kafka.core;
 
 import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
+import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.model.BoxHolder;
 import kz.greetgo.kafka.producer.ProducerSource;
@@ -43,6 +44,12 @@ public class KafkaSimulator extends KafkaReactorAbstract {
   private final ConcurrentHashMap<String, MockProducerHolder> producers = new ConcurrentHashMap<>();
 
   private final ProducerSource producerSource = new ProducerSource() {
+
+    @Override
+    public Logger logger() {
+      return logger;
+    }
+
     @Override
     public Kryo getKryo() {
       return kryo;

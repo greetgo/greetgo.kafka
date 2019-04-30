@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.producer;
 
+import kz.greetgo.kafka.core.logger.LoggerType;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import org.apache.kafka.clients.producer.Producer;
@@ -28,7 +29,13 @@ public class ProducerFacade {
   public void reset() {
     Producer<byte[], Box> producer = this.producer.getAndSet(null);
     if (producer != null) {
+
+
       producer.close();
+
+      if (source.logger().isShow(LoggerType.LOG_CLOSE_PRODUCER)) {
+        source.logger().logProducerClosed(producerName);
+      }
     }
   }
 

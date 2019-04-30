@@ -2,6 +2,7 @@ package kz.greetgo.kafka.consumer;
 
 import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
+import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.serializer.BoxDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -18,17 +19,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_FINISH_WORKER;
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_WAKEUP_EXCEPTION_HAPPENED;
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_START_CONSUMER_WORKER;
+import static kz.greetgo.kafka.core.logger.LoggerType.SHOW_CONSUMER_WORKER_CONFIG;
+
 public class ConsumerReactor {
 
   //
   // Input values for reactor
   //
 
+  public Logger logger;
   public Kryo kryo;
   public ConsumerDefinition consumerDefinition;
   public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
-  public ConsumerLogger consumerLogger;
   public String storageRootPath;
   public String storageParentConfigPath;
 
@@ -156,21 +162,22 @@ public class ConsumerReactor {
     @Override
     public void run() {
       try {
-        consumerLogger.startWorker(consumerDefinition.logDisplay(), id);
+        if (logger.isShow(LOG_START_CONSUMER_WORKER)) {
+          logger.logConsumerStartWorker(consumerDefinition.logDisplay(), id);
+        }
+
         Map<String, Object> configMap = consumerConfigWorker.getConfigMap();
         configMap.put("bootstrap.servers", bootstrapServers.get());
         configMap.put("auto.offset.reset", consumerDefinition.getAutoOffsetReset().name().toLowerCase());
         configMap.put("group.id", consumerDefinition.getGroupId());
         configMap.put("enable.auto.commit", consumerDefinition.isAutoCommit() ? "true" : "false");
 
-        consumerLogger.showWorkerConfig(consumerDefinition.logDisplay(), id, configMap);
+        if (logger.isShow(SHOW_CONSUMER_WORKER_CONFIG)) {
+          logger.logConsumerWorkerConfig(consumerDefinition.logDisplay(), id, configMap);
+        }
 
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
         BoxDeserializer forValue = new BoxDeserializer(kryo);
-
-//        for (Map.Entry<String, Object> e : configMap.entrySet()) {
-//          System.out.println("CONSUMER PARAM " + e.getKey() + " = " + e.getValue());
-//        }
 
         try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
           consumer.subscribe(consumerDefinition.topicList());
@@ -184,14 +191,18 @@ public class ConsumerReactor {
               }
 
             } catch (org.apache.kafka.common.errors.WakeupException wakeupException) {
-              consumerLogger.wakeupExceptionHappened(wakeupException);
+              if (logger.isShow(LOG_CONSUMER_WAKEUP_EXCEPTION_HAPPENED)) {
+                logger.logConsumerWakeupExceptionHappened(wakeupException);
+              }
             }
           }
         }
 
       } finally {
         running.set(false);
-        consumerLogger.finishWorker(consumerDefinition.logDisplay(), id);
+        if (logger.isShow(LOG_CONSUMER_FINISH_WORKER)) {
+          logger.logConsumerFinishWorker(consumerDefinition.logDisplay(), id);
+        }
       }
     }
   }

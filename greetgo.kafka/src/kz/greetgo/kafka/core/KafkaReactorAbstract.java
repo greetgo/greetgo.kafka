@@ -5,13 +5,13 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.serializers.CollectionSerializer;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerDefinitionExtractor;
-import kz.greetgo.kafka.consumer.ConsumerLogger;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
+import kz.greetgo.kafka.core.logger.Logger;
+import kz.greetgo.kafka.core.logger.LoggerExternal;
 import kz.greetgo.kafka.errors.NotDefined;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.producer.ProducerSource;
-import kz.greetgo.kafka.util.EmptyConsumerLogger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,9 +23,16 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   protected EventConfigStorage configStorage;
   protected Supplier<String> authorGetter;
   protected String producerConfigRootPath;
-  protected ConsumerLogger consumerLogger = new EmptyConsumerLogger();
+
   protected String hostId;
   protected Supplier<String> bootstrapServers;
+
+  protected final Logger logger = new Logger();
+
+  @Override
+  public LoggerExternal logger() {
+    return logger;
+  }
 
   @Override
   public void setConfigStorage(EventConfigStorage configStorage) {
@@ -40,11 +47,6 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   @Override
   public void setProducerConfigRootPath(String producerConfigRootPath) {
     this.producerConfigRootPath = producerConfigRootPath;
-  }
-
-  @Override
-  public void setConsumerLogger(ConsumerLogger consumerLogger) {
-    this.consumerLogger = consumerLogger;
   }
 
   @Override
@@ -103,7 +105,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     List<ConsumerDefinition> consumerDefinitionList = new ArrayList<>();
 
     ConsumerDefinitionExtractor cde = new ConsumerDefinitionExtractor();
-    cde.consumerLogger = consumerLogger;
+    cde.logger = logger;
     cde.hostId = hostId;
 
     for (Object controller : controllerList) {

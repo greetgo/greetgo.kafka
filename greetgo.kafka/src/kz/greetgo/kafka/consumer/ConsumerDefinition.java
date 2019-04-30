@@ -4,6 +4,7 @@ import kz.greetgo.kafka.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.KafkaNotifier;
 import kz.greetgo.kafka.consumer.annotations.Topic;
+import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -22,7 +23,7 @@ public class ConsumerDefinition {
   private final AutoOffsetReset autoOffsetReset;
   private final String groupId;
 
-  public ConsumerDefinition(Object controller, Method method, ConsumerLogger consumerLogger, String hostId) {
+  public ConsumerDefinition(Object controller, Method method, Logger logger, String hostId) {
     this.controller = controller;
     this.method = method;
 
@@ -31,7 +32,7 @@ public class ConsumerDefinition {
       folderPath = consumersFolder == null ? null : consumersFolder.value();
     }
 
-    invoker = new InvokerBuilder(controller, method, consumerLogger).build();
+    invoker = new InvokerBuilder(controller, method, logger).build();
 
     {
       autoOffsetReset = method.getAnnotation(KafkaNotifier.class) == null

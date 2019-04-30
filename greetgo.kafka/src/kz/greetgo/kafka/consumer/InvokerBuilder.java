@@ -7,6 +7,7 @@ import kz.greetgo.kafka.consumer.annotations.Offset;
 import kz.greetgo.kafka.consumer.annotations.Partition;
 import kz.greetgo.kafka.consumer.annotations.Timestamp;
 import kz.greetgo.kafka.consumer.annotations.Topic;
+import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_ERROR_IN_METHOD;
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD;
 import static kz.greetgo.kafka.util.GenericUtil.extractClass;
 import static kz.greetgo.kafka.util.GenericUtil.isOfClass;
 
@@ -29,12 +32,12 @@ public class InvokerBuilder {
 
   private final Object controller;
   private final Method method;
-  private final ConsumerLogger consumerLogger;
+  private final Logger logger;
 
-  public InvokerBuilder(Object controller, Method method, ConsumerLogger consumerLogger) {
+  public InvokerBuilder(Object controller, Method method, Logger logger) {
     this.controller = controller;
     this.method = method;
-    this.consumerLogger = consumerLogger;
+    this.logger = logger;
   }
 
   public Invoker build() {
@@ -118,11 +121,15 @@ public class InvokerBuilder {
           method.invoke(controller, parameters);
           return true;
         } catch (IllegalAccessException e) {
-          consumerLogger.illegalAccessExceptionInvokingMethod(e);
+          if (logger.isShow(LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD)) {
+            logger.logConsumerIllegalAccessExceptionInvokingMethod(e, consumerName, controller, method);
+          }
           return false;
         } catch (InvocationTargetException e) {
           Throwable error = e.getTargetException();
-          consumerLogger.errorInMethod(error);
+          if (logger.isShow(LOG_CONSUMER_ERROR_IN_METHOD)) {
+            logger.logConsumerErrorInMethod(error, consumerName, controller, method);
+          }
 
           for (Class<?> aClass : commitOn) {
             if (aClass.isInstance(error)) {

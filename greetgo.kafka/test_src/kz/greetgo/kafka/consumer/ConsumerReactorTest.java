@@ -6,6 +6,7 @@ import kz.greetgo.kafka.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
+import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.util.NetUtil;
 import org.testng.SkipException;
@@ -46,10 +47,10 @@ public class ConsumerReactorTest {
 
     TestController controller = new TestController();
 
-    TestConsumerLogger testConsumerLogger = new TestConsumerLogger();
+    Logger logger = new Logger();
 
     ConsumerDefinitionExtractor cde = new ConsumerDefinitionExtractor();
-    cde.consumerLogger = testConsumerLogger;
+    cde.logger = logger;
     cde.hostId = "testHost";
 
     List<ConsumerDefinition> consumerDefinitionList = cde.extract(controller);
@@ -66,7 +67,7 @@ public class ConsumerReactorTest {
     consumerReactor.kryo = kryo;
     consumerReactor.configStorage = configStorage;
     consumerReactor.bootstrapServers = () -> bootstrapServers;
-    consumerReactor.consumerLogger = testConsumerLogger;
+    consumerReactor.logger = logger;
     consumerReactor.consumerDefinition = consumerDefinitionList.get(0);
     consumerReactor.storageRootPath = "test/root";
     consumerReactor.storageParentConfigPath = "test/root/parent.txt";

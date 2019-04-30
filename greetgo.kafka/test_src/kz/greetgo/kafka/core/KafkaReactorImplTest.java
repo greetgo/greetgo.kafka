@@ -2,7 +2,7 @@ package kz.greetgo.kafka.core;
 
 import kz.greetgo.kafka.ModelKryo;
 import kz.greetgo.kafka.ModelKryo2;
-import kz.greetgo.kafka.consumer.TestConsumerLogger;
+import kz.greetgo.kafka.consumer.TestLoggerDestination;
 import kz.greetgo.kafka.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.Topic;
@@ -52,7 +52,7 @@ public class KafkaReactorImplTest {
   public void runKafkaReactor() throws Exception {
     TestController controller = new TestController();
 
-    TestConsumerLogger testConsumerLogger = new TestConsumerLogger();
+    TestLoggerDestination testConsumerLogger = new TestLoggerDestination();
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
@@ -64,7 +64,7 @@ public class KafkaReactorImplTest {
     kafkaReactor.registerModel(ModelKryo.class);
     kafkaReactor.registerModel(ModelKryo2.class);
 
-    kafkaReactor.setConsumerLogger(testConsumerLogger);
+    kafkaReactor.logger().setDestination(testConsumerLogger);
 
     kafkaReactor.setHostId("testHost");
     kafkaReactor.setAuthorGetter(() -> "author123");
