@@ -11,6 +11,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,6 @@ public class ProducerFacade {
     Producer<byte[], Box> producer = this.producer.getAndSet(null);
     if (producer != null) {
 
-
       producer.close();
 
       if (source.logger().isShow(LoggerType.LOG_CLOSE_PRODUCER)) {
@@ -39,22 +39,32 @@ public class ProducerFacade {
     }
   }
 
+  private final AtomicLong creationTimestamp = new AtomicLong(0);
+
   private Producer<byte[], Box> getProducer() {
+
+    if (creationTimestamp.get() < source.getProducerConfigUpdateTimestamp(producerName)) {
+      reset();
+    }
+
     {
       Producer<byte[], Box> ret = producer.get();
       if (ret != null) {
         return ret;
       }
     }
+
     return producer.updateAndGet(current -> current != null ? current : createProducer());
+
   }
 
   private Producer<byte[], Box> createProducer() {
     ByteArraySerializer keySerializer = new ByteArraySerializer();
     BoxSerializer valueSerializer = new BoxSerializer(source.getKryo());
-    return source.createProducer(producerName, keySerializer, valueSerializer);
+    Producer<byte[], Box> ret = source.createProducer(producerName, keySerializer, valueSerializer);
+    creationTimestamp.set(source.getProducerConfigUpdateTimestamp(producerName));
+    return ret;
   }
-
 
   public KafkaSending sending(Object body) {
     return new KafkaSending() {

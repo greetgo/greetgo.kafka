@@ -17,7 +17,10 @@ public interface ProducerSource {
 
   String author();
 
+  long getProducerConfigUpdateTimestamp(String producerName);
+
   Producer<byte[], Box> createProducer(String producerName,
                                        ByteArraySerializer keySerializer,
                                        BoxSerializer valueSerializer);
+
 }

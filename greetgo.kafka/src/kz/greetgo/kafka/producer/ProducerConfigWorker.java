@@ -36,7 +36,7 @@ public class ProducerConfigWorker {
   public Map<String, Object> getConfigFor(String producerName) {
     String configPath = configPath(producerName);
 
-    ConfigLines configLines = configLinesMap.computeIfAbsent(configPath, this::createConfigLines);
+    ConfigLines configLines = configLinesMap.computeIfAbsent(configPath, this::createConfigLinesAndSaveUpdateTimestamp);
 
     EventConfigStorage configStorage = this.configStorage.get();
 
@@ -71,20 +71,42 @@ public class ProducerConfigWorker {
     }
   }
 
-  private void configEventHappened(String path, ConfigEventType type) {
+  private void configEventHappened(String configPath, ConfigEventType type) {
     if (type != ConfigEventType.UPDATE) {
       return;
     }
 
     for (String key : new ArrayList<>(configLinesMap.keySet())) {
-      if (Objects.equals(key, path)) {
+      if (Objects.equals(key, configPath)) {
 
-        ConfigLines configLines = ConfigLines.fromBytes(configStorage.get().readContent(path), key);
+        ConfigLines configLines = ConfigLines.fromBytes(configStorage.get().readContent(configPath), key);
 
-        configLinesMap.put(key, configLines);
+        if (configLines == null) {
+          configLinesMap.remove(key);
+        } else {
+          configLinesMap.put(key, configLines);
+        }
+
+        configPathUpdateTimestampMap.put(configPath, System.nanoTime());
 
       }
     }
+  }
+
+  public long getConfigUpdateTimestamp(String producerName) {
+    String configPath = configPath(producerName);
+
+    Long timestamp = configPathUpdateTimestampMap.get(configPath);
+
+    return timestamp == null ? 0 : timestamp;
+  }
+
+  private final ConcurrentHashMap<String, Long> configPathUpdateTimestampMap = new ConcurrentHashMap<>();
+
+  private ConfigLines createConfigLinesAndSaveUpdateTimestamp(String configPath) {
+    ConfigLines ret = createConfigLines(configPath);
+    configPathUpdateTimestampMap.put(configPath, System.nanoTime());
+    return ret;
   }
 
   private ConfigLines createConfigLines(String configPath) {
@@ -97,21 +119,27 @@ public class ProducerConfigWorker {
       configBytes = null;
     }
 
-    if (configBytes == null) {
+    if (configBytes != null) {
+      return ConfigLines.fromBytes(configBytes, configPath);
+    }
+
+    {
       ConfigLines ret = new ConfigLines(configPath);
+
       ret.putValue("prod.acts                    ", "all");
       ret.putValue("prod.buffer.memory           ", "33554432");
-      ret.putValue("prod.retries                 ", "2147483647");
       ret.putValue("prod.compression.type        ", "none");
       ret.putValue("prod.batch.size              ", "16384");
       ret.putValue("prod.connections.max.idle.ms ", "540000");
-      ret.putValue("prod.delivery.timeout.ms     ", "35000");
       ret.putValue("prod.request.timeout.ms      ", "30000");
       ret.putValue("prod.linger.ms               ", "1");
       ret.putValue("prod.batch.size              ", "16384");
+
+      ret.putValue("prod.retries                               ", "2147483647");
+      ret.putValue("prod.max.in.flight.requests.per.connection ", "1");
+      ret.putValue("prod.delivery.timeout.ms                   ", "35000");
+
       return ret;
     }
-
-    return ConfigLines.fromBytes(configBytes, configPath);
   }
 }

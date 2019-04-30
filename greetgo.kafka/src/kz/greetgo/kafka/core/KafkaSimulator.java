@@ -66,6 +66,11 @@ public class KafkaSimulator extends KafkaReactorAbstract {
     }
 
     @Override
+    public long getProducerConfigUpdateTimestamp(String producerName) {
+      return 0;
+    }
+
+    @Override
     public Producer<byte[], Box> createProducer(String producerName,
                                                 ByteArraySerializer keySerializer,
                                                 BoxSerializer valueSerializer) {

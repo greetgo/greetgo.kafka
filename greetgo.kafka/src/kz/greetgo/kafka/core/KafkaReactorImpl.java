@@ -50,9 +50,17 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
   @Override
   public void stopConsumers() {
+
     consumerReactorList.forEach(ConsumerReactor::stop);
     consumerReactorList.clear();
+
+    producerConfigWorker.close();
+
   }
+
+  private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(
+    () -> producerConfigRootPath, () -> configStorage
+  );
 
   @Override
   public ProducerSource getProducerSource() {
@@ -81,9 +89,10 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       return authorGetter == null ? null : authorGetter.get();
     }
 
-    private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(
-      () -> producerConfigRootPath, () -> configStorage
-    );
+    @Override
+    public long getProducerConfigUpdateTimestamp(String producerName) {
+      return producerConfigWorker.getConfigUpdateTimestamp(producerName);
+    }
 
     @Override
     public Producer<byte[], Box> createProducer(String producerName,
