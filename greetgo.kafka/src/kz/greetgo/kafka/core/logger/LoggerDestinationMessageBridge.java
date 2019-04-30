@@ -31,7 +31,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
       .stream()
       .sorted(comparing(Map.Entry::getKey))
       .forEachOrdered(e ->
-        sb.append("\n    ").append(e.getKey()).append(" = ").append(e.getValue())
+        sb.append("\n    ").append(e.getKey()).append(" = `").append(e.getValue()).append("`")
       );
     acceptor.info(sb.toString());
   }
@@ -103,7 +103,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
       .stream()
       .sorted(comparing(Map.Entry::getKey))
       .forEachOrdered(e ->
-        sb.append("\n    ").append(e.getKey()).append(" = ").append(e.getValue())
+        sb.append("\n    ").append(e.getKey()).append(" = `").append(e.getValue()).append("`")
       );
 
     acceptor.error(sb.toString());
