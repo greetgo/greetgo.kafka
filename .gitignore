@@ -4,7 +4,7 @@
 /.classpath
 /.project
 /test-output/
-/build/
+build/
 /.gwt/
 /.gwt-tmp/
 /tomcat/
