@@ -52,7 +52,7 @@ public class KafkaSimulator extends KafkaReactorAbstract {
 
     @Override
     public Kryo getKryo() {
-      return kryo;
+      return getReactorKryo();
     }
 
     @Override

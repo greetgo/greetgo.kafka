@@ -64,7 +64,7 @@ public class ConsumerReactorTest {
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     ConsumerReactor consumerReactor = new ConsumerReactor();
-    consumerReactor.kryo = kryo;
+    consumerReactor.kryoCreator = () -> kryo;
     consumerReactor.configStorage = configStorage;
     consumerReactor.bootstrapServers = () -> bootstrapServers;
     consumerReactor.logger = logger;

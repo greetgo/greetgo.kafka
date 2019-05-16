@@ -59,9 +59,19 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     controllerList.add(controller);
   }
 
-  protected final Kryo kryo = new Kryo();
+  private final ThreadLocal<Kryo> kryoThreadLocal = new ThreadLocal<Kryo>() {
+    @Override
+    protected Kryo initialValue() {
+      Kryo kryo = new Kryo();
+      registerBaseClasses(kryo);
+      for (Class<?> registeredKryoClass : registeredKryoClasses) {
+        kryo.register(registeredKryoClass);
+      }
+      return kryo;
+    }
+  };
 
-  {
+  private void registerBaseClasses(Kryo kryo) {
     kryo.register(Box.class);
     kryo.register(ArrayList.class);
     //noinspection ArraysAsListWithZeroOrOneArgument
@@ -74,13 +84,15 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   }
 
   @Override
-  public Kryo getKryo() {
-    return kryo;
+  public Kryo getReactorKryo() {
+    return kryoThreadLocal.get();
   }
+
+  private final List<Class<?>> registeredKryoClasses = new ArrayList<>();
 
   @Override
   public void registerModel(Class<?> modelClass) {
-    kryo.register(modelClass);
+    registeredKryoClasses.add(modelClass);
   }
 
   @Override

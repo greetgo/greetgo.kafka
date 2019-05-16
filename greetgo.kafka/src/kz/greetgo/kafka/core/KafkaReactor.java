@@ -19,7 +19,7 @@ public interface KafkaReactor {
 
   void setBootstrapServers(Supplier<String> bootstrapServers);
 
-  Kryo getKryo();
+  Kryo getReactorKryo();
 
   default void addControllers(Iterable<Object> controllers) {
     controllers.forEach(this::addController);

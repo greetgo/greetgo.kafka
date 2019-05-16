@@ -31,7 +31,7 @@ public class ConsumerReactor {
   //
 
   public Logger logger;
-  public Kryo kryo;
+  public Supplier<Kryo> kryoCreator;
   public ConsumerDefinition consumerDefinition;
   public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
@@ -177,7 +177,7 @@ public class ConsumerReactor {
         }
 
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
-        BoxDeserializer forValue = new BoxDeserializer(kryo);
+        BoxDeserializer forValue = new BoxDeserializer(kryoCreator.get());
 
         try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
           consumer.subscribe(consumerDefinition.topicList());

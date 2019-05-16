@@ -40,7 +40,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       ConsumerReactor consumerReactor = new ConsumerReactor();
       consumerReactorList.add(consumerReactor);
       consumerReactor.logger = logger;
-      consumerReactor.kryo = kryo;
+      consumerReactor.kryoCreator = this::getReactorKryo;
       consumerReactor.bootstrapServers = bootstrapServers;
       consumerReactor.configStorage = configStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
@@ -76,7 +76,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
     @Override
     public Kryo getKryo() {
-      return kryo;
+      return getReactorKryo();
     }
 
     @Override
