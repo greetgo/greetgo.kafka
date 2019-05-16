@@ -26,6 +26,7 @@ import static kz.greetgo.kafka.consumer.RecordUtil.recordWithOffset;
 import static kz.greetgo.kafka.consumer.RecordUtil.recordWithPartition;
 import static kz.greetgo.kafka.consumer.RecordUtil.recordWithTimestamp;
 import static kz.greetgo.kafka.consumer.RecordUtil.recordsOf;
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_ERROR_IN_METHOD;
 import static kz.greetgo.kafka.util_for_tests.ReflectionUtil.findMethod;
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -269,10 +270,15 @@ public class InvokerBuilderTest {
     TestLoggerDestination testLoggerDestination = new TestLoggerDestination();
     Logger logger = new Logger();
     logger.setDestination(testLoggerDestination);
+    logger.setShowLogger(LOG_CONSUMER_ERROR_IN_METHOD, true);
 
     //
     //
-    boolean toCommit = new InvokerBuilder(c6, method, logger).build().invoke(records);
+    //
+    InvokerBuilder invokerBuilder = new InvokerBuilder(c6, method, logger);
+    Invoker invoker = invokerBuilder.build();
+    boolean toCommit = invoker.invoke(records);
+    //
     //
     //
 
@@ -315,6 +321,7 @@ public class InvokerBuilderTest {
     TestLoggerDestination testLoggerDestination = new TestLoggerDestination();
     Logger logger = new Logger();
     logger.setDestination(testLoggerDestination);
+    logger.setShowLogger(LOG_CONSUMER_ERROR_IN_METHOD, true);
 
     //
     //
