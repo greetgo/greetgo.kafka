@@ -27,11 +27,7 @@ public interface KafkaReactor {
 
   void addController(Object controller);
 
-  default void registerModels(Iterable<Class<?>> modelClasses) {
-    modelClasses.forEach(this::registerModel);
-  }
-
-  void registerModel(Class<?> modelClass);
+  void registerKryoPreparation(KryoPreparation kryoPreparation);
 
   void setHostId(String hostId);
 

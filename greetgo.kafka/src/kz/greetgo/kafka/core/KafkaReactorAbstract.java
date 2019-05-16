@@ -19,6 +19,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static java.util.Collections.synchronizedList;
+
 public abstract class KafkaReactorAbstract implements KafkaReactor {
   protected EventConfigStorage configStorage;
   protected Supplier<String> authorGetter;
@@ -64,8 +66,8 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     protected Kryo initialValue() {
       Kryo kryo = new Kryo();
       registerBaseClasses(kryo);
-      for (Class<?> registeredKryoClass : registeredKryoClasses) {
-        kryo.register(registeredKryoClass);
+      for (KryoPreparation preparation : registeredKryoPreparations) {
+        preparation.prepareKryo(kryo);
       }
       return kryo;
     }
@@ -88,12 +90,12 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     return kryoThreadLocal.get();
   }
 
-  private final List<Class<?>> registeredKryoClasses = new ArrayList<>();
-
   @Override
-  public void registerModel(Class<?> modelClass) {
-    registeredKryoClasses.add(modelClass);
+  public void registerKryoPreparation(KryoPreparation kryoPreparation) {
+    registeredKryoPreparations.add(kryoPreparation);
   }
+
+  private final List<KryoPreparation> registeredKryoPreparations = synchronizedList(new ArrayList<>());
 
   @Override
   public void setHostId(String hostId) {
