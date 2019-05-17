@@ -23,7 +23,7 @@ public class StrConverterSimpleTest {
   StrConverterSimple converter;
 
   @BeforeMethod
-  public void setUp() {
+  public void prepareConverter() {
     converter = new StrConverterSimple();
     converter.useClass(ExampleModel.class, "ExampleModel");
     converter.useClass(ForTest.class, "ForTest");

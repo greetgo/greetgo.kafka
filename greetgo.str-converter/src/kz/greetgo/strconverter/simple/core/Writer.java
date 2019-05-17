@@ -199,7 +199,7 @@ public class Writer {
 
   private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
-  private String quote(String str) {
+  private static String quote(String str) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0, n = str.length(); i < n; i++) {
       char c = str.charAt(i);
