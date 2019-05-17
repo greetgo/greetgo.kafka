@@ -6,6 +6,7 @@ import kz.greetgo.strconverter.simple.errors.CannotSerializeClass;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 /**
  * Serialize object and write it to string.
- *
+ * <p>
  * Single threaded - you cannot use this class from different threads
  */
 public class Writer {
@@ -130,6 +131,19 @@ public class Writer {
     }
 
     if (objectClass.isArray()) {
+
+      if (byte[].class == objectClass) {
+        String base64str = Base64.getEncoder().encodeToString((byte[]) object);
+        res.append('b').append(quote(base64str));
+        return;
+      }
+
+      if (char[].class == objectClass) {
+        String str = new String((char[]) object);
+        res.append('c').append(quote(str));
+        return;
+      }
+
       String arrayType = getArrayTypeId(objectClass);
       int length = Array.getLength(object);
       res.append('A').append(length).append(arrayType).append('[');

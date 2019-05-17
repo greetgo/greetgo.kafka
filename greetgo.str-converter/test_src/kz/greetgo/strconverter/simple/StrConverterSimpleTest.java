@@ -40,6 +40,8 @@ public class StrConverterSimpleTest {
 
     String str = converter.toStr(source);
 
+    System.out.println("4gfc256dfx :: str = `" + str + "`");
+
     ExampleModel actual = converter.fromStr(str);
 
     assertThat(actual.toString()).isEqualTo(source.toString());
@@ -409,7 +411,20 @@ public class StrConverterSimpleTest {
 
     String s = converter.toStr(value);
 
-    assertThat(s).isEqualTo("A4B[B17B-11B120B-123]");
+    assertThat(s).isEqualTo("bEfV4hQ==|");
+
+    byte[] actual = converter.fromStr(s);
+
+    assertThat(actual).isEqualTo(value);
+  }
+
+  @Test
+  public void byteArray_BIG() {
+    byte[] value = RND.byteArray(36);
+
+    String s = converter.toStr(value);
+
+    System.out.println("54g325hgv4 :: serialized byte array : `" + s + "`");
 
     byte[] actual = converter.fromStr(s);
 
@@ -418,11 +433,37 @@ public class StrConverterSimpleTest {
 
   @Test
   public void charArray() {
-    char[] value = new char[]{'Ж', 'ж', 'I', 'j', 'u', '1',};
+    char[] value = new char[]{'Ж', 'ж', 'I', 'j', 'u', '1'};
 
     String s = converter.toStr(value);
 
-    assertThat(s).isEqualTo("A6C[CЖCжCICjCuC1]");
+    assertThat(s).isEqualTo("cЖжIju1|");
+
+    char[] actual = converter.fromStr(s);
+
+    assertThat(actual).isEqualTo(value);
+  }
+
+  @Test
+  public void charArray2() {
+    char[] value = new char[]{'Ж', 'ж', 'I', 'j', 'u', '1', '|', 'Q'};
+
+    String s = converter.toStr(value);
+
+    assertThat(s).isEqualTo("cЖжIju1\\|Q|");
+
+    char[] actual = converter.fromStr(s);
+
+    assertThat(actual).isEqualTo(value);
+  }
+
+  @Test
+  public void charArray3() {
+    char[] value = new char[]{'Ж', 'ж', 'I', '\\', 'j', 'u', '1', '|', 'Q'};
+
+    String s = converter.toStr(value);
+
+    assertThat(s).isEqualTo("cЖжI\\\\ju1\\|Q|");
 
     char[] actual = converter.fromStr(s);
 
@@ -609,7 +650,7 @@ public class StrConverterSimpleTest {
 
     String str = converter.toStr(hello);
 
-    System.out.println("str = " + str);
+    System.out.println("5v4c6vg5 :: str = " + str);
 
     Hello actual = converter.fromStr(str);
 

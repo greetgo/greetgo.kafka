@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,8 +84,17 @@ public class Reader {
         return readMapAsHashMap();
       case 'Q':
         return readObjectByAlias();
+      case 'b':
+        return readByteArray();
+      case 'c':
+        return readAndUnquoteStr().toCharArray();
     }
     throw new RuntimeException("Illegal command char " + commandChar);
+  }
+
+  private Object readByteArray() {
+    String base64str = readAndUnquoteStr();
+    return Base64.getDecoder().decode(base64str);
   }
 
 
