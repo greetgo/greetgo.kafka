@@ -14,6 +14,7 @@ import kz.greetgo.strconverter.simple.StrConverterSimple;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import static java.util.Collections.synchronizedList;
@@ -58,16 +59,32 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     controllerList.add(controller);
   }
 
-  private final StrConverter strConverter = new StrConverterSimple();
-
-  {
-    strConverter.useClass(Box.class);
-    strConverter.useClass(ArrayList.class);
-  }
+  private final AtomicReference<StrConverter> strConverter = new AtomicReference<>(null);
 
   @Override
   public StrConverter getReactorStrConverter() {
-    return strConverter;
+
+    {
+      StrConverter sc = strConverter.get();
+      if (sc != null) {
+        return sc;
+      }
+    }
+
+    return strConverter.updateAndGet(current -> {
+      if (current != null) {
+        return current;
+      }
+      {
+        StrConverter sc = new StrConverterSimple();
+        sc.useClass(Box.class);
+        for (StrConverterPreparation rp : registeredStrConverterPreparations) {
+          rp.prepareStrConverter(sc);
+        }
+        return sc;
+      }
+    });
+
   }
 
   @Override
