@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  * Serialize object and write it to string.
  *
- * @apiNote single threaded - you cannot use this class from different threads
+ * Single threaded - you cannot use this class from different threads
  */
 public class Writer {
   private ConvertHelper convertHelper;

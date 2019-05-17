@@ -88,7 +88,7 @@ public class AcceptorManager {
       int paramsCount = method.getParameterTypes().length;
       String methodName = method.getName();
 
-      if (methodName.startsWith("get") && paramsCount == 0) {
+      if (paramsCount == 0 && methodName.length() > 3 && methodName.startsWith("get")) {
         String normName = normName(methodName, 3);
         orderList.add(normName);
         getterMap.put(normName, source -> {
@@ -102,7 +102,7 @@ public class AcceptorManager {
 
       Class<?> returnType = method.getReturnType();
 
-      if (isBool(returnType) && paramsCount == 0 && methodName.startsWith("is")) {
+      if (isBool(returnType) && paramsCount == 0 && methodName.length() > 2 && methodName.startsWith("is")) {
         String normName = normName(methodName, 2);
         orderList.add(normName);
         getterMap.put(normName, source -> {
@@ -114,8 +114,8 @@ public class AcceptorManager {
         });
       }
 
-      if (methodName.startsWith("set") && paramsCount == 1) {
-        String normName = normName(methodName, 2);
+      if (paramsCount == 1 && methodName.length() > 3 && methodName.startsWith("set")) {
+        String normName = normName(methodName, 3);
         setterMap.put(normName, (target, value) -> {
           try {
             method.invoke(target, value);
@@ -143,7 +143,4 @@ public class AcceptorManager {
     return name2.substring(0, 1).toLowerCase() + name2.substring(1);
   }
 
-  public AttrAcceptor getAcceptor(String name) {
-    return acceptorMap.get(name);
-  }
 }

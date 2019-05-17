@@ -17,9 +17,9 @@ import java.util.Set;
 import static kz.greetgo.strconverter.simple.core.ConvertHelper.isJavaVariableChar;
 
 /**
- * Reading object from serialised string
+ * Reading object from serialised string.
  *
- * @apiNote single threaded - you cannot use this class from different threads
+ * Single threaded - you cannot use this class from different threads
  */
 public class Reader {
   private final ConvertHelper convertHelper;
@@ -292,7 +292,7 @@ public class Reader {
       Object value = read0();
       if (source[index] == ',') index++;
 
-      AttrAcceptor acceptor = acceptorManager.getAcceptor(name);
+      AttrAcceptor acceptor = acceptorManager.acceptor(name);
       if (acceptor != null) acceptor.set(object, value);
     }
 
