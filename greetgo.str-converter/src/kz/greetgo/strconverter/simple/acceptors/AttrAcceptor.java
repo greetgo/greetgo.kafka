@@ -1,4 +1,4 @@
-package kz.greetgo.strconverter.simple;
+package kz.greetgo.strconverter.simple.acceptors;
 
 public class AttrAcceptor {
   private final AttrGetter getter;

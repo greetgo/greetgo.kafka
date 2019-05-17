@@ -11,4 +11,5 @@ public interface StrConverter {
   default void useClass(Class<?> aClass) {
     useClass(aClass, aClass.getSimpleName());
   }
+
 }

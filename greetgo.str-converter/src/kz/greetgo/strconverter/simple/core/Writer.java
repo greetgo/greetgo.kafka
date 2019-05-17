@@ -1,4 +1,7 @@
-package kz.greetgo.strconverter.simple;
+package kz.greetgo.strconverter.simple.core;
+
+import kz.greetgo.strconverter.simple.acceptors.AcceptorManager;
+import kz.greetgo.strconverter.simple.errors.CannotSerializeClass;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -8,10 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Serialize object and write it to string.
+ *
+ * @apiNote single threaded - you cannot use this class from different threads
+ */
 public class Writer {
   private ConvertHelper convertHelper;
 
-  private StringBuilder res = new StringBuilder();
+  private StringBuilder res = new StringBuilder(4 * 1024);
 
   public Writer(ConvertHelper convertHelper) {
     this.convertHelper = convertHelper;
@@ -165,7 +173,7 @@ public class Writer {
       }
     }
 
-    throw new RuntimeException("Cannot write " + object.getClass());
+    throw new CannotSerializeClass(object.getClass());
   }
 
   private String getArrayTypeId(Class<?> objectClass) {

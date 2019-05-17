@@ -1,6 +1,13 @@
 package kz.greetgo.strconverter.simple;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Comparator.comparingInt;
 
 public class ExampleModel {
 
@@ -35,51 +42,57 @@ public class ExampleModel {
   @Override
   public String toString() {
     return "ExampleModel{" +
-        "strField='" + strField + '\'' +
-        ", intField=" + intField +
-        ", longField=" + longField +
-        ", floatField=" + floatField +
-        ", doubleField=" + doubleField +
-        ", dateField=" + dateField +
-        ", charField=" + charField +
-        ", byteField=" + byteField +
-        ", shortField=" + shortField +
-        ", exampleModelField=" + exampleModelField +
-        ", someObject=" + someObject +
-        ", strFieldA=" + Arrays.toString(strFieldA) +
-        ", intFieldA=" + Arrays.toString(intFieldA) +
-        ", longFieldA=" + Arrays.toString(longFieldA) +
-        ", floatFieldA=" + Arrays.toString(floatFieldA) +
-        ", doubleFieldA=" + Arrays.toString(doubleFieldA) +
-        ", dateFieldA=" + Arrays.toString(dateFieldA) +
-        ", charFieldA=" + Arrays.toString(charFieldA) +
-        ", byteFieldA=" + Arrays.toString(byteFieldA) +
-        ", shortFieldA=" + Arrays.toString(shortFieldA) +
-        ", exampleModelFieldA=" + Arrays.toString(exampleModelFieldA) +
-        ", objectA=" + Arrays.toString(objectA) +
-        ", listField=" + listField +
-        ", setField=" + setField +
-        ", mapField=" + str(mapField) +
-        '}';
+      "strField='" + strField + '\'' +
+      ", intField=" + intField +
+      ", longField=" + longField +
+      ", floatField=" + floatField +
+      ", doubleField=" + doubleField +
+      ", dateField=" + dateField +
+      ", charField=" + charField +
+      ", byteField=" + byteField +
+      ", shortField=" + shortField +
+      ", exampleModelField=" + exampleModelField +
+      ", someObject=" + someObject +
+      ", strFieldA=" + Arrays.toString(strFieldA) +
+      ", intFieldA=" + Arrays.toString(intFieldA) +
+      ", longFieldA=" + Arrays.toString(longFieldA) +
+      ", floatFieldA=" + Arrays.toString(floatFieldA) +
+      ", doubleFieldA=" + Arrays.toString(doubleFieldA) +
+      ", dateFieldA=" + Arrays.toString(dateFieldA) +
+      ", charFieldA=" + Arrays.toString(charFieldA) +
+      ", byteFieldA=" + Arrays.toString(byteFieldA) +
+      ", shortFieldA=" + Arrays.toString(shortFieldA) +
+      ", exampleModelFieldA=" + Arrays.toString(exampleModelFieldA) +
+      ", objectA=" + Arrays.toString(objectA) +
+      ", listField=" + listField +
+      ", setField=" + setField +
+      ", mapField=" + str(mapField) +
+      '}';
   }
 
-  @SuppressWarnings("unchecked")
+
   private String str(Map<Object, Object> mapField) {
-    if (mapField == null) return "null";
-    List keys = new ArrayList<>();
-    keys.addAll((Set) mapField.keySet());
-    Collections.sort(keys, new Comparator() {
-      @Override
-      public int compare(Object o1, Object o2) {
-        return o1.hashCode() - o2.hashCode();
-      }
-    });
-    StringBuilder sb = new StringBuilder();
+
+    if (mapField == null) {
+      return "null";
+    }
+
+    List<Object> keys = new ArrayList<>(mapField.keySet());
+
+    keys.sort(comparingInt(Object::hashCode));
+
+    StringBuilder sb = new StringBuilder(128);
+
     sb.append('{');
+
     for (Object key : keys) {
       sb.append(key).append('=').append(mapField.get(key)).append(',');
     }
+
     sb.append('}');
+
     return sb.toString();
+
   }
+
 }

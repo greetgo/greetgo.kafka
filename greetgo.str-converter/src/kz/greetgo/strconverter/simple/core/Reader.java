@@ -1,13 +1,26 @@
-package kz.greetgo.strconverter.simple;
+package kz.greetgo.strconverter.simple.core;
+
+import kz.greetgo.strconverter.simple.acceptors.AcceptorManager;
+import kz.greetgo.strconverter.simple.acceptors.AttrAcceptor;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static kz.greetgo.strconverter.simple.ConvertHelper.isJavaVariableChar;
+import static kz.greetgo.strconverter.simple.core.ConvertHelper.isJavaVariableChar;
 
-
+/**
+ * Reading object from serialised string
+ *
+ * @apiNote single threaded - you cannot use this class from different threads
+ */
 public class Reader {
   private final ConvertHelper convertHelper;
   private final char[] source;
@@ -25,8 +38,9 @@ public class Reader {
   public <T> T read() {
     try {
       return (T) read0();
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof RuntimeException) throw (RuntimeException) e;
       throw new RuntimeException(e);
     }
   }

@@ -1,6 +1,9 @@
 package kz.greetgo.strconverter.simple;
 
 import kz.greetgo.strconverter.StrConverter;
+import kz.greetgo.strconverter.simple.core.ConvertHelper;
+import kz.greetgo.strconverter.simple.core.Reader;
+import kz.greetgo.strconverter.simple.core.Writer;
 
 public class StrConverterSimple implements StrConverter {
 
@@ -20,4 +23,5 @@ public class StrConverterSimple implements StrConverter {
   public <T> T fromStr(String str) {
     return new Reader(convertHelper, str).read();
   }
+
 }

@@ -1,28 +1,27 @@
-package kz.greetgo.strconverter.simple;
+package kz.greetgo.strconverter.simple.core;
+
+import kz.greetgo.strconverter.simple.acceptors.AcceptorManager;
+import kz.greetgo.strconverter.simple.errors.NoRegisteredClassForAlias;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConvertHelper {
   public final Map<String, Class<?>> aliasClassMap = new HashMap<>();
   public final Map<Class<?>, String> classAliasMap = new HashMap<>();
 
-  private final Map<Class<?>, AcceptorManager> classAcceptorManagerMap = new HashMap<>();
+  private final ConcurrentHashMap<Class<?>, AcceptorManager> classAcceptorManagerMap = new ConcurrentHashMap<>();
 
-  public synchronized AcceptorManager getAcceptorManager(Class<?> aClass) {
-
-    AcceptorManager acceptorManager = classAcceptorManagerMap.get(aClass);
-
-    if (acceptorManager != null) return acceptorManager;
-
-    classAcceptorManagerMap.put(aClass, acceptorManager = new AcceptorManager(aClass));
-
-    return acceptorManager;
+  public AcceptorManager getAcceptorManager(Class<?> aClass) {
+    return classAcceptorManagerMap.computeIfAbsent(aClass, AcceptorManager::new);
   }
 
   public AcceptorManager getAcceptorManager(String alias) {
     Class<?> aClass = aliasClassMap.get(alias);
-    if (aClass == null) throw new RuntimeException("No alias " + alias);
+    if (aClass == null) {
+      throw new NoRegisteredClassForAlias(alias);
+    }
     return getAcceptorManager(aClass);
   }
 
@@ -37,7 +36,7 @@ public class ConvertHelper {
       if (alreadyClass.equals(aClass) && alreadyAlias.equals(alias)) return;
 
       throw new IllegalArgumentException("Alias " + alias + " already registered for " + alreadyClass
-          + ", and " + aClass + " already registered for " + alreadyClass);
+        + ", and " + aClass + " already registered for " + alreadyClass);
     }
 
     if (alreadyClass != null) {
