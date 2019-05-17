@@ -5,7 +5,7 @@ import org.testng.annotations.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-public class AcceptorManagerTest {
+public class ClassManagerTest {
 
   public static class FieldTestClass {
     public String wow;
@@ -14,9 +14,9 @@ public class AcceptorManagerTest {
   @Test
   public void setField() {
 
-    AcceptorManager acceptorManager = new AcceptorManager(FieldTestClass.class);
+    DefaultClassManager classManager = new DefaultClassManager(FieldTestClass.class, "");
 
-    AttrAcceptor acceptorWow = acceptorManager.acceptor("wow");
+    AttrAcceptor acceptorWow = classManager.acceptor("wow");
 
     FieldTestClass test = new FieldTestClass();
 
@@ -39,9 +39,9 @@ public class AcceptorManagerTest {
   @Test
   public void getField() {
 
-    AcceptorManager acceptorManager = new AcceptorManager(FieldTestClass.class);
+    DefaultClassManager classManager = new DefaultClassManager(FieldTestClass.class, "");
 
-    AttrAcceptor acceptorWow = acceptorManager.acceptor("wow");
+    AttrAcceptor acceptorWow = classManager.acceptor("wow");
 
     FieldTestClass test = new FieldTestClass();
     test.wow = RND.str(10);
@@ -72,9 +72,9 @@ public class AcceptorManagerTest {
   @Test
   public void setMethod() {
 
-    AcceptorManager acceptorManager = new AcceptorManager(MethodTestClass.class);
+    DefaultClassManager classManager = new DefaultClassManager(MethodTestClass.class, "");
 
-    AttrAcceptor acceptorWow = acceptorManager.acceptor("wow");
+    AttrAcceptor acceptorWow = classManager.acceptor("wow");
 
     MethodTestClass test = new MethodTestClass();
     test.field = RND.str(10);
@@ -96,9 +96,9 @@ public class AcceptorManagerTest {
   @Test
   public void getMethod() {
 
-    AcceptorManager acceptorManager = new AcceptorManager(MethodTestClass.class);
+    DefaultClassManager classManager = new DefaultClassManager(MethodTestClass.class, "");
 
-    AttrAcceptor acceptorWow = acceptorManager.acceptor("wow");
+    AttrAcceptor acceptorWow = classManager.acceptor("wow");
 
     MethodTestClass test = new MethodTestClass();
     test.field = RND.str(10);
@@ -121,9 +121,9 @@ public class AcceptorManagerTest {
 
   @Test
   public void testLeftSetMethodName() {
-    AcceptorManager acceptorManager = new AcceptorManager(LeftSetMethodName.class);
+    DefaultClassManager classManager = new DefaultClassManager(LeftSetMethodName.class, "");
 
-    AttrAcceptor acceptor = acceptorManager.acceptor("");
+    AttrAcceptor acceptor = classManager.acceptor("");
     assertThat(acceptor).isNull();
 
   }
@@ -140,9 +140,9 @@ public class AcceptorManagerTest {
   @Test
   public void testLeftGetMethodName() {
 
-    AcceptorManager acceptorManager = new AcceptorManager(LeftGetMethodName.class);
+    DefaultClassManager classManager = new DefaultClassManager(LeftGetMethodName.class, "");
 
-    AttrAcceptor acceptor = acceptorManager.acceptor("");
+    AttrAcceptor acceptor = classManager.acceptor("");
     assertThat(acceptor).isNull();
 
   }

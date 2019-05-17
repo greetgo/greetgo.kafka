@@ -1,6 +1,7 @@
 package kz.greetgo.strconverter.simple.core;
 
-import kz.greetgo.strconverter.simple.acceptors.AcceptorManager;
+import kz.greetgo.strconverter.simple.acceptors.ClassManager;
+import kz.greetgo.strconverter.simple.acceptors.DefaultClassManager;
 import kz.greetgo.strconverter.simple.errors.AliasAlreadyRegistered;
 import kz.greetgo.strconverter.simple.errors.ClassAlreadyRegistered;
 import kz.greetgo.strconverter.simple.errors.NoRegisteredClassForAlias;
@@ -8,17 +9,17 @@ import kz.greetgo.strconverter.simple.errors.NoRegisteredClassForAlias;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConvertHelper {
+public class ConvertRegistry {
   public final Map<String, Class<?>> aliasClassMap = new ConcurrentHashMap<>();
   public final Map<Class<?>, String> classAliasMap = new ConcurrentHashMap<>();
 
-  private final ConcurrentHashMap<Class<?>, AcceptorManager> classAcceptorManagerMap = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<Class<?>, ClassManager> classAcceptorManagerMap = new ConcurrentHashMap<>();
 
-  public AcceptorManager getAcceptorManager(Class<?> aClass) {
-    return classAcceptorManagerMap.computeIfAbsent(aClass, AcceptorManager::new);
+  public ClassManager getAcceptorManager(Class<?> aClass) {
+    return classAcceptorManagerMap.get(aClass);
   }
 
-  public AcceptorManager getAcceptorManager(String alias) {
+  public ClassManager getAcceptorManager(String alias) {
     Class<?> aClass = aliasClassMap.get(alias);
     if (aClass == null) {
       throw new NoRegisteredClassForAlias(alias);
@@ -26,9 +27,19 @@ public class ConvertHelper {
     return getAcceptorManager(aClass);
   }
 
+  public void register(Class<?> aClass, String alias) {
+    register(new DefaultClassManager(aClass, alias));
+  }
 
-  public synchronized void useClass(Class<?> aClass, String alias) {
-    checkAvailableChars(alias);
+  public void register(Class<?> aClass) {
+    register(aClass, aClass.getSimpleName());
+  }
+
+  public synchronized void register(ClassManager classManager) {
+    checkAvailableChars(classManager.alias());
+
+    String alias = classManager.alias();
+    Class<?> aClass = classManager.workingClass();
 
     Class<?> alreadyClass = aliasClassMap.get(alias);
 
@@ -55,6 +66,8 @@ public class ConvertHelper {
 
     aliasClassMap.put(alias, aClass);
     classAliasMap.put(aClass, alias);
+    classAcceptorManagerMap.put(aClass, classManager);
+
   }
 
   private void checkAvailableChars(String alias) {

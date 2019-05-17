@@ -1,5 +1,7 @@
 package kz.greetgo.strconverter.simple.acceptors;
 
+import kz.greetgo.strconverter.simple.core.NameValue;
+
 import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -10,17 +12,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AcceptorManager {
+public class DefaultClassManager implements ClassManager {
 
+  private final Class<?> workingClass;
+  private final String alias;
   private Map<String, AttrAcceptor> acceptorMap = new HashMap<>();
   private List<String> orderList = new ArrayList<>();
 
-  public AcceptorManager(Class<?> aClass) {
+  @Override
+  public Class<?> workingClass() {
+    return workingClass;
+  }
+
+  @Override
+  public String alias() {
+    return alias;
+  }
+
+  public DefaultClassManager(Class<?> workingClass, String alias) {
+    this.workingClass = workingClass;
+    this.alias = alias;
     getterMap = new HashMap<>();
     setterMap = new HashMap<>();
 
-    fillWithFieldSetters(aClass);
-    fillWithMethods(aClass);
+    fillWithFieldSetters(workingClass);
+    fillWithMethods(workingClass);
 
     List<String> orderList2 = new ArrayList<>(orderList);
     orderList.clear();
@@ -43,10 +59,12 @@ public class AcceptorManager {
     orderList = Collections.unmodifiableList(orderList);
   }
 
+  @Override
   public List<String> orderList() {
     return orderList;
   }
 
+  @Override
   public AttrAcceptor acceptor(String name) {
     return acceptorMap.get(name);
   }
@@ -141,6 +159,12 @@ public class AcceptorManager {
   private static String normName(String name, int prefixLen) {
     String name2 = name.substring(prefixLen);
     return name2.substring(0, 1).toLowerCase() + name2.substring(1);
+  }
+
+  @Override
+  public Object createInstance(NameValueList nameValueList) {
+    ClassInstantiation classInstantiation = new DefaultClassInstantiation();
+    return classInstantiation.createInstance(workingClass, acceptorMap, nameValueList);
   }
 
 }

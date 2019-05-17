@@ -1,6 +1,6 @@
 package kz.greetgo.strconverter.simple.core;
 
-import kz.greetgo.strconverter.simple.acceptors.AcceptorManager;
+import kz.greetgo.strconverter.simple.acceptors.ClassManager;
 import kz.greetgo.strconverter.simple.errors.CannotSerializeClass;
 
 import java.lang.reflect.Array;
@@ -17,12 +17,12 @@ import java.util.Set;
  * Single threaded - you cannot use this class from different threads
  */
 public class Writer {
-  private ConvertHelper convertHelper;
+  private ConvertRegistry convertRegistry;
 
   private StringBuilder res = new StringBuilder(4 * 1024);
 
-  public Writer(ConvertHelper convertHelper) {
-    this.convertHelper = convertHelper;
+  public Writer(ConvertRegistry convertRegistry) {
+    this.convertRegistry = convertRegistry;
   }
 
   public Writer write(Object object) {
@@ -141,7 +141,7 @@ public class Writer {
     }
 
     {
-      String alias = convertHelper.classAliasMap.get(objectClass);
+      String alias = convertRegistry.classAliasMap.get(objectClass);
       if (alias != null) {
 
         if (objectClass.isEnum()) {
@@ -152,12 +152,12 @@ public class Writer {
 
 
         res.append('Q').append(alias).append('{');
-        AcceptorManager acceptorManager = convertHelper.getAcceptorManager(objectClass);
+        ClassManager classManager = convertRegistry.getAcceptorManager(objectClass);
 
         int len = res.length();
 
-        for (String attrName : acceptorManager.orderList()) {
-          Object attrValue = acceptorManager.acceptor(attrName).get(object);
+        for (String attrName : classManager.orderList()) {
+          Object attrValue = classManager.acceptor(attrName).get(object);
           if (attrValue != null) {
             res.append(attrName).append('=');
             write0(attrValue);
@@ -194,7 +194,7 @@ public class Writer {
     if (objectClass == Map[].class) return "M";
     if (objectClass == Set[].class) return "G";
 
-    return "H" + convertHelper.getAliasForOrThrowError(objectClass.getComponentType());
+    return "H" + convertRegistry.getAliasForOrThrowError(objectClass.getComponentType());
   }
 
   private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");

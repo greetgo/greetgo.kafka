@@ -6,10 +6,4 @@ public interface StrConverter {
 
   <T> T fromStr(String str);
 
-  void useClass(Class<?> aClass, String asName);
-
-  default void useClass(Class<?> aClass) {
-    useClass(aClass, aClass.getSimpleName());
-  }
-
 }

@@ -1,7 +1,6 @@
 package kz.greetgo.strconverter.simple.core;
 
-import kz.greetgo.strconverter.simple.acceptors.AcceptorManager;
-import kz.greetgo.strconverter.simple.acceptors.AttrAcceptor;
+import kz.greetgo.strconverter.simple.acceptors.NameValueList;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -14,23 +13,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static kz.greetgo.strconverter.simple.core.ConvertHelper.isJavaVariableChar;
+import static kz.greetgo.strconverter.simple.core.ConvertRegistry.isJavaVariableChar;
 
 /**
  * Reading object from serialised string.
- *
+ * <p>
  * Single threaded - you cannot use this class from different threads
  */
 public class Reader {
-  private final ConvertHelper convertHelper;
+  private final ConvertRegistry convertRegistry;
   private final char[] source;
 
   private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
   private int index = 0;
 
-  public Reader(ConvertHelper convertHelper, String sourceStr) {
-    this.convertHelper = convertHelper;
+  public Reader(ConvertRegistry convertRegistry, String sourceStr) {
+    this.convertRegistry = convertRegistry;
     this.source = sourceStr.toCharArray();
   }
 
@@ -169,7 +168,7 @@ public class Reader {
         return new Map[arraySize];
       case 'H': {
         String alias = readJavaId();
-        Class<?> aClass = convertHelper.aliasClassMap.get(alias);
+        Class<?> aClass = convertRegistry.aliasClassMap.get(alias);
         if (aClass == null) return new Object[arraySize];
         return Array.newInstance(aClass, arraySize);
       }
@@ -257,15 +256,21 @@ public class Reader {
   private Object readObjectByAlias() throws Exception {
     String alias = readJavaId();
     char openBrace = source[index++];
-    if (openBrace != '{') throw new RuntimeException("AQ87A2K8GYT: Here must be char {");
+    if (openBrace != '{') {
+      throw new RuntimeException("AQ87A2K8GYT: Here must be char {");
+    }
 
-    Class<?> objectClass = convertHelper.aliasClassMap.get(alias);
-    if (objectClass == null) throw new RuntimeException("No alias " + alias);
+    Class<?> objectClass = convertRegistry.aliasClassMap.get(alias);
+    if (objectClass == null) {
+      throw new RuntimeException("No alias " + alias);
+    }
 
     if (objectClass.isEnum()) {
       String enumStrValue = readJavaId();
       char closeBrace = source[index++];
-      if (closeBrace != '}') throw new RuntimeException("AJYRw8U: Here must be char }");
+      if (closeBrace != '}') {
+        throw new RuntimeException("AJYRw8U: Here must be char }");
+      }
 
       try {
         @SuppressWarnings("unchecked")
@@ -276,8 +281,7 @@ public class Reader {
       }
     }
 
-    Object object = convertHelper.createObjectWithAlias(alias);
-    AcceptorManager acceptorManager = convertHelper.getAcceptorManager(alias);
+    final NameValueList nameValueList = new NameValueList();
 
     while (index < source.length) {
       char c = source[index];
@@ -288,15 +292,21 @@ public class Reader {
 
       String name = readJavaId();
       char eq = source[index++];
-      if (eq != '=') throw new RuntimeException("Here must be =");
+      if (eq != '=') {
+        throw new RuntimeException("Here must be =");
+      }
       Object value = read0();
-      if (source[index] == ',') index++;
+      if (source[index] == ',') {
+        index++;
+      }
 
-      AttrAcceptor acceptor = acceptorManager.acceptor(name);
-      if (acceptor != null) acceptor.set(object, value);
+      nameValueList.add(name, value);
     }
 
-    return object;
+    return convertRegistry
+      .getAcceptorManager(alias)
+      .createInstance(nameValueList);
+
   }
 
   private String readJavaId() {

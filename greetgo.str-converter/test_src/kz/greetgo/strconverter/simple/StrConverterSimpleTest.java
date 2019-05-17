@@ -1,5 +1,6 @@
 package kz.greetgo.strconverter.simple;
 
+import kz.greetgo.strconverter.simple.acceptors.CustomClassManager;
 import kz.greetgo.util.RND;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -25,9 +27,9 @@ public class StrConverterSimpleTest {
   @BeforeMethod
   public void prepareConverter() {
     converter = new StrConverterSimple();
-    converter.useClass(ExampleModel.class, "ExampleModel");
-    converter.useClass(ForTest.class, "ForTest");
-    converter.useClass(TestEnum.class, "TestEnum");
+    converter.convertRegistry().register(ExampleModel.class, "ExampleModel");
+    converter.convertRegistry().register(ForTest.class, "ForTest");
+    converter.convertRegistry().register(TestEnum.class, "TestEnum");
   }
 
   @Test
@@ -556,4 +558,65 @@ public class StrConverterSimpleTest {
 
     assertThat(actual).isEqualTo(TestEnum.HI);
   }
+
+  static class CustomField {
+    public final long wow;
+
+    public CustomField(long wow) {
+      this.wow = wow;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      CustomField that = (CustomField) o;
+      return wow == that.wow;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(wow);
+    }
+  }
+
+  public static class Hello {
+    public CustomField field1;
+    public CustomField field2;
+    public String hello;
+
+  }
+
+  @Test
+  public void customClassManager() {
+
+    StrConverterSimple converter = new StrConverterSimple();
+
+    converter.convertRegistry().register(
+      CustomClassManager
+        .of(CustomField.class, "F")
+        .addOnlyGetter("x", source -> ((CustomField) source).wow)
+        .setClassInstantiation((workingClass, acceptorMap, nameValueList) ->
+          new CustomField((Long) nameValueList.getValue("x")))
+    );
+
+    converter.convertRegistry().register(Hello.class);
+
+    Hello hello = new Hello();
+    hello.hello = "Привет";
+    hello.field1 = new CustomField(3456L);
+    hello.field2 = new CustomField(1000009L);
+
+    String str = converter.toStr(hello);
+
+    System.out.println("str = " + str);
+
+    Hello actual = converter.fromStr(str);
+
+    assertThat(actual.field1).isEqualTo(hello.field1);
+    assertThat(actual.field2).isEqualTo(hello.field2);
+    assertThat(actual.hello).isEqualTo(hello.hello);
+
+  }
+
 }
