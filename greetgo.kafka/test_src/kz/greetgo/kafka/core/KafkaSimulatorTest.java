@@ -5,7 +5,9 @@ import kz.greetgo.kafka.ModelKryo2;
 import kz.greetgo.kafka.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.Topic;
+import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerFacade;
+import kz.greetgo.strconverter.simple.StrConverterSimple;
 import kz.greetgo.util.RND;
 import org.testng.annotations.Test;
 
@@ -18,7 +20,7 @@ public class KafkaSimulatorTest {
 
 
   @ConsumersFolder("top")
-  public static class TestController {
+  public static class TestConsumer {
 
     public final List<ModelKryo> modelList = new ArrayList<>();
 
@@ -41,7 +43,7 @@ public class KafkaSimulatorTest {
   @Test
   public void testSimulator() {
 
-    TestController controller = new TestController();
+    TestConsumer controller = new TestConsumer();
 
     KafkaSimulator simulator = new KafkaSimulator();
 
@@ -49,6 +51,13 @@ public class KafkaSimulatorTest {
     simulator.hostId = "asd";
 
     simulator.addController(controller);
+
+    StrConverterSimple strConverter = new StrConverterSimple();
+    strConverter.convertRegistry().register(Box.class);
+    strConverter.convertRegistry().register(ModelKryo.class);
+    strConverter.convertRegistry().register(ModelKryo2.class);
+
+    simulator.setStrConverterSupplier(() -> strConverter);
 
     simulator.startConsumers();
 

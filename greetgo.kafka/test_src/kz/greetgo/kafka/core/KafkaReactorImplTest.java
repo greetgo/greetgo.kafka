@@ -9,6 +9,7 @@ import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.util.NetUtil;
+import kz.greetgo.strconverter.simple.StrConverterSimple;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -61,15 +62,16 @@ public class KafkaReactorImplTest {
 
     kafkaReactor.addController(controller);
 
-    kafkaReactor.registerStrConverterPreparation(strConverter -> {
-      strConverter.useClass(ModelKryo.class);
-      strConverter.useClass(ModelKryo2.class);
-    });
+    StrConverterSimple strConverter = new StrConverterSimple();
+    strConverter.convertRegistry().register(ModelKryo.class);
+    strConverter.convertRegistry().register(ModelKryo2.class);
+
+    kafkaReactor.setStrConverterSupplier(() -> strConverter);
 
     kafkaReactor.logger().setDestination(testConsumerLogger);
 
     kafkaReactor.setHostId("testHost");
-    kafkaReactor.setAuthorGetter(() -> "author123");
+    kafkaReactor.setAuthorSupplier(() -> "author123");
 
     kafkaReactor.setBootstrapServers(() -> bootstrapServers);
 

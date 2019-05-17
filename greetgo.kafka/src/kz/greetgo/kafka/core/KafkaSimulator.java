@@ -52,7 +52,7 @@ public class KafkaSimulator extends KafkaReactorAbstract {
 
     @Override
     public StrConverter getStrConverter() {
-      return getReactorStrConverter();
+      return strConverterSupplier().get();
     }
 
     @Override
@@ -115,7 +115,7 @@ public class KafkaSimulator extends KafkaReactorAbstract {
 
     ConsumerRecord<byte[], Box> consumerRecord = new ConsumerRecord<>(
       topicPartition.topic(), topicPartition.partition(), 1L,
-      toLong(r.timestamp()), TimestampType.CREATE_TIME, 1L, 1, 1, r.key(), r.value(), r.headers()
+      toLong(r.timestamp()), TimestampType.CREATE_TIME, 1L, 1, 1, r.key(), serialization(r.value()), r.headers()
     );
 
     List<ConsumerDefinition> consumerDefinitionList = this.consumerDefinitionList;
@@ -137,6 +137,14 @@ public class KafkaSimulator extends KafkaReactorAbstract {
     }
 
     pushedRecords.add(consumerRecord);
+  }
+
+  private Box serialization(Box value) {
+    StrConverter strConverter = strConverterSupplier().get();
+
+    String str = strConverter.toStr(value);
+
+    return strConverter.fromStr(str);
   }
 
   @SuppressWarnings("unused")

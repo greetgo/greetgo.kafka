@@ -8,7 +8,6 @@ import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.util.NetUtil;
-import kz.greetgo.strconverter.StrConverter;
 import kz.greetgo.strconverter.simple.StrConverterSimple;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
@@ -58,9 +57,9 @@ public class ConsumerReactorTest {
 
     assertThat(consumerDefinitionList).hasSize(1);
 
-    StrConverter strConverter = new StrConverterSimple();
-    strConverter.useClass(Box.class);
-    strConverter.useClass(ModelKryo.class);
+    StrConverterSimple strConverter = new StrConverterSimple();
+    strConverter.convertRegistry().register(Box.class);
+    strConverter.convertRegistry().register(ModelKryo.class);
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 

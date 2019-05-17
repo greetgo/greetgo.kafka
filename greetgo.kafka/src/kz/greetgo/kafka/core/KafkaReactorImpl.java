@@ -40,7 +40,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       ConsumerReactor consumerReactor = new ConsumerReactor();
       consumerReactorList.add(consumerReactor);
       consumerReactor.logger = logger;
-      consumerReactor.strConverterSupplier = this::getReactorStrConverter;
+      consumerReactor.strConverterSupplier = strConverterSupplier();
       consumerReactor.bootstrapServers = bootstrapServers;
       consumerReactor.configStorage = configStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
@@ -76,7 +76,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
     @Override
     public StrConverter getStrConverter() {
-      return getReactorStrConverter();
+      return strConverterSupplier().get();
     }
 
     @Override

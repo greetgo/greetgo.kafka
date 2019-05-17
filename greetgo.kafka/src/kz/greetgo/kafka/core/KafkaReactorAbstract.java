@@ -6,18 +6,13 @@ import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.core.logger.LoggerExternal;
 import kz.greetgo.kafka.errors.NotDefined;
-import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.strconverter.StrConverter;
-import kz.greetgo.strconverter.simple.StrConverterSimple;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-
-import static java.util.Collections.synchronizedList;
 
 public abstract class KafkaReactorAbstract implements KafkaReactor {
   protected EventConfigStorage configStorage;
@@ -40,7 +35,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   }
 
   @Override
-  public void setAuthorGetter(Supplier<String> authorGetter) {
+  public void setAuthorSupplier(Supplier<String> authorGetter) {
     this.authorGetter = authorGetter;
   }
 
@@ -59,40 +54,24 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     controllerList.add(controller);
   }
 
-  private final AtomicReference<StrConverter> strConverter = new AtomicReference<>(null);
+  private Supplier<StrConverter> strConverterSupplier;
 
-  @Override
-  public StrConverter getReactorStrConverter() {
+  protected Supplier<StrConverter> strConverterSupplier() {
 
-    {
-      StrConverter sc = strConverter.get();
-      if (sc != null) {
-        return sc;
-      }
+    Supplier<StrConverter> ret = strConverterSupplier;
+
+    if (ret == null) {
+      throw new NullPointerException("strConverterSupplier == null");
     }
 
-    return strConverter.updateAndGet(current -> {
-      if (current != null) {
-        return current;
-      }
-      {
-        StrConverter sc = new StrConverterSimple();
-        sc.useClass(Box.class);
-        for (StrConverterPreparation rp : registeredStrConverterPreparations) {
-          rp.prepareStrConverter(sc);
-        }
-        return sc;
-      }
-    });
+    return ret;
 
   }
 
   @Override
-  public void registerStrConverterPreparation(StrConverterPreparation strConverterPreparation) {
-    registeredStrConverterPreparations.add(strConverterPreparation);
+  public void setStrConverterSupplier(Supplier<StrConverter> strConverterSupplier) {
+    this.strConverterSupplier = strConverterSupplier;
   }
-
-  private final List<StrConverterPreparation> registeredStrConverterPreparations = synchronizedList(new ArrayList<>());
 
   @Override
   public void setHostId(String hostId) {

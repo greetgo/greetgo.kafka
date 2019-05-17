@@ -13,21 +13,19 @@ public interface KafkaReactor {
 
   void setProducerConfigRootPath(String producerConfigRootPath);
 
-  void setAuthorGetter(Supplier<String> authorGetter);
+  void setAuthorSupplier(Supplier<String> authorSupplier);
 
   void setConfigStorage(EventConfigStorage configStorage);
 
   void setBootstrapServers(Supplier<String> bootstrapServers);
 
-  StrConverter getReactorStrConverter();
+  void setStrConverterSupplier(Supplier<StrConverter> strConverterSupplier);
 
   default void addControllers(Iterable<Object> controllers) {
     controllers.forEach(this::addController);
   }
 
   void addController(Object controller);
-
-  void registerStrConverterPreparation(StrConverterPreparation strConverterPreparation);
 
   void setHostId(String hostId);
 
