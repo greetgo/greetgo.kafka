@@ -61,9 +61,9 @@ public class KafkaReactorImplTest {
 
     kafkaReactor.addController(controller);
 
-    kafkaReactor.registerKryoPreparation(kryo -> {
-      kryo.register(ModelKryo.class);
-      kryo.register(ModelKryo2.class);
+    kafkaReactor.registerStrConverterPreparation(strConverter -> {
+      strConverter.useClass(ModelKryo.class);
+      strConverter.useClass(ModelKryo2.class);
     });
 
     kafkaReactor.logger().setDestination(testConsumerLogger);

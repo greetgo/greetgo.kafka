@@ -1,10 +1,10 @@
 package kz.greetgo.kafka.consumer;
 
-import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.serializer.BoxDeserializer;
+import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -31,7 +31,7 @@ public class ConsumerReactor {
   //
 
   public Logger logger;
-  public Supplier<Kryo> kryoCreator;
+  public Supplier<StrConverter> strConverterSupplier;
   public ConsumerDefinition consumerDefinition;
   public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
@@ -177,7 +177,7 @@ public class ConsumerReactor {
         }
 
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
-        BoxDeserializer forValue = new BoxDeserializer(kryoCreator.get());
+        BoxDeserializer forValue = new BoxDeserializer(strConverterSupplier.get());
 
         try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
           consumer.subscribe(consumerDefinition.topicList());

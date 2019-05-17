@@ -1,6 +1,5 @@
 package kz.greetgo.kafka.consumer;
 
-import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.ModelKryo;
 import kz.greetgo.kafka.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
@@ -9,6 +8,8 @@ import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.util.NetUtil;
+import kz.greetgo.strconverter.StrConverter;
+import kz.greetgo.strconverter.simple.StrConverterSimple;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -57,14 +58,14 @@ public class ConsumerReactorTest {
 
     assertThat(consumerDefinitionList).hasSize(1);
 
-    Kryo kryo = new Kryo();
-    kryo.register(Box.class);
-    kryo.register(ModelKryo.class);
+    StrConverter strConverter = new StrConverterSimple();
+    strConverter.useClass(Box.class);
+    strConverter.useClass(ModelKryo.class);
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     ConsumerReactor consumerReactor = new ConsumerReactor();
-    consumerReactor.kryoCreator = () -> kryo;
+    consumerReactor.strConverterSupplier = () -> strConverter;
     consumerReactor.configStorage = configStorage;
     consumerReactor.bootstrapServers = () -> bootstrapServers;
     consumerReactor.logger = logger;

@@ -5,9 +5,9 @@ plugins {
 
 dependencies {
 
-  compile 'org.apache.kafka:kafka-clients:2.1.0'
+  compile project(':greetgo.str-converter')
 
-  compile 'com.esotericsoftware:kryo:5.0.0-RC2'
+  compile 'org.apache.kafka:kafka-clients:2.1.0'
 
   compile('org.apache.zookeeper:zookeeper:3.4.13') {
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'

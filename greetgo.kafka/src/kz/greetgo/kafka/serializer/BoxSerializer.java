@@ -1,19 +1,19 @@
 package kz.greetgo.kafka.serializer;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
 import kz.greetgo.kafka.model.Box;
+import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.common.serialization.Serializer;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class BoxSerializer implements Serializer<Box> {
 
-  private final Kryo kryo;
+  private final StrConverter strConverter;
 
-  public BoxSerializer(Kryo kryo) {
-    this.kryo = kryo;
+  public BoxSerializer(StrConverter strConverter) {
+    this.strConverter = strConverter;
   }
 
   @Override
@@ -25,11 +25,9 @@ public class BoxSerializer implements Serializer<Box> {
   @Override
   public byte[] serialize(String topic, Box data) {
 
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    try (Output output = new Output(outputStream)) {
-      kryo.writeObject(output, data);
-    }
+    String str = strConverter.toStr(data);
 
-    return outputStream.toByteArray();
+    return str.getBytes(UTF_8);
+
   }
 }

@@ -1,18 +1,18 @@
 package kz.greetgo.kafka.serializer;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
 import kz.greetgo.kafka.model.Box;
+import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.common.serialization.Deserializer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class BoxDeserializer implements Deserializer<Box> {
 
-  private final Kryo kryo;
+  private final StrConverter strConverter;
 
-  public BoxDeserializer(Kryo kryo) {
-    this.kryo = kryo;
+  public BoxDeserializer(StrConverter strConverter) {
+    this.strConverter = strConverter;
   }
 
   @Override
@@ -20,9 +20,15 @@ public class BoxDeserializer implements Deserializer<Box> {
 
   @Override
   public Box deserialize(String topic, byte[] data) {
-    try (Input input = new Input(data)) {
-      return kryo.readObject(input, Box.class);
+
+    if (data == null) {
+      return null;
     }
+
+    String str = new String(data, StandardCharsets.UTF_8);
+
+    return strConverter.fromStr(str);
+
   }
 
   @Override

@@ -1,6 +1,5 @@
 package kz.greetgo.kafka.core;
 
-import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerReactor;
 import kz.greetgo.kafka.core.logger.Logger;
@@ -11,6 +10,7 @@ import kz.greetgo.kafka.producer.ProducerConfigWorker;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import kz.greetgo.kafka.util.KeyUtil;
+import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -40,7 +40,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       ConsumerReactor consumerReactor = new ConsumerReactor();
       consumerReactorList.add(consumerReactor);
       consumerReactor.logger = logger;
-      consumerReactor.kryoCreator = this::getReactorKryo;
+      consumerReactor.strConverterSupplier = this::getReactorStrConverter;
       consumerReactor.bootstrapServers = bootstrapServers;
       consumerReactor.configStorage = configStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
@@ -75,8 +75,8 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
     }
 
     @Override
-    public Kryo getKryo() {
-      return getReactorKryo();
+    public StrConverter getStrConverter() {
+      return getReactorStrConverter();
     }
 
     @Override

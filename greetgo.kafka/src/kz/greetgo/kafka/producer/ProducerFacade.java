@@ -36,6 +36,7 @@ public class ProducerFacade {
       if (source.logger().isShow(LoggerType.LOG_CLOSE_PRODUCER)) {
         source.logger().logProducerClosed(producerName);
       }
+
     }
   }
 
@@ -60,7 +61,7 @@ public class ProducerFacade {
 
   private Producer<byte[], Box> createProducer() {
     ByteArraySerializer keySerializer = new ByteArraySerializer();
-    BoxSerializer valueSerializer = new BoxSerializer(source.getKryo());
+    BoxSerializer valueSerializer = new BoxSerializer(source.getStrConverter());
     Producer<byte[], Box> ret = source.createProducer(producerName, keySerializer, valueSerializer);
     creationTimestamp.set(source.getProducerConfigUpdateTimestamp(producerName));
     return ret;
@@ -87,6 +88,7 @@ public class ProducerFacade {
 
       Long timestamp = null;
 
+      @SuppressWarnings("unused")
       public KafkaSending setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
         return this;
@@ -94,6 +96,7 @@ public class ProducerFacade {
 
       final ArrayList<Header> headers = new ArrayList<>();
 
+      @SuppressWarnings("unused")
       public KafkaSending addHeader(String key, byte[] value) {
         headers.add(new Header() {
           @Override
@@ -111,6 +114,7 @@ public class ProducerFacade {
 
       final Set<String> ignorableConsumers = new HashSet<>();
 
+      @SuppressWarnings("unused")
       public KafkaSending addConsumerToIgnore(String consumerName) {
         ignorableConsumers.add(consumerName);
         return this;
@@ -130,8 +134,11 @@ public class ProducerFacade {
         byte[] key = source.extractKey(body);
 
         return new KafkaFuture(getProducer().send(new ProducerRecord<>(topic, partition, timestamp, key, box, headers)));
+
       }
+
     };
+
   }
 
 }

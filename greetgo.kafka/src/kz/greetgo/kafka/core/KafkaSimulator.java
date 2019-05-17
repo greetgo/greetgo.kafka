@@ -1,6 +1,5 @@
 package kz.greetgo.kafka.core;
 
-import com.esotericsoftware.kryo.Kryo;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
@@ -9,6 +8,7 @@ import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import kz.greetgo.kafka.util.BoxUtil;
 import kz.greetgo.kafka.util.KeyUtil;
+import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Producer;
@@ -51,8 +51,8 @@ public class KafkaSimulator extends KafkaReactorAbstract {
     }
 
     @Override
-    public Kryo getKryo() {
-      return getReactorKryo();
+    public StrConverter getStrConverter() {
+      return getReactorStrConverter();
     }
 
     @Override
@@ -176,4 +176,5 @@ public class KafkaSimulator extends KafkaReactorAbstract {
     verifyControllerList();
     consumerDefinitionList = accumulateConsumerDefinitionList();
   }
+
 }

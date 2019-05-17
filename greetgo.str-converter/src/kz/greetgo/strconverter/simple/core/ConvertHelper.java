@@ -1,15 +1,16 @@
 package kz.greetgo.strconverter.simple.core;
 
 import kz.greetgo.strconverter.simple.acceptors.AcceptorManager;
+import kz.greetgo.strconverter.simple.errors.AliasAlreadyRegistered;
+import kz.greetgo.strconverter.simple.errors.ClassAlreadyRegistered;
 import kz.greetgo.strconverter.simple.errors.NoRegisteredClassForAlias;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConvertHelper {
-  public final Map<String, Class<?>> aliasClassMap = new HashMap<>();
-  public final Map<Class<?>, String> classAliasMap = new HashMap<>();
+  public final Map<String, Class<?>> aliasClassMap = new ConcurrentHashMap<>();
+  public final Map<Class<?>, String> classAliasMap = new ConcurrentHashMap<>();
 
   private final ConcurrentHashMap<Class<?>, AcceptorManager> classAcceptorManagerMap = new ConcurrentHashMap<>();
 
@@ -30,21 +31,26 @@ public class ConvertHelper {
     checkAvailableChars(alias);
 
     Class<?> alreadyClass = aliasClassMap.get(alias);
-    String alreadyAlias = classAliasMap.get(aClass);
-
-    if (alreadyClass != null && alreadyAlias != null) {
-      if (alreadyClass.equals(aClass) && alreadyAlias.equals(alias)) return;
-
-      throw new IllegalArgumentException("Alias " + alias + " already registered for " + alreadyClass
-        + ", and " + aClass + " already registered for " + alreadyClass);
-    }
 
     if (alreadyClass != null) {
-      throw new IllegalArgumentException("Alias " + alias + " already registered for " + alreadyClass);
+
+      if (alreadyClass.equals(aClass)) {
+        return;
+      }
+
+      throw new AliasAlreadyRegistered(alias, aClass, alreadyClass);
     }
 
+    String alreadyAlias = classAliasMap.get(aClass);
+
     if (alreadyAlias != null) {
-      throw new IllegalArgumentException(aClass + " already registered for alias " + alreadyAlias);
+
+      if (alreadyAlias.equals(alias)) {
+        return;
+      }
+
+
+      throw new ClassAlreadyRegistered(aClass, alias, alreadyAlias);
     }
 
     aliasClassMap.put(alias, aClass);

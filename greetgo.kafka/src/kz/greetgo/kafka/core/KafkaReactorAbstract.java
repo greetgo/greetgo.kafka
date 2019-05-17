@@ -1,8 +1,5 @@
 package kz.greetgo.kafka.core;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.serializers.CollectionSerializer;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerDefinitionExtractor;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
@@ -12,10 +9,10 @@ import kz.greetgo.kafka.errors.NotDefined;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.producer.ProducerSource;
+import kz.greetgo.strconverter.StrConverter;
+import kz.greetgo.strconverter.simple.StrConverterSimple;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -61,41 +58,24 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     controllerList.add(controller);
   }
 
-  private final ThreadLocal<Kryo> kryoThreadLocal = new ThreadLocal<Kryo>() {
-    @Override
-    protected Kryo initialValue() {
-      Kryo kryo = new Kryo();
-      registerBaseClasses(kryo);
-      for (KryoPreparation preparation : registeredKryoPreparations) {
-        preparation.prepareKryo(kryo);
-      }
-      return kryo;
-    }
-  };
+  private final StrConverter strConverter = new StrConverterSimple();
 
-  private void registerBaseClasses(Kryo kryo) {
-    kryo.register(Box.class);
-    kryo.register(ArrayList.class);
-    //noinspection ArraysAsListWithZeroOrOneArgument
-    kryo.register(Arrays.asList().getClass(), new CollectionSerializer() {
-      @Override
-      protected Collection create(Kryo kryo, Input input, Class type, int size) {
-        return new ArrayList();
-      }
-    });
+  {
+    strConverter.useClass(Box.class);
+    strConverter.useClass(ArrayList.class);
   }
 
   @Override
-  public Kryo getReactorKryo() {
-    return kryoThreadLocal.get();
+  public StrConverter getReactorStrConverter() {
+    return strConverter;
   }
 
   @Override
-  public void registerKryoPreparation(KryoPreparation kryoPreparation) {
-    registeredKryoPreparations.add(kryoPreparation);
+  public void registerStrConverterPreparation(StrConverterPreparation strConverterPreparation) {
+    registeredStrConverterPreparations.add(strConverterPreparation);
   }
 
-  private final List<KryoPreparation> registeredKryoPreparations = synchronizedList(new ArrayList<>());
+  private final List<StrConverterPreparation> registeredStrConverterPreparations = synchronizedList(new ArrayList<>());
 
   @Override
   public void setHostId(String hostId) {
