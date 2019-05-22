@@ -4,9 +4,12 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -15,16 +18,52 @@ import static kz.greetgo.kafka.util.StrUtil.intToStrLen;
 
 public class EventConfigStorageInMem extends EventConfigStorageAbstract {
 
-  private final ConcurrentHashMap<String, byte[]> data = new ConcurrentHashMap<>();
+  private static class FileRecord {
+    final Date createdAt;
+    final Date lastModifiedAt;
+    final byte[] data;
 
-  @Override
-  public boolean exists(String path) {
-    return data.containsKey(path);
+    public FileRecord(Date createdAt, byte[] data) {
+      this.createdAt = createdAt;
+      this.lastModifiedAt = new Date();
+      this.data = data;
+    }
+
+    public FileRecord(byte[] data) {
+      createdAt = new Date();
+      this.lastModifiedAt = createdAt;
+      this.data = data;
+    }
+
+    public static FileRecord create(byte[] data) {
+      Objects.requireNonNull(data);
+      return new FileRecord(data);
+    }
+
+    public FileRecord modify(byte[] data) {
+      Objects.requireNonNull(data);
+      return new FileRecord(createdAt, data);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      FileRecord that = (FileRecord) o;
+      return Arrays.equals(data, that.data);
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(data);
+    }
   }
+
+  private final ConcurrentHashMap<String, FileRecord> data = new ConcurrentHashMap<>();
 
   @Override
   public byte[] readContent(String path) {
-    return data.get(path);
+    return Optional.ofNullable(data.get(path)).map(a -> a.data).orElse(null);
   }
 
   @Override
@@ -32,15 +71,26 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
     if (content == null) {
       data.remove(path);
     } else {
-      data.put(path, content);
+      data.compute(path, (path1, fileRecord)
+        -> fileRecord == null ? FileRecord.create(content) : fileRecord.modify(content));
     }
   }
 
-  private final Map<String, byte[]> state = new HashMap<>();
+  @Override
+  public Optional<Date> createdAt(String path) {
+    return Optional.ofNullable(data.get(path)).map(a -> a.createdAt);
+  }
+
+  @Override
+  public Optional<Date> lastModifiedAt(String path) {
+    return Optional.ofNullable(data.get(path)).map(a -> a.lastModifiedAt);
+  }
+
+  private final Map<String, FileRecord> state = new HashMap<>();
 
   public void rememberState() {
     state.clear();
-    for (Map.Entry<String, byte[]> e : data.entrySet()) {
+    for (Map.Entry<String, FileRecord> e : data.entrySet()) {
       state.put(e.getKey(), e.getValue());
     }
   }
@@ -48,10 +98,10 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
   public void fireEvents() {
 
     for (String path : lookingForPaths.keySet()) {
-      byte[] nowBytes = data.get(path);
-      byte[] oldBytes = state.get(path);
+      FileRecord nowBytes = data.get(path);
+      FileRecord oldBytes = state.get(path);
       if (nowBytes != null && oldBytes != null) {
-        if (!Arrays.equals(nowBytes, oldBytes)) {
+        if (!Objects.equals(nowBytes, oldBytes)) {
           fireConfigEventHandler(path, ConfigEventType.UPDATE);
         }
         continue;
@@ -79,43 +129,58 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
   }
 
   public List<String> getLinesWithoutSpaces(String path) {
-    byte[] bytes = data.get(path);
+
+    FileRecord bytes = data.get(path);
     if (bytes == null) {
       return null;
     }
 
-    return new ArrayList<>(Arrays.asList(new String(bytes, UTF_8)
+    return new ArrayList<>(Arrays.asList(new String(bytes.data, UTF_8)
       .split("\\n")))
       .stream()
       .map(s -> s.replaceAll("\\s+", ""))
       .collect(toList());
+
   }
 
-  private static byte[] addLines(byte[] bytes, String[] lines) {
-    List<String> lineList = bytes == null
+  private static FileRecord addLines(FileRecord fileRecord, String[] lines) {
+
+    List<String> lineList = fileRecord == null
       ? new ArrayList<>() :
-      new ArrayList<>(Arrays.asList(new String(bytes, UTF_8).split("\\n")));
+      new ArrayList<>(Arrays.asList(new String(fileRecord.data, UTF_8).split("\\n")));
 
     lineList.addAll(Arrays.asList(lines));
 
-    return String.join("\n", lineList).getBytes(UTF_8);
+    byte[] newBytes = String.join("\n", lineList).getBytes(UTF_8);
+
+    return fileRecord == null ? FileRecord.create(newBytes) : fileRecord.modify(newBytes);
+
   }
 
-  private static byte[] removeLines(byte[] bytes, String[] lines) {
-    if (bytes == null) {
+  private static FileRecord removeLines(FileRecord fileRecord, String[] lines) {
+
+    if (fileRecord == null) {
       return null;
     }
-    List<String> lineList = new ArrayList<>(Arrays.asList(new String(bytes, UTF_8).split("\\n")));
+    List<String> lineList = new ArrayList<>(Arrays.asList(new String(fileRecord.data, UTF_8).split("\\n")));
+
     lineList.removeAll(Arrays.asList(lines));
-    return lineList.isEmpty() ? null : String.join("\n", lineList).getBytes(UTF_8);
+
+    if (lineList.isEmpty()) {
+      return null;
+    }
+
+    return fileRecord.modify(String.join("\n", lineList).getBytes(UTF_8));
+
   }
 
   @SuppressWarnings("Duplicates")
   public void addLines(String path, String... lines) {
-    while (true) {
-      byte[] bytes = data.get(path);
 
-      byte[] newBytes = addLines(bytes, lines);
+    while (true) {
+      FileRecord bytes = data.get(path);
+
+      FileRecord newBytes = addLines(bytes, lines);
 
       if (bytes == null) {
         if (data.putIfAbsent(path, newBytes) == null) {
@@ -132,11 +197,11 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
   @SuppressWarnings("Duplicates")
   public void removeLines(String path, String... lines) {
     while (true) {
-      byte[] bytes = data.get(path);
+      FileRecord bytes = data.get(path);
 
-      byte[] newBytes = removeLines(bytes, lines);
+      FileRecord newBytes = removeLines(bytes, lines);
 
-      if (Arrays.equals(bytes, newBytes)) {
+      if (Objects.equals(bytes, newBytes)) {
         return;
       }
 
@@ -159,18 +224,18 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
   }
 
   public void printCurrentState() {
-    List<Map.Entry<String, byte[]>> list
+    List<Map.Entry<String, FileRecord>> list
       = data
       .entrySet()
       .stream()
       .sorted(Comparator.comparing(Map.Entry::getKey))
       .collect(toList());
 
-    for (Map.Entry<String, byte[]> e : list) {
+    for (Map.Entry<String, FileRecord> e : list) {
 
       writeLine("FILE " + e.getKey());
 
-      String[] lines = new String(e.getValue(), UTF_8).split("\n");
+      String[] lines = new String(e.getValue().data, UTF_8).split("\n");
 
       if (lines.length > 0) {
         int len = ("" + (lines.length - 1)).length();

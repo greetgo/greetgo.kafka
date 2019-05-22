@@ -12,7 +12,9 @@ import org.apache.zookeeper.data.Stat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -141,11 +143,34 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
   }
 
   @Override
-  public boolean exists(String path) {
+  public Optional<Date> createdAt(String path) {
 
     try {
 
-      return client().checkExists().forPath(zNode(path)) != null;
+      return Optional.ofNullable(
+
+        client().checkExists().forPath(zNode(path))
+
+      ).map(Stat::getCtime).map(Date::new);
+
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+  }
+
+  @Override
+  public Optional<Date> lastModifiedAt(String path) {
+
+    try {
+
+      return Optional.ofNullable(
+
+        client().checkExists().forPath(zNode(path))
+
+      ).map(Stat::getMtime).map(Date::new);
 
     } catch (RuntimeException e) {
       throw e;
