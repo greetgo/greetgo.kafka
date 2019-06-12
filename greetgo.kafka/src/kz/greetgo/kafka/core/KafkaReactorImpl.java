@@ -2,6 +2,7 @@ package kz.greetgo.kafka.core;
 
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerReactor;
+import kz.greetgo.kafka.consumer.ConsumerReactorImpl;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.core.logger.LoggerType;
 import kz.greetgo.kafka.errors.NotDefined;
@@ -18,10 +19,11 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class KafkaReactorImpl extends KafkaReactorAbstract {
 
-  private final List<ConsumerReactor> consumerReactorList = new ArrayList<>();
+  private final List<ConsumerReactorImpl> consumerReactorList = new ArrayList<>();
 
   @Override
   public void startConsumers() {
@@ -37,7 +39,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
 
     for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {
-      ConsumerReactor consumerReactor = new ConsumerReactor();
+      ConsumerReactorImpl consumerReactor = new ConsumerReactorImpl();
       consumerReactorList.add(consumerReactor);
       consumerReactor.logger = logger;
       consumerReactor.strConverterSupplier = strConverterSupplier();
@@ -49,9 +51,19 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
   }
 
   @Override
+  public Optional<ConsumerReactor> consumer(String consumerName) {
+    for (ConsumerReactorImpl consumerReactor : consumerReactorList) {
+      if (consumerReactor.consumerDefinition.getConsumerName().equals(consumerName)) {
+        return Optional.of(consumerReactor);
+      }
+    }
+    return Optional.empty();
+  }
+
+  @Override
   public void stopConsumers() {
 
-    consumerReactorList.forEach(ConsumerReactor::stop);
+    consumerReactorList.forEach(ConsumerReactorImpl::stop);
     consumerReactorList.clear();
 
     producerConfigWorker.close();

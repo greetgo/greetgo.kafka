@@ -2,6 +2,7 @@ package kz.greetgo.kafka.core;
 
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerDefinitionExtractor;
+import kz.greetgo.kafka.consumer.ConsumerReactor;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.core.logger.LoggerExternal;
@@ -12,6 +13,7 @@ import kz.greetgo.strconverter.StrConverter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public abstract class KafkaReactorAbstract implements KafkaReactor {
@@ -66,6 +68,11 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
 
     return ret;
 
+  }
+
+  @Override
+  public Optional<ConsumerReactor> consumer(String consumerName) {
+    return Optional.empty();
   }
 
   @Override

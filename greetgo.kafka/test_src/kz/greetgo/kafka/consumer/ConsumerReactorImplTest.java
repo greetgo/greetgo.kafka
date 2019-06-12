@@ -17,7 +17,7 @@ import java.util.List;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-public class ConsumerReactorTest {
+public class ConsumerReactorImplTest {
 
   String bootstrapServers;
 
@@ -63,7 +63,7 @@ public class ConsumerReactorTest {
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
-    ConsumerReactor consumerReactor = new ConsumerReactor();
+    ConsumerReactorImpl consumerReactor = new ConsumerReactorImpl();
     consumerReactor.strConverterSupplier = () -> strConverter;
     consumerReactor.configStorage = configStorage;
     consumerReactor.bootstrapServers = () -> bootstrapServers;
