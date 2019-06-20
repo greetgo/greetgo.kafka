@@ -69,8 +69,6 @@ public class ConsumerReactorImplTest {
     consumerReactor.bootstrapServers = () -> bootstrapServers;
     consumerReactor.logger = logger;
     consumerReactor.consumerDefinition = consumerDefinitionList.get(0);
-    consumerReactor.storageRootPath = "test/root";
-    consumerReactor.storageParentConfigPath = "test/root/parent.txt";
 
     consumerReactor.start();
 

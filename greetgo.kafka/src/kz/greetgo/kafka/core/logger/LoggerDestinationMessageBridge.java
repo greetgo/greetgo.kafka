@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static java.util.Comparator.comparing;
 
@@ -24,16 +25,18 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
 
   @Override
   public void logProducerConfigOnCreating(String producerName, Map<String, Object> configMap) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("Created producer `").append(producerName).append("` with config:");
-    configMap
-      .entrySet()
-      .stream()
-      .sorted(comparing(Map.Entry::getKey))
-      .forEachOrdered(e ->
-        sb.append("\n    ").append(e.getKey()).append(" = `").append(e.getValue()).append("`")
-      );
-    acceptor.info(sb.toString());
+    if (acceptor.isInfoEnabled()) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Created producer `").append(producerName).append("` with config:");
+      configMap
+        .entrySet()
+        .stream()
+        .sorted(comparing(Map.Entry::getKey))
+        .forEachOrdered(e ->
+          sb.append("\n    ").append(e.getKey()).append(" = `").append(e.getValue()).append("`")
+        );
+      acceptor.info(sb.toString());
+    }
   }
 
   @Override
@@ -65,13 +68,24 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
 
   @Override
   public void logConsumerStartWorker(String consumerInfo, long workerId) {
-    acceptor.info("Started consumer worker `" + consumerInfo
-      + "` with id = " + workerId + " in thread " + Thread.currentThread().getName());
+    if (acceptor.isInfoEnabled()) {
+      acceptor.info("Started consumer worker `" + consumerInfo
+        + "` with id = " + workerId + " in thread " + Thread.currentThread().getName());
+    }
   }
 
   @Override
   public void logConsumerFinishWorker(String consumerInfo, long workerId) {
-    acceptor.info("Finished consumer worker `" + consumerInfo + "` with id = " + workerId);
+    if (acceptor.isInfoEnabled()) {
+      acceptor.info("Finished consumer worker `" + consumerInfo + "` with id = " + workerId);
+    }
+  }
+
+  @Override
+  public void debug(Supplier<String> message) {
+    if (acceptor.isDebugEnabled()) {
+      acceptor.debug(message.get());
+    }
   }
 
   @Override

@@ -2,11 +2,13 @@ package kz.greetgo.kafka.core;
 
 import kz.greetgo.kafka.ModelKryo;
 import kz.greetgo.kafka.ModelKryo2;
-import kz.greetgo.kafka.consumer.TestLoggerDestination;
+import kz.greetgo.kafka.consumer.TestLoggerDestinationInteractive;
 import kz.greetgo.kafka.consumer.annotations.ConsumersFolder;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.Topic;
-import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
+import kz.greetgo.kafka.core.config.EventConfigStorageZooKeeper;
+import kz.greetgo.kafka.core.logger.LoggerDestination;
+import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.util.NetUtil;
 import kz.greetgo.strconverter.simple.StrConverterSimple;
@@ -16,7 +18,12 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static kz.greetgo.kafka.core.config.EventConfigStorageUtil.changeRoot;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class KafkaReactorImplTest {
@@ -51,21 +58,24 @@ public class KafkaReactorImplTest {
 
   @Test
   public void runKafkaReactor() throws Exception {
+    EventConfigStorageZooKeeper storageZooKeeper = new EventConfigStorageZooKeeper(
+      "greetgo_kafka/KafkaReactorImplTest", () -> "localhost:2181", () -> 3000
+    );
+
     TestController controller = new TestController();
 
-    TestLoggerDestination testConsumerLogger = new TestLoggerDestination();
-
-    EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
+    LoggerDestination testConsumerLogger = new TestLoggerDestinationInteractive();
 
     KafkaReactor kafkaReactor = new KafkaReactorImpl();
-    kafkaReactor.setConsumerConfigStorage(configStorage);
-    kafkaReactor.setProducerConfigStorage(configStorage);
+    kafkaReactor.setConsumerConfigStorage(changeRoot("consumers", storageZooKeeper));
+    kafkaReactor.setProducerConfigStorage(changeRoot("producers", storageZooKeeper));
 
     kafkaReactor.addController(controller);
 
     StrConverterSimple strConverter = new StrConverterSimple();
     strConverter.convertRegistry().register(ModelKryo.class);
     strConverter.convertRegistry().register(ModelKryo2.class);
+    strConverter.convertRegistry().register(Box.class);
 
     kafkaReactor.setStrConverterSupplier(() -> strConverter);
 
@@ -86,8 +96,10 @@ public class KafkaReactorImplTest {
     File keepRunningFile = new File(baseDir + "/keepRunning.txt");
     File keepRunningFile2 = new File(baseDir + "/keepRunning__removeThisSuffix.txt");
 
-    keepRunningFile2.getParentFile().mkdirs();
-    keepRunningFile2.createNewFile();
+    if (!keepRunningFile.exists()) {
+      keepRunningFile2.getParentFile().mkdirs();
+      keepRunningFile2.createNewFile();
+    }
     currentKeepRunningFile.createNewFile();
 
     File test_topic1_dir = new File(baseDir + "/test_topic1");
@@ -151,6 +163,7 @@ public class KafkaReactorImplTest {
     }
 
     public void runInner() throws Exception {
+      SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss-SSS");
       while (working.get() && dir.exists()) {
 
         File[] files = dir.listFiles();
@@ -168,7 +181,13 @@ public class KafkaReactorImplTest {
           }
 
           for (File file : files) {
-            file.delete();
+            File file2 = Paths
+              .get(dir.toString() + "_sent")
+              .resolve(file.getName() + "_" + sdf.format(new Date()))
+              .toFile();
+
+            file2.getParentFile().mkdirs();
+            file.renameTo(file2);
           }
         }
 

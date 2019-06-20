@@ -47,6 +47,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       consumerReactor.configStorage = consumerConfigStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
       consumerReactor.start();
+      System.out.println("5hb4326v6 :: started consumer " + consumerDefinition);
     }
   }
 

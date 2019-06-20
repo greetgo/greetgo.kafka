@@ -4,6 +4,7 @@ import org.apache.kafka.common.errors.WakeupException;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public interface LoggerDestination {
 
@@ -23,5 +24,7 @@ public interface LoggerDestination {
 
   void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName,
                                                        Object controller, Method method);
+
+  void debug(Supplier<String> message);
 
 }

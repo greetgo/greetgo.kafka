@@ -23,6 +23,15 @@ public class ConsumerDefinition {
   private final AutoOffsetReset autoOffsetReset;
   private final String groupId;
 
+  @Override
+  public String toString() {
+    return "ConsumerDefinition{" +
+      controller.getClass() + "#" + method.getName() +
+      ", folderPath=" + folderPath +
+      ", groupId=" + groupId +
+      '}';
+  }
+
   public ConsumerDefinition(Object controller, Method method, Logger logger, String hostId) {
     this.controller = controller;
     this.method = method;
@@ -36,7 +45,7 @@ public class ConsumerDefinition {
 
     {
       autoOffsetReset = method.getAnnotation(KafkaNotifier.class) == null
-          ? AutoOffsetReset.EARLIEST : AutoOffsetReset.LATEST;
+        ? AutoOffsetReset.EARLIEST : AutoOffsetReset.LATEST;
     }
 
     {
@@ -111,9 +120,9 @@ public class ConsumerDefinition {
 
   public List<String> topicList() {
     return Arrays.stream(
-        method
-            .getAnnotation(Topic.class)
-            .value()
+      method
+        .getAnnotation(Topic.class)
+        .value()
     ).collect(Collectors.toList());
   }
 

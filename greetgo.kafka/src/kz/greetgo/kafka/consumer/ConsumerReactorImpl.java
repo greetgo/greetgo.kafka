@@ -35,8 +35,6 @@ public class ConsumerReactorImpl implements ConsumerReactor {
   public ConsumerDefinition consumerDefinition;
   public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
-  public String storageRootPath;
-  public String storageParentConfigPath;
 
   /**
    * Start reactor
@@ -46,28 +44,9 @@ public class ConsumerReactorImpl implements ConsumerReactor {
       throw new IllegalStateException("Cannot start closed ConsumerReactor");
     }
 
-    consumerConfigWorker.setParentPath(storageParentConfigPath);
-
-    {
-      String configPath = consumerDefinition.getConfigPath();
-      if (storageRootPath != null) {
-        configPath = storageRootPath + "/" + configPath;
-      }
-      consumerConfigWorker.setConfigPath(configPath);
-    }
+    consumerConfigWorker.setConfigPathPrefix(consumerDefinition.getConfigPath());
 
     consumerConfigWorker.start();
-
-    {
-      StringBuilder sb = new StringBuilder();
-      String folderPath = consumerDefinition.getFolderPath();
-      if (folderPath != null) {
-        sb.append(folderPath).append('/');
-      }
-      sb.append(consumerDefinition.getControllerClass().getSimpleName());
-      sb.append(".txt");
-      consumerConfigWorker.setConfigPath(sb.toString());
-    }
 
     refresh();
   }

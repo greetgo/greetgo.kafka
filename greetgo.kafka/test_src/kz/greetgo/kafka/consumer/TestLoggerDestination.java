@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class TestLoggerDestination implements LoggerDestination {
 
@@ -51,4 +52,10 @@ public class TestLoggerDestination implements LoggerDestination {
   public void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName, Object controller, Method method) {
 
   }
+
+  @Override
+  public void debug(Supplier<String> message) {
+
+  }
+
 }

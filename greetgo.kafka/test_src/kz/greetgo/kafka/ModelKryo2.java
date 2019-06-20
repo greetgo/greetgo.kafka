@@ -28,7 +28,7 @@ public class ModelKryo2 implements HasStrKafkaKey {
 
     ModelKryo2 ret = new ModelKryo2();
 
-    for (String line : content.split(";")) {
+    for (String line : content.split(":")) {
       int idx = line.indexOf('=');
       if (idx < 0) {
         continue;

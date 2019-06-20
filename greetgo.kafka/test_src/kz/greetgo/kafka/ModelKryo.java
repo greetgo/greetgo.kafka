@@ -30,7 +30,7 @@ public class ModelKryo implements HasStrKafkaKey {
 
     ModelKryo ret = new ModelKryo();
 
-    for (String line : content.split(";")) {
+    for (String line : content.split(":")) {
       int idx = line.indexOf('=');
       if (idx < 0) {
         continue;

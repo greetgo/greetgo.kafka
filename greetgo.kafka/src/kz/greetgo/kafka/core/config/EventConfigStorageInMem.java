@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
+import static kz.greetgo.kafka.util.StrUtil.bytesToLines;
 import static kz.greetgo.kafka.util.StrUtil.intToStrLen;
 
 public class EventConfigStorageInMem extends EventConfigStorageAbstract {
@@ -64,6 +65,10 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
   @Override
   public byte[] readContent(String path) {
     return Optional.ofNullable(data.get(path)).map(a -> a.data).orElse(null);
+  }
+
+  public List<String> readLines(String path) {
+    return bytesToLines(readContent(path));
   }
 
   @Override
@@ -118,7 +123,6 @@ public class EventConfigStorageInMem extends EventConfigStorageAbstract {
       }
     }
 
-    rememberState();
   }
 
   private final ConcurrentHashMap<String, Boolean> lookingForPaths = new ConcurrentHashMap<>();
