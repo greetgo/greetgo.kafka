@@ -16,7 +16,7 @@ public class ProducerConfigWorkerTest {
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
-    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> "producer/root", () -> configStorage);
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage);
 
     //
     //
@@ -35,7 +35,7 @@ public class ProducerConfigWorkerTest {
     assertThat(config).contains(MapEntry.entry("linger.ms", "1"));
     assertThat(config).contains(MapEntry.entry("batch.size", "16384"));
 
-    List<String> lines = configStorage.getLinesWithoutSpaces("producer/root/all-test.txt");
+    List<String> lines = configStorage.getLinesWithoutSpaces("all-test.txt");
 
     assertThat(lines).contains("prod.acts=all");
     assertThat(lines).contains("prod.buffer.memory=33554432");
@@ -53,14 +53,14 @@ public class ProducerConfigWorkerTest {
   public void readingFromConfigFile() {
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
-    configStorage.addLines("producer/root/testProducer.txt",
+    configStorage.addLines("testProducer.txt",
         "prod.param1=value 1001",
         "prod.param2=value 1002",
         "prod.param3=value 1003",
         "prod.param4=value 1004"
     );
 
-    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> "producer/root", () -> configStorage);
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage);
 
     //
     //
@@ -79,11 +79,11 @@ public class ProducerConfigWorkerTest {
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
-    configStorage.addLines("producer/root/testProducer.txt",
+    configStorage.addLines("testProducer.txt",
         "prod.param1=started value"
     );
 
-    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> "producer/root", () -> configStorage);
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage);
 
     Map<String, Object> startedConfig = producerConfigWorker.getConfigFor("testProducer");
 
@@ -91,10 +91,10 @@ public class ProducerConfigWorkerTest {
 
     configStorage.rememberState();
 
-    configStorage.removeLines("producer/root/testProducer.txt",
+    configStorage.removeLines("testProducer.txt",
         "prod.param1=started value"
     );
-    configStorage.addLines("producer/root/testProducer.txt",
+    configStorage.addLines("testProducer.txt",
         "prod.param1=another value"
     );
 
@@ -117,10 +117,10 @@ public class ProducerConfigWorkerTest {
     configStorage.rememberState();
 
 
-    configStorage.removeLines("producer/root/testProducer.txt",
+    configStorage.removeLines("testProducer.txt",
         "prod.param1=another value"
     );
-    configStorage.removeLines("producer/root/testProducer.txt",
+    configStorage.removeLines("testProducer.txt",
         "prod.param1=last value"
     );
 

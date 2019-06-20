@@ -30,11 +30,11 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
     verifyControllerList();
     List<ConsumerDefinition> consumerDefinitionList = accumulateConsumerDefinitionList();
 
-    if (configStorage == null) {
-      throw new NotDefined("configStorage in " + KafkaReactor.class.getSimpleName() + ".start()");
+    if (consumerConfigStorage == null) {
+      throw new NotDefined("consumerConfigStorage in " + getClass().getSimpleName() + ".startConsumers()");
     }
     if (bootstrapServers == null) {
-      throw new NotDefined("bootstrapServers in " + KafkaReactor.class.getSimpleName() + ".start()");
+      throw new NotDefined("bootstrapServers in " + getClass().getSimpleName() + ".startConsumers()");
     }
 
 
@@ -44,7 +44,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       consumerReactor.logger = logger;
       consumerReactor.strConverterSupplier = strConverterSupplier();
       consumerReactor.bootstrapServers = bootstrapServers;
-      consumerReactor.configStorage = configStorage;
+      consumerReactor.configStorage = consumerConfigStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
       consumerReactor.start();
     }
@@ -70,9 +70,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
   }
 
-  private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(
-    () -> producerConfigRootPath, () -> configStorage
-  );
+  private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> producerConfigStorage);
 
   @Override
   public ProducerSource getProducerSource() {

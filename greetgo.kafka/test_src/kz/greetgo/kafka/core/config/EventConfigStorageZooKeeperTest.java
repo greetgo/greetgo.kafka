@@ -2,6 +2,7 @@ package kz.greetgo.kafka.core.config;
 
 import kz.greetgo.kafka.util.NetUtil;
 import org.apache.curator.framework.CuratorFramework;
+import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -25,7 +26,7 @@ public class EventConfigStorageZooKeeperTest {
     zookeeperServers = "localhost:2181";
 
     if (!NetUtil.canConnectToAnyBootstrapServer(zookeeperServers)) {
-      throw new RuntimeException("No zookeeper connection : " + zookeeperServers);
+      throw new SkipException("No zookeeper connection : " + zookeeperServers);
     }
   }
 

@@ -13,11 +13,11 @@ public interface KafkaReactor {
 
   LoggerExternal logger();
 
-  void setProducerConfigRootPath(String producerConfigRootPath);
+  void setConsumerConfigStorage(EventConfigStorage configStorage);
+
+  void setProducerConfigStorage(EventConfigStorage configStorage);
 
   void setAuthorSupplier(Supplier<String> authorSupplier);
-
-  void setConfigStorage(EventConfigStorage configStorage);
 
   void setBootstrapServers(Supplier<String> bootstrapServers);
 

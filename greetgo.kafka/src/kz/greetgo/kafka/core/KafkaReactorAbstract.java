@@ -17,9 +17,9 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public abstract class KafkaReactorAbstract implements KafkaReactor {
-  protected EventConfigStorage configStorage;
   protected Supplier<String> authorGetter;
-  protected String producerConfigRootPath;
+  protected EventConfigStorage consumerConfigStorage;
+  protected EventConfigStorage producerConfigStorage;
 
   protected String hostId;
   protected Supplier<String> bootstrapServers;
@@ -27,13 +27,18 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   protected final Logger logger = new Logger();
 
   @Override
-  public LoggerExternal logger() {
-    return logger;
+  public void setConsumerConfigStorage(EventConfigStorage consumerConfigStorage) {
+    this.consumerConfigStorage = consumerConfigStorage;
   }
 
   @Override
-  public void setConfigStorage(EventConfigStorage configStorage) {
-    this.configStorage = configStorage;
+  public void setProducerConfigStorage(EventConfigStorage producerConfigStorage) {
+    this.producerConfigStorage = producerConfigStorage;
+  }
+
+  @Override
+  public LoggerExternal logger() {
+    return logger;
   }
 
   @Override
@@ -42,12 +47,9 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   }
 
   @Override
-  public void setProducerConfigRootPath(String producerConfigRootPath) {
-    this.producerConfigRootPath = producerConfigRootPath;
+  public void setBootstrapServers(Supplier<String> bootstrapServers) {
+    this.bootstrapServers = bootstrapServers;
   }
-
-  @Override
-  public void setBootstrapServers(Supplier<String> bootstrapServers) {this.bootstrapServers = bootstrapServers;}
 
   protected final List<Object> controllerList = new ArrayList<>();
 
@@ -115,4 +117,5 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
 
     return consumerDefinitionList;
   }
+
 }

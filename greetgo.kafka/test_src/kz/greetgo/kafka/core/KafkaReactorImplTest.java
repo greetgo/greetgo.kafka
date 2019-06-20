@@ -58,7 +58,8 @@ public class KafkaReactorImplTest {
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     KafkaReactor kafkaReactor = new KafkaReactorImpl();
-    kafkaReactor.setConfigStorage(configStorage);
+    kafkaReactor.setConsumerConfigStorage(configStorage);
+    kafkaReactor.setProducerConfigStorage(configStorage);
 
     kafkaReactor.addController(controller);
 

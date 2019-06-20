@@ -14,21 +14,13 @@ import java.util.function.Supplier;
 
 public class ProducerConfigWorker {
   private final Supplier<EventConfigStorage> configStorage;
-  private final Supplier<String> configRootPath;
 
-  public ProducerConfigWorker(Supplier<String> configRootPath, Supplier<EventConfigStorage> configStorage) {
+  public ProducerConfigWorker(Supplier<EventConfigStorage> configStorage) {
     this.configStorage = configStorage;
-    this.configRootPath = configRootPath;
   }
 
   private String configPath(String producerName) {
-    String rootPath = configRootPath.get();
-    if (rootPath == null) {
-      rootPath = "";
-    } else {
-      rootPath = rootPath + "/";
-    }
-    return rootPath + producerName + ".txt";
+    return producerName + ".txt";
   }
 
   private final ConcurrentHashMap<String, ConfigLines> configLinesMap = new ConcurrentHashMap<>();
