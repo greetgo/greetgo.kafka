@@ -1,5 +1,5 @@
 package kz.greetgo.kafka.core.config;
 
-public interface ConfigEventRegistration {
+public interface EventRegistration {
   void unregister();
 }

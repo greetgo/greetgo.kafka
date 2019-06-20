@@ -11,7 +11,7 @@ public abstract class EventConfigStorageAbstract implements EventConfigStorage {
   private final AtomicLong nextId = new AtomicLong(1);
 
   @Override
-  public ConfigEventRegistration addEventHandler(ConfigEventHandler configEventHandler) {
+  public EventRegistration addEventHandler(ConfigEventHandler configEventHandler) {
     final long id = nextId.getAndIncrement();
     map.put(id, configEventHandler);
     return () -> map.remove(id);
@@ -21,5 +21,10 @@ public abstract class EventConfigStorageAbstract implements EventConfigStorage {
     for (ConfigEventHandler configEventHandler : new ArrayList<>(map.values())) {
       configEventHandler.configEventHappened(path, type);
     }
+  }
+
+  @Override
+  public void close() {
+    map.clear();
   }
 }

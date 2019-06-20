@@ -5,6 +5,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.retry.RetryNTimes;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
@@ -252,6 +253,9 @@ public class EventConfigStorageZooKeeper extends EventConfigStorageAbstract impl
 
     } catch (RuntimeException e) {
       throw e;
+    } catch (KeeperException.NodeExistsException | KeeperException.BadVersionException e) {
+      writeContent(path, content);
+      return;
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

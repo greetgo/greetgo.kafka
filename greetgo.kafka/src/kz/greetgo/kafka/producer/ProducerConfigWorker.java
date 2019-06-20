@@ -1,6 +1,6 @@
 package kz.greetgo.kafka.producer;
 
-import kz.greetgo.kafka.core.config.ConfigEventRegistration;
+import kz.greetgo.kafka.core.config.EventRegistration;
 import kz.greetgo.kafka.core.config.ConfigEventType;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.util.ConfigLines;
@@ -42,12 +42,12 @@ public class ProducerConfigWorker {
     return configLines.getWithPrefix("prod.");
   }
 
-  private final AtomicReference<ConfigEventRegistration> registration = new AtomicReference<>(null);
+  private final AtomicReference<EventRegistration> registration = new AtomicReference<>(null);
 
   private void ensureRegisteredHandler() {
 
     if (this.registration.get() == null) {
-      ConfigEventRegistration registration = configStorage.get().addEventHandler(this::configEventHappened);
+      EventRegistration registration = configStorage.get().addEventHandler(this::configEventHappened);
 
       if (!this.registration.compareAndSet(null, registration)) {
         registration.unregister();
@@ -57,7 +57,7 @@ public class ProducerConfigWorker {
   }
 
   public void close() {
-    ConfigEventRegistration registration = this.registration.getAndSet(null);
+    EventRegistration registration = this.registration.getAndSet(null);
     if (registration != null) {
       registration.unregister();
     }

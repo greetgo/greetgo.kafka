@@ -49,7 +49,7 @@ public class EventConfigStorageUtil {
 
     @Override
     @SuppressWarnings("Convert2Lambda")
-    public ConfigEventRegistration addEventHandler(ConfigEventHandler configEventHandler) {
+    public EventRegistration addEventHandler(ConfigEventHandler configEventHandler) {
       return parent.addEventHandler(new ConfigEventHandler() {
         @Override
         public void configEventHappened(String path, ConfigEventType type) {
@@ -58,6 +58,11 @@ public class EventConfigStorageUtil {
           }
         }
       });
+    }
+
+    @Override
+    public void close() {
+      //nothing to do
     }
   }
 

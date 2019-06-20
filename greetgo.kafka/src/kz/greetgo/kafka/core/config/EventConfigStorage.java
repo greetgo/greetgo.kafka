@@ -6,7 +6,7 @@ import java.util.Optional;
 /**
  * Interface to access to file storage
  */
-public interface EventConfigStorage {
+public interface EventConfigStorage extends AutoCloseable {
 
   /**
    * Checks file to existence
@@ -72,6 +72,9 @@ public interface EventConfigStorage {
    * @param configEventHandler handler
    * @return registration object using to unregister handler
    */
-  ConfigEventRegistration addEventHandler(ConfigEventHandler configEventHandler);
+  EventRegistration addEventHandler(ConfigEventHandler configEventHandler);
+
+  @Override
+  void close();
 
 }
