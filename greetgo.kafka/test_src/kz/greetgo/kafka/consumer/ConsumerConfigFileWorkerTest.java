@@ -406,7 +406,6 @@ public class ConsumerConfigFileWorkerTest {
 
   }
 
-
   @Test
   public void noErrorFilesIfNoErrors() {
 

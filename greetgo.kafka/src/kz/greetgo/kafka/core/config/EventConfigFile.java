@@ -21,7 +21,7 @@ public interface EventConfigFile extends AutoCloseable {
 
   void writeContent(byte[] content);
 
-  default void delete(String path) {
+  default void delete() {
     writeContent(null);
   }
 
