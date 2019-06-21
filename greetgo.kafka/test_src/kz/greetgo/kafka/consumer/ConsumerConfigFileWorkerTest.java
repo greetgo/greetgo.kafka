@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.core.config.ConfigEventType;
+import kz.greetgo.kafka.util.StrUtil;
 import kz.greetgo.kafka.util.TestEventConfigFile;
 import kz.greetgo.kafka.util.TestHandler;
 import org.fest.assertions.data.MapEntry;
@@ -122,16 +123,28 @@ public class ConsumerConfigFileWorkerTest {
 
   }
 
-
   @Test
   public void createHostFileWithDefaultValues() {
 
     parentConfig.addLines("con.auto.commit.interval.ms=54267");
     parentConfig.addLines("con.heartbeat.interval.ms=3242456");
+    parentConfig.addLines("out.worker.count=1");
 
     parentConfig.writeContentCount = 0;
 
+    //
+    //
     fileWorker.start();
+    //
+    //
+
+    if (parentConfigError.exists()) {
+      System.out.println("Begin parentConfigError lines:");
+      for (String line : parentConfigError.readLines()) {
+        System.out.println("   " + line);
+      }
+      System.out.println("End parentConfigError");
+    }
 
     assertThat(parentConfigError.exists()).isFalse();
 
@@ -153,7 +166,7 @@ public class ConsumerConfigFileWorkerTest {
       assertThat(parentLines).contains("con.send.buffer.bytes=131072");
       assertThat(parentLines).contains("con.fetch.max.wait.ms=500");
 
-      assertThat(parentLines).contains("out.worker.count=1");
+      assertThat(parentLines).contains("out.worker.count:inherits");
       assertThat(parentLines).contains("out.poll.duration.ms=800");
     }
 
@@ -180,7 +193,9 @@ public class ConsumerConfigFileWorkerTest {
     }
 
     assertThat(configDataChanged.happenCount).isZero();
-    assertThat(parentConfig.writeContentCount).isZero();
+    assertThat(parentConfig.writeContentCount)
+      .describedAs("ATTENTION: Parent config cannot be touched because it is already exist")
+      .isZero();
     assertThat(hostConfig.writeContentCount).isEqualTo(1);
     assertThat(hostConfigActualValues.writeContentCount).isEqualTo(1);
 
@@ -196,7 +211,11 @@ public class ConsumerConfigFileWorkerTest {
 
     assertThat(parentConfig.exists()).isFalse();
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(parentConfigError.exists()).isFalse();
 
@@ -237,18 +256,25 @@ public class ConsumerConfigFileWorkerTest {
     }
 
     assertThat(configDataChanged.happenCount).isZero();
-    assertThat(hostConfig.writeContentCount).isZero();
+
+    assertThat(hostConfig.writeContentCount)
+      .describedAs("ATTENTION: Host config cannot be touched because it is already exist")
+      .isZero();
+
     assertThat(parentConfig.writeContentCount).isEqualTo(1);
+
   }
 
   @Test
   public void inheritance() {
 
-    parentConfig.addLines("con.value.1=3333");
-    parentConfig.addLines("con.value.2=666666666");
+    parentConfig.addLines("con.value.1 = 3333");
+    parentConfig.addLines("con.value.2 = 666666666");
 
-    parentConfig.addLines("out.value.1=76538");
-    parentConfig.addLines("out.value.2=3215");
+    parentConfig.addLines("out.value.1 = 76538");
+    parentConfig.addLines("out.value.2 = 3215");
+
+    parentConfig.addLines("out.worker.count=177");
 
     hostConfig.addLines("con.value.1:inherits");
     hostConfig.addLines("con.value.2=43333333");
@@ -256,8 +282,7 @@ public class ConsumerConfigFileWorkerTest {
     hostConfig.addLines("out.value.1 = 8764990578");
     hostConfig.addLines("out.value.2:inherits");
 
-    parentConfig.writeContentCount = 0;
-    hostConfig.writeContentCount = 0;
+    hostConfig.addLines("out.worker.count = 711");
 
     assertThat(parentConfig.exists()).isFalse();
 
@@ -268,15 +293,17 @@ public class ConsumerConfigFileWorkerTest {
     List<String> actualLines = hostConfigActualValues.readLinesWithoutSpaces();
     {
       assertThat(actualLines).contains("con.value.1=3333");
-      assertThat(actualLines).contains("con.value.2=77777");
+      assertThat(actualLines).contains("con.value.2=43333333");
       assertThat(actualLines).contains("out.value.1=8764990578");
-      assertThat(actualLines).contains("out.value.2=43333333");
-      assertThat(actualLines).hasSize(2);
+      assertThat(actualLines).contains("out.value.2=3215");
+      assertThat(actualLines).contains("out.value.2=3215");
+      assertThat(actualLines).contains("out.worker.count=711");
+      assertThat(actualLines).hasSize(5);
     }
 
     Map<String, Object> configMap = fileWorker.getConfigMap();
     assertThat(configMap).contains(MapEntry.entry("value.1", "3333"));
-    assertThat(configMap).contains(MapEntry.entry("value.2", "77777"));
+    assertThat(configMap).contains(MapEntry.entry("value.2", "43333333"));
 
     assertThat(configDataChanged.happenCount).isZero();
     assertThat(hostConfig.writeContentCount).isZero();
@@ -296,7 +323,11 @@ public class ConsumerConfigFileWorkerTest {
 
     assertThat(parentConfig.exists()).isFalse();
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(fileWorker.getWorkerCount()).isEqualTo(325166);
 
@@ -314,7 +345,11 @@ public class ConsumerConfigFileWorkerTest {
 
     assertThat(parentConfig.exists()).isFalse();
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(fileWorker.getWorkerCount()).isEqualTo(56427);
 
@@ -332,15 +367,22 @@ public class ConsumerConfigFileWorkerTest {
 
     assertThat(parentConfig.exists()).isFalse();
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(fileWorker.getWorkerCount()).isEqualTo(0);
 
     assertThat(hostConfigError.exists()).isTrue();
 
+    printFile("hostConfig", hostConfig);
+    printFile("hostConfigError", hostConfigError);
+
     List<String> errorLines = hostConfigError.readLines();
 
-    assertThat(errorLines.get(0)).isEqualTo("ERROR: Parameter `out.worker.count` is absent - using value `0`");
+    assertThat(errorLines.get(1)).isEqualTo("ERROR: Parameter `out.worker.count` is absent - using value `0`");
 
   }
 
@@ -355,20 +397,24 @@ public class ConsumerConfigFileWorkerTest {
     hostConfig.addLines("out.worker.count = 17");
     hostConfig.addLines("  con.session.timeout.ms = left value ");
 
-    parentConfig.writeContentCount = 0;
-    hostConfig.writeContentCount = 0;
-
     assertThat(parentConfig.exists()).isFalse();
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
-    assertThat(fileWorker.getWorkerCount()).isEqualTo(0);
+    assertThat(fileWorker.getConfigMap()).doesNotContainKey("con.session.timeout.ms");
 
     assertThat(hostConfigError.exists()).isTrue();
 
+    printFile("hostConfig", hostConfig);
+    printFile("hostConfigError", hostConfigError);
+
     List<String> errorLines = hostConfigError.readLines();
 
-    assertThat(errorLines.get(0)).isEqualTo(
+    assertThat(errorLines.get(1)).isEqualTo(
       "ERROR: line 5, parameter `con.session.timeout.ms`, value `left value` : value must be integer"
     );
 
@@ -392,15 +438,22 @@ public class ConsumerConfigFileWorkerTest {
 
     assertThat(parentConfig.exists()).isFalse();
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
-    assertThat(fileWorker.getWorkerCount()).isEqualTo(0);
+    assertThat(fileWorker.getConfigMap()).doesNotContainKey("con.max.poll.records");
 
     assertThat(parentConfigError.exists()).isTrue();
 
+    printFile("parentConfig", parentConfig);
+    printFile("parentConfigError", parentConfigError);
+
     List<String> errorLines = parentConfigError.readLines();
 
-    assertThat(errorLines.get(0)).isEqualTo(
+    assertThat(errorLines.get(1)).isEqualTo(
       "ERROR: line 6, parameter `con.max.poll.records`, value `left VAL` : value must be integer"
     );
 
@@ -413,7 +466,11 @@ public class ConsumerConfigFileWorkerTest {
 
     hostConfig.addLines("out.worker.count = 17");
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(parentConfigError.exists()).isFalse();
     assertThat(hostConfigError.exists()).isFalse();
@@ -429,7 +486,11 @@ public class ConsumerConfigFileWorkerTest {
     hostConfig.addLines("out.worker.count = 17");
     hostConfig.addLines("con.max.poll.records = left out");
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(parentConfigError.exists()).isTrue();
     assertThat(hostConfigError.exists()).isTrue();
@@ -444,7 +505,11 @@ public class ConsumerConfigFileWorkerTest {
 
     hostConfig.addLines("out.worker.count = 17");
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(parentConfigError.exists()).isTrue();
     assertThat(hostConfigError.exists()).isFalse();
@@ -460,7 +525,11 @@ public class ConsumerConfigFileWorkerTest {
     hostConfig.addLines("out.worker.count = 17");
     hostConfig.addLines("con.max.poll.records = left out");
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     assertThat(parentConfigError.exists()).isFalse();
     assertThat(hostConfigError.exists()).isTrue();
@@ -489,10 +558,15 @@ public class ConsumerConfigFileWorkerTest {
     hostConfig.addLines("con.fetch.max.wait.ms = 111");
     hostConfig.addLines("con.send.buffer.bytes = 222");
     hostConfig.addLines("out.worker.count : inherits");
+    hostConfig.addLines("con.max.poll.interval.ms : inherits");
 
     // Запускается система
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     // Проверяем, что всё прочиталось
 
@@ -530,8 +604,8 @@ public class ConsumerConfigFileWorkerTest {
 
     // Ошибок не должно быть - проверяем это
 
-    assertThat(parentConfigError.writeContentCount).isZero();
-    assertThat(hostConfigError.writeContentCount).isZero();
+    assertThat(parentConfigError.exists()).isFalse();
+    assertThat(hostConfigError.exists()).isFalse();
   }
 
   /**
@@ -549,13 +623,18 @@ public class ConsumerConfigFileWorkerTest {
 
     parentConfig.addLines("con.session.timeout.ms = 44444");
     parentConfig.addLines("con.max.poll.interval.ms = 77777");
+    parentConfig.addLines("out.worker.count = 0");
 
     hostConfig.addLines("con.send.buffer.bytes = 222");
     hostConfig.addLines("out.worker.count = 37");
 
     // Запускается система
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     // Проверяем, что всё прочиталось
 
@@ -593,8 +672,8 @@ public class ConsumerConfigFileWorkerTest {
 
     // Ошибок не должно быть - проверяем это
 
-    assertThat(parentConfigError.writeContentCount).isZero();
-    assertThat(hostConfigError.writeContentCount).isZero();
+    assertThat(parentConfigError.exists()).isFalse();
+    assertThat(hostConfigError.exists()).isFalse();
   }
 
   /**
@@ -617,7 +696,11 @@ public class ConsumerConfigFileWorkerTest {
 
     // Стартуем приложение
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     // Ошибок нет - смотрим, что файла тоже нет
 
@@ -628,16 +711,20 @@ public class ConsumerConfigFileWorkerTest {
     parentConfig.delLines("con.session.timeout.ms = 44444");
     parentConfig.addLines("con.session.timeout.ms = err");
 
+    parentConfigError.writeContentCount = 0;
+
     parentConfig.fireEvent(ConfigEventType.UPDATE);
 
     // Смотрим, что появился файл ошибок
 
     assertThat(parentConfigError.exists()).isTrue();
 
+    printFile("parentConfig", parentConfig);
+    printFile("parentConfigError", parentConfigError);
+
     List<String> errorLines = parentConfigError.readLines();
-    System.out.println(errorLines);
-    assertThat(errorLines.get(0)).isEqualTo(
-      "ERROR: line 1, parameter `con.session.timeout.ms`, value `err` : must be integer value"
+    assertThat(errorLines.get(1)).isEqualTo(
+      "ERROR: line 2, parameter `con.session.timeout.ms`, value `err` : value must be integer"
     );
 
     // Ну и проверим, что хэндлер отработал
@@ -648,6 +735,20 @@ public class ConsumerConfigFileWorkerTest {
 
     assertThat(parentConfigError.writeContentCount).isEqualTo(1);
 
+  }
+
+  private void printFile(String fileName, TestEventConfigFile file) {
+    System.out.println("BEGIN file " + fileName);
+    List<String> lines = file.readLines();
+    if (lines.size() > 0) {
+      int len = ("" + (lines.size() - 1)).length();
+      int i = 1;
+      for (String line : lines) {
+        System.out.println(StrUtil.intToStrLen(i, len) + " " + line);
+        i++;
+      }
+    }
+    System.out.println("END file " + fileName);
   }
 
   /**
@@ -670,7 +771,11 @@ public class ConsumerConfigFileWorkerTest {
 
     // Стартуем приложение
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     // Ошибок нет - смотрим, что файла тоже нет
 
@@ -681,16 +786,21 @@ public class ConsumerConfigFileWorkerTest {
     hostConfig.delLines("con.session.timeout.ms = 44444");
     hostConfig.addLines("con.session.timeout.ms = err");
 
-    parentConfig.fireEvent(ConfigEventType.UPDATE);
+    hostConfigError.writeContentCount = 0;
+
+    hostConfig.fireEvent(ConfigEventType.UPDATE);
 
     // Смотрим, что появился файл ошибок
 
     assertThat(hostConfigError.exists()).isTrue();
 
+    printFile("hostConfig", hostConfig);
+    printFile("hostConfigError", hostConfigError);
+
     List<String> errorLines = hostConfigError.readLines();
-    System.out.println(errorLines);
-    assertThat(errorLines.get(0)).isEqualTo(
-      "ERROR: line 1, parameter `con.session.timeout.ms`, value `err` : must be integer value"
+
+    assertThat(errorLines.get(1)).isEqualTo(
+      "ERROR: line 3, parameter `con.session.timeout.ms`, value `err` : value must be integer"
     );
 
     // Ну и проверим, что хэндлер отработал
@@ -724,7 +834,11 @@ public class ConsumerConfigFileWorkerTest {
 
     // Стартуем приложение
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     // Должен быть файл ошибок - проверим это
 
@@ -734,6 +848,8 @@ public class ConsumerConfigFileWorkerTest {
 
     parentConfig.delLines("con.session.timeout.ms : left");
     parentConfig.addLines("con.session.timeout.ms : inherits");
+
+    parentConfigError.writeContentCount = 0;
 
     parentConfig.fireEvent(ConfigEventType.UPDATE);
 
@@ -770,7 +886,11 @@ public class ConsumerConfigFileWorkerTest {
 
     // Стартуем приложение
 
+    //
+    //
     fileWorker.start();
+    //
+    //
 
     // Должен быть файл ошибок - проверим это
 
@@ -781,11 +901,17 @@ public class ConsumerConfigFileWorkerTest {
     hostConfig.delLines("con.session.timeout.ms : left");
     hostConfig.addLines("con.session.timeout.ms : inherits");
 
+    hostConfigError.writeContentCount = 0;
     hostConfig.fireEvent(ConfigEventType.UPDATE);
 
     // Смотрим, что файл ошибок исчез
 
-    assertThat(hostConfigError.exists()).isTrue();
+    printFile("hostConfig", hostConfig);
+    if (hostConfigError.exists()) {
+      printFile("hostConfigError", hostConfigError);
+    }
+
+    assertThat(hostConfigError.exists()).isFalse();
 
     // Ну и проверим, что хэндлер отработал
 
@@ -795,6 +921,5 @@ public class ConsumerConfigFileWorkerTest {
 
     assertThat(hostConfigError.writeContentCount).isEqualTo(1);
   }
-
 
 }

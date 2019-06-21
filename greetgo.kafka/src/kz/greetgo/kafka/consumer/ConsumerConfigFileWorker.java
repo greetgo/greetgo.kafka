@@ -8,58 +8,15 @@ import kz.greetgo.kafka.util.Handler;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Objects.requireNonNull;
+import static kz.greetgo.kafka.consumer.ConsumerConfigDefaults.parameterDefinitionList;
 
 public class ConsumerConfigFileWorker {
 
-  private static final List<ParameterDefinition> parameterDefinitionList;
-  private static final Map<String, ParameterValueValidator> validatorMap;
-
-  static {
-    Map<String, ParameterValueValidator> vMap = new HashMap<>();
-    vMap.put("Long", new ParameterValueValidatorLong());
-    vMap.put("Int", new ParameterValueValidatorInt());
-    vMap.put("Str", new ParameterValueValidatorStr());
-    validatorMap = Collections.unmodifiableMap(vMap);
-
-    List<ParameterDefinition> list = new ArrayList<>();
-
-    addDefinition(list, " Long   con.auto.commit.interval.ms           1000  ");
-    addDefinition(list, " Long   con.session.timeout.ms               30000  ");
-    addDefinition(list, " Long   con.heartbeat.interval.ms            10000  ");
-    addDefinition(list, " Long   con.fetch.min.bytes                      1  ");
-    addDefinition(list, " Long   con.max.partition.fetch.bytes      1048576  ");
-    addDefinition(list, " Long   con.connections.max.idle.ms         540000  ");
-    addDefinition(list, " Long   con.default.api.timeout.ms           60000  ");
-    addDefinition(list, " Long   con.fetch.max.bytes               52428800  ");
-    addDefinition(list, " Long   con.max.poll.interval.ms            300000  ");
-    addDefinition(list, " Long   con.max.poll.records                   500  ");
-    addDefinition(list, " Long   con.receive.buffer.bytes             65536  ");
-    addDefinition(list, " Long   con.request.timeout.ms               30000  ");
-    addDefinition(list, " Long   con.send.buffer.bytes               131072  ");
-    addDefinition(list, " Long   con.fetch.max.wait.ms                  500  ");
-
-    addDefinition(list, " Int out.worker.count        1  ");
-    addDefinition(list, " Int out.poll.duration.ms  800  ");
-
-    parameterDefinitionList = Collections.unmodifiableList(list);
-  }
-
-  private static void addDefinition(List<ParameterDefinition> list, String definitionStr) {
-    String[] split = definitionStr.trim().split("\\s+");
-    ParameterValueValidator validator = requireNonNull(validatorMap.get(split[0]));
-    String parameterName = split[1];
-    String defaultValue = split[2];
-
-    list.add(new ParameterDefinition(parameterName, defaultValue, validator));
-  }
 
   private final Handler configDataChanged;
   private final EventConfigFile parentConfig;
@@ -99,7 +56,7 @@ public class ConsumerConfigFileWorker {
 
 
   public int getWorkerCount() {
-    return hostContent.get().getLongValue("out.worker.count");
+    return hostContent.get().getIntValue("out.worker.count").orElse(0);
   }
 
   public Map<String, Object> getConfigMap() {
@@ -107,7 +64,7 @@ public class ConsumerConfigFileWorker {
   }
 
   public Duration pollDuration() {
-    return Duration.ofMillis(hostContent.get().getLongValue("out.poll.duration.ms"));
+    return Duration.ofMillis(hostContent.get().getLongValue("out.poll.duration.ms").orElse(800L));
   }
 
   public void close() {
@@ -120,8 +77,8 @@ public class ConsumerConfigFileWorker {
 
     List<String> lines = new ArrayList<>();
 
-    for (ParameterDefinition pd : parameterDefinitionList) {
-      lines.add(pd.parameterName + "=" + pd.defaultValue);
+    for (ParameterDefinition pd : parameterDefinitionList()) {
+      lines.add(pd.parameterName + " = " + pd.defaultValue);
     }
 
     return new ConfigContent(String.join("\n", lines).getBytes(UTF_8));
@@ -133,7 +90,7 @@ public class ConsumerConfigFileWorker {
     ConfigContent parent = this.parentContent.get();
 
     List<String> lines = new ArrayList<>();
-    for (ParameterDefinition pd : parameterDefinitionList) {
+    for (ParameterDefinition pd : parameterDefinitionList()) {
       if (parent.parameterExists(pd.parameterName)) {
         lines.add(pd.parameterName + " : inherits");
       } else {
@@ -141,21 +98,22 @@ public class ConsumerConfigFileWorker {
       }
     }
 
-    return new ConfigContent(String.join("\n", lines).getBytes(UTF_8));
+    return new ConfigContent(String.join("\n", lines).getBytes(UTF_8), this.parentContent::get);
 
   }
 
   public void start() {
     {
       byte[] contentInBytes = parentConfig.readContent();
-      if (contentInBytes == null) {
-        ConfigContent content = createParentConfigContent();
-        parentContent.set(content);
-        parentConfigError.delete();
-      } else {
+      if (contentInBytes != null) {
         ConfigContent content = new ConfigContent(contentInBytes);
         parentContent.set(content);
         parentConfigError.writeContent(content.generateErrorsInBytes());
+      } else {
+        ConfigContent content = createParentConfigContent();
+        parentContent.set(content);
+        parentConfig.writeContent(content.contentInBytes);
+        parentConfigError.delete();
       }
     }
 
@@ -172,6 +130,7 @@ public class ConsumerConfigFileWorker {
         ConfigContent content = createHostConfigContent();
         hostConfigError.delete();
         hostContent.set(content);
+        hostConfig.writeContent(content.contentInBytes);
         hostConfigActualValues.writeContent(content.generateActualValuesInBytes());
       }
     }
@@ -188,6 +147,7 @@ public class ConsumerConfigFileWorker {
 
     ConfigContent content = new ConfigContent(contentInBytes);
     parentContent.set(content);
+    parentConfig.writeContent(content.contentInBytes);
     parentConfigError.writeContent(content.generateErrorsInBytes());
 
     configDataChanged.handler();
@@ -201,6 +161,7 @@ public class ConsumerConfigFileWorker {
 
     ConfigContent content = new ConfigContent(contentInBytes, parentContent::get);
     hostContent.set(content);
+    hostConfig.writeContent(content.contentInBytes);
     hostConfigError.writeContent(content.generateErrorsInBytes());
     hostConfigActualValues.writeContent(content.generateActualValuesInBytes());
 

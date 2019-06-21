@@ -1,54 +1,77 @@
 package kz.greetgo.kafka.consumer;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toMap;
 
 public class ConsumerConfigDefaults {
-  public final LinkedHashMap<String, String> patentableValues = new LinkedHashMap<>();
-  public final LinkedHashMap<String, String> ownValues = new LinkedHashMap<>();
+  private static final List<ParameterDefinition> parameterDefinitionList;
+  private static final Map<String, ParameterDefinition> parameterDefinitionMap;
+  private static final Map<String, ParameterValueValidator> validatorMap;
 
-  public ConsumerConfigDefaults() {
-    {
-      List<String> lines = new ArrayList<>();
+  static {
+    Map<String, ParameterValueValidator> vMap = new HashMap<>();
+    vMap.put("Long", new ParameterValueValidatorLong());
+    vMap.put("Int", new ParameterValueValidatorInt());
+    vMap.put("Str", new ParameterValueValidatorStr());
+    validatorMap = unmodifiableMap(vMap);
 
-      lines.add("con.auto.commit.interval.ms=1000");
-      lines.add("con.session.timeout.ms=30000");
-      lines.add("con.heartbeat.interval.ms=10000");
-      lines.add("con.fetch.min.bytes=1");
-      lines.add("con.max.partition.fetch.bytes=1048576");
-      lines.add("con.connections.max.idle.ms=540000");
-      lines.add("con.default.api.timeout.ms=60000");
-      lines.add("con.fetch.max.bytes=52428800");
-      lines.add("con.max.poll.interval.ms=300000");
-      lines.add("con.max.poll.records=500");
-      lines.add("con.receive.buffer.bytes=65536");
-      lines.add("con.request.timeout.ms=30000");
-      lines.add("con.send.buffer.bytes=131072");
-      lines.add("con.fetch.max.wait.ms=500");
+    List<ParameterDefinition> list = new ArrayList<>();
 
-      appendLines(patentableValues, lines);
-    }
+    addDefinition(list, " Long   con.auto.commit.interval.ms           1000  ");
+    addDefinition(list, " Long   con.session.timeout.ms               30000  ");
+    addDefinition(list, " Long   con.heartbeat.interval.ms            10000  ");
+    addDefinition(list, " Long   con.fetch.min.bytes                      1  ");
+    addDefinition(list, " Long   con.max.partition.fetch.bytes      1048576  ");
+    addDefinition(list, " Long   con.connections.max.idle.ms         540000  ");
+    addDefinition(list, " Long   con.default.api.timeout.ms           60000  ");
+    addDefinition(list, " Long   con.fetch.max.bytes               52428800  ");
+    addDefinition(list, " Long   con.max.poll.interval.ms            300000  ");
+    addDefinition(list, " Long   con.max.poll.records                   500  ");
+    addDefinition(list, " Long   con.receive.buffer.bytes             65536  ");
+    addDefinition(list, " Long   con.request.timeout.ms               30000  ");
+    addDefinition(list, " Long   con.send.buffer.bytes               131072  ");
+    addDefinition(list, " Long   con.fetch.max.wait.ms                  500  ");
 
-    {
-      List<String> lines = new ArrayList<>();
+    addDefinition(list, " Int out.worker.count        1  ");
+    addDefinition(list, " Int out.poll.duration.ms  800  ");
 
-      lines.add("out.worker.count=1");
-      lines.add("out.poll.duration.ms=800");
-
-      appendLines(ownValues, lines);
-    }
+    parameterDefinitionList = unmodifiableList(list);
+    parameterDefinitionMap = unmodifiableMap(list.stream().collect(toMap(x -> x.parameterName, x -> x)));
   }
 
-  private static void appendLines(LinkedHashMap<String, String> values, List<String> lines) {
-    for (String line : lines) {
-      String[] split = line.split("=");
-      if (split.length != 2) {
-        throw new RuntimeException("Left value : " + line);
+  private static void addDefinition(List<ParameterDefinition> list, String definitionStr) {
+    String[] split = definitionStr.trim().split("\\s+");
+    ParameterValueValidator validator = requireNonNull(validatorMap.get(split[0]));
+    String parameterName = split[1];
+    String defaultValue = split[2];
+
+    list.add(new ParameterDefinition(parameterName, defaultValue, validator));
+  }
+
+  public static List<ParameterDefinition> parameterDefinitionList() {
+    return parameterDefinitionList;
+  }
+
+  private static final
+  ParameterDefinition DEFAULT_PARAMETER_DEFINITION = new ParameterDefinition(null, "", new ParameterValueValidatorStr());
+
+  public static ParameterDefinition getDefinition(String parameterName) {
+    requireNonNull(parameterName);
+
+    {
+      ParameterDefinition pd = parameterDefinitionMap.get(parameterName);
+      if (pd != null) {
+        return pd;
       }
-
-
-      values.put(split[0], split[1]);
     }
+
+    return DEFAULT_PARAMETER_DEFINITION;
   }
 }

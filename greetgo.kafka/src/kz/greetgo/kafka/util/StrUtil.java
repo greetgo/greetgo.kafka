@@ -1,10 +1,7 @@
 package kz.greetgo.kafka.util;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -133,4 +130,19 @@ public class StrUtil {
     return ret;
   }
 
+  public static Integer parseIntOrNull(String value) {
+    try {
+      return Integer.parseInt(value);
+    } catch (RuntimeException ignore) {
+      return null;
+    }
+  }
+
+  public static Long parseLongOrNull(String value) {
+    try {
+      return Long.parseLong(value);
+    } catch (RuntimeException ignore) {
+      return null;
+    }
+  }
 }
