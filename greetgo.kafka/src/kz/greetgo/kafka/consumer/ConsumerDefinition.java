@@ -128,7 +128,7 @@ public class ConsumerDefinition {
 
   public String getConfigPath() {
 
-    String configName = getConsumerName() + ".txt";
+    String configName = getConsumerName();
 
     if (folderPath == null) {
       return configName;

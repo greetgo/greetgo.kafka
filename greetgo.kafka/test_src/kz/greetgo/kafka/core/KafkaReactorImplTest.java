@@ -43,7 +43,7 @@ public class KafkaReactorImplTest {
   public static class TestController {
 
     @Topic("test_topic1")
-    @GroupId("gr1")
+    @GroupId("gr1-2")
     public void consumer1(ModelKryo model) {
       System.out.println("Come from consumer1: " + model);
     }

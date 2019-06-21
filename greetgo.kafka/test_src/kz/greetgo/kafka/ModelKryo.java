@@ -49,6 +49,9 @@ public class ModelKryo implements HasStrKafkaKey {
         case "wow":
           ret.wow = Long.valueOf(value);
           break;
+        case "hello":
+          ret.hello = value;
+          break;
       }
     }
 
