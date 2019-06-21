@@ -35,6 +35,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
   public ConsumerDefinition consumerDefinition;
   public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
+  public String hostId;
 
   /**
    * Start reactor
@@ -45,6 +46,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
     }
 
     consumerConfigWorker.setConfigPathPrefix(consumerDefinition.getConfigPath());
+    consumerConfigWorker.setHostId(hostId);
 
     consumerConfigWorker.start();
 

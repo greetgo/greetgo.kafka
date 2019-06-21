@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
+import kz.greetgo.kafka.util.StrUtil;
 import kz.greetgo.kafka.util.TestHandler;
 import org.testng.annotations.Test;
 
@@ -115,7 +116,7 @@ public class ConsumerConfigWorkerTest {
     assert configMap != null;
 
     assertThat(configMap).contains(entry("example.variable", "navigator of life"));
-    assertThat(configMap).contains(entry("con.another.var", "status quo"));
+    assertThat(configMap).contains(entry("another.var", "status quo"));
 
     consumerConfigWorker.close();
   }
@@ -219,7 +220,7 @@ public class ConsumerConfigWorkerTest {
     //
     //
 
-    assertThat(workerCount).isEqualTo(1);
+    assertThat(workerCount).isEqualTo(0);
 
     consumerConfigWorker.close();
   }
@@ -268,7 +269,7 @@ public class ConsumerConfigWorkerTest {
 
     assertThat(error).isNotNull();
     assert error != null;
-    assertThat(error.toLowerCase()).contains("line 4");
+    assertThat(error.toLowerCase()).contains("parameter `out.worker.count` is absent");
 
     consumerConfigWorker.close();
   }
@@ -307,7 +308,7 @@ public class ConsumerConfigWorkerTest {
 
     String errorsPath = "root/controller/method.d/host-id.errors";
 
-    assertThat(configStorage.exists(errorsPath)).isFalse();
+    assertThat(configStorage.exists(errorsPath)).isTrue();
 
     String parentErrorsPath = "root/controller/method.errors";
 
@@ -321,7 +322,7 @@ public class ConsumerConfigWorkerTest {
 
     assertThat(error).isNotNull();
     assert error != null;
-    assertThat(error.toLowerCase()).contains("line 3");
+    assertThat(error.toLowerCase()).contains("parameter `out.worker.count` is absent");
 
     consumerConfigWorker.close();
   }
@@ -352,6 +353,7 @@ public class ConsumerConfigWorkerTest {
     configStorage.addLines("root/controller/method.d/host-id.conf",
       "con.fetch.max.wait.ms = 111",
       "con.send.buffer.bytes = 222",
+      "con.max.poll.interval.ms : inherits",
       "out.worker.count : inherits"
     );
 
@@ -689,6 +691,19 @@ public class ConsumerConfigWorkerTest {
     consumerConfigWorker.close();
   }
 
+  private void printFile(String fileName, List<String> lines) {
+    System.out.println("BEGIN file " + fileName);
+    if (lines.size() > 0) {
+      int len = ("" + (lines.size() - 1)).length();
+      int i = 1;
+      for (String line : lines) {
+        System.out.println(StrUtil.intToStrLen(i, len) + " " + line);
+        i++;
+      }
+    }
+    System.out.println("END file " + fileName);
+  }
+
   /**
    * Нужно проверить, что файл ошибок удаляется, если ошибки исправлены
    */
@@ -705,7 +720,6 @@ public class ConsumerConfigWorkerTest {
     );
 
     configStorage.addLines("root/controller/method.d/host-id.conf",
-      "extends=root/parent.txt",
       "con.session.timeout.ms : inherits",
       "out.worker.count : err"
     );
@@ -721,7 +735,7 @@ public class ConsumerConfigWorkerTest {
 
     // Должен быть файл ошибок - проверим это
 
-    String errorFile = "root/controller/method.d/host-id.conf";
+    String errorFile = "root/controller/method.d/host-id.errors";
 
     assertThat(configStorage.exists(errorFile)).isTrue();
 
@@ -746,7 +760,7 @@ public class ConsumerConfigWorkerTest {
 
     if (configStorage.exists(errorFile)) {
       List<String> errorLines = configStorage.readLines(errorFile);
-      System.out.println(errorLines);
+      printFile(errorFile, errorLines);
     }
 
     assertThat(configStorage.exists(errorFile)).isFalse();
@@ -757,4 +771,5 @@ public class ConsumerConfigWorkerTest {
 
     consumerConfigWorker.close();
   }
+
 }

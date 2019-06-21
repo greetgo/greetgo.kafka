@@ -69,6 +69,7 @@ public class ConsumerReactorImplTest {
     consumerReactor.bootstrapServers = () -> bootstrapServers;
     consumerReactor.logger = logger;
     consumerReactor.consumerDefinition = consumerDefinitionList.get(0);
+    consumerReactor.hostId = cde.hostId;
 
     consumerReactor.start();
 
