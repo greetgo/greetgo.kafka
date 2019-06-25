@@ -48,7 +48,6 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       consumerReactor.consumerDefinition = consumerDefinition;
       consumerReactor.hostId = hostId;
       consumerReactor.start();
-      System.out.println("5hb4326v6 :: started consumer " + consumerDefinition);
     }
   }
 

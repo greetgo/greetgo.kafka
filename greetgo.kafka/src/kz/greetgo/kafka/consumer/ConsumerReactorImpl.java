@@ -144,6 +144,9 @@ public class ConsumerReactorImpl implements ConsumerReactor {
     @Override
     public void run() {
       try {
+
+        Thread.currentThread().setName("kafka-consumer-" + consumerDefinition.logDisplay() + "-" + id);
+
         if (logger.isShow(LOG_START_CONSUMER_WORKER)) {
           logger.logConsumerStartWorker(consumerDefinition.logDisplay(), id);
         }

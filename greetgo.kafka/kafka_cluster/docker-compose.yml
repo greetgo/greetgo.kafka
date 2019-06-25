@@ -1,0 +1,156 @@
+version: "3.3"
+services:
+
+  zookeeper-1:
+    #image: wurstmeister/zookeeper
+    image: confluentinc/cp-zookeeper:5.2.2
+    hostname: zookeeper-1
+    ports:
+      - "2181:2181"
+    environment:
+#      ZOO_MY_ID: 1
+#      ZOO_SERVERS: server.1=zookeeper-1:2888:3888 server.2=zookeeper-2:2888:3888 server.3=zookeeper-3:2888:3888
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+
+  zookeeper-2:
+    #image: wurstmeister/zookeeper
+    image: confluentinc/cp-zookeeper:5.2.2
+    hostname: zookeeper-2
+    ports:
+      - "2182:2181"
+    environment:
+#      ZOO_MY_ID: 2
+#      ZOO_SERVERS: server.1=zookeeper-1:2888:3888 server.2=zookeeper-2:2888:3888 server.3=zookeeper-3:2888:3888
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+
+  zookeeper-3:
+    #image: wurstmeister/zookeeper
+    image: confluentinc/cp-zookeeper:5.2.2
+    hostname: zookeeper-3
+    ports:
+      - "2183:2181"
+    environment:
+#      ZOO_MY_ID: 3
+#      ZOO_SERVERS: server.1=zookeeper-1:2888:3888 server.2=zookeeper-2:2888:3888 server.3=zookeeper-3:2888:3888
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+
+  kafka-1:
+    #    build: kafka
+#    image: confluentinc/cp-kafka:5.2.2
+    image: wurstmeister/kafka:2.12-2.2.1
+    hostname: kafka-1
+    ports:
+      - "9093:9093"
+    environment:
+      HOSTNAME_COMMAND: "hostname -i"
+      #KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9093
+      #KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9093
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      #KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://_{HOSTNAME_COMMAND}:9093
+      KAFKA_LISTENERS: PLAINTEXT://_{HOSTNAME_COMMAND}:9093
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+
+  kafka-2:
+    #    build: kafka
+    #image: confluentinc/cp-kafka:5.2.2
+    image: wurstmeister/kafka:2.12-2.2.1
+    hostname: kafka-2
+    ports:
+      - "9094:9094"
+    environment:
+      HOSTNAME_COMMAND: "hostname -i"
+      #KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094
+      #KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      #KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://_{HOSTNAME_COMMAND}:9094
+      KAFKA_LISTENERS: PLAINTEXT://_{HOSTNAME_COMMAND}:9094
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_BROKER_ID: 2
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+
+  kafka-3:
+    #    build: kafka
+    #image: confluentinc/cp-kafka:5.2.2
+    image: wurstmeister/kafka:2.12-2.2.1
+    hostname: kafka-3
+    ports:
+      - "9095:9095"
+    environment:
+      HOSTNAME_COMMAND: "hostname -i"
+      #KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9095
+      #KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9095
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      #KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://_{HOSTNAME_COMMAND}:9095
+      KAFKA_LISTENERS: PLAINTEXT://_{HOSTNAME_COMMAND}:9095
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_BROKER_ID: 3
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager
+    ports:
+      - "9002:9000"
+    environment:
+      ZK_HOSTS: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      APPLICATION_SECRET: letmein
+
+
+  zoo-navigator-web:
+    image: elkozmon/zoonavigator-web:0.6.0
+    container_name: zoo-navigator-web
+    ports:
+      - "9001:9001"
+    environment:
+      WEB_HTTP_PORT: 9001
+      API_HOST: "zoo-navigator-api"
+      API_PORT: 9082
+      AUTO_CONNECT_CONNECTION_STRING: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+    depends_on:
+      - zoo-navigator-api
+    restart: always
+
+  zoo-navigator-api:
+    image: elkozmon/zoonavigator-api:0.6.0
+    container_name: zoo-navigator-api
+    environment:
+      API_HTTP_PORT: 9082
+    restart: always

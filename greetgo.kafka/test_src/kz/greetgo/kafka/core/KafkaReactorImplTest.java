@@ -17,7 +17,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,7 +36,8 @@ public class KafkaReactorImplTest {
 
   @BeforeMethod
   public void pingKafka() {
-    bootstrapServers = "localhost:9092";
+//    bootstrapServers = "localhost:9092";//single
+    bootstrapServers = "localhost:9093,localhost:9094,localhost:9095";//cluster
 
     if (!NetUtil.canConnectToAnyBootstrapServer(bootstrapServers)) {
       throw new SkipException("No kafka connection : " + bootstrapServers);
@@ -59,7 +64,7 @@ public class KafkaReactorImplTest {
   @Test
   public void runKafkaReactor() throws Exception {
     EventConfigStorageZooKeeper storageZooKeeper = new EventConfigStorageZooKeeper(
-      "greetgo_kafka/KafkaReactorImplTest", () -> "localhost:2181", () -> 3000
+      "greetgo_kafka/KafkaReactorImplTest", () -> "localhost:2181", () -> 30000
     );
 
     TestController controller = new TestController();
@@ -108,6 +113,13 @@ public class KafkaReactorImplTest {
     test_topic1_dir.mkdirs();
     test_topic2_dir.mkdirs();
 
+    {
+      createFileIfAbsent(baseDir + "/test_topic1_go1", "name=John:age=32:wow=5426543:hello=greetings");
+      createFileIfAbsent(baseDir + "/test_topic1_go2", "name=Simon:age=12:wow=76548684:hello=hi");
+      createFileIfAbsent(baseDir + "/test_topic2_go1", "id=45316:surname=Leon:loaderCount=432");
+      createFileIfAbsent(baseDir + "/test_topic2_go2", "id=4:surname=Stone:loaderCount=44");
+    }
+
     ProducerFacade producer = kafkaReactor.createProducer("main");
 
     ProducerThread producerThread1 = new ProducerThread(producer, working,
@@ -135,6 +147,13 @@ public class KafkaReactorImplTest {
 
     producerThread1.join();
     producerThread2.join();
+  }
+
+  private void createFileIfAbsent(String filePath, String text) throws IOException {
+    Path path = Paths.get(filePath);
+    if (!Files.exists(path)) {
+      Files.write(path, text.getBytes(StandardCharsets.UTF_8));
+    }
   }
 
   static class ProducerThread extends Thread {

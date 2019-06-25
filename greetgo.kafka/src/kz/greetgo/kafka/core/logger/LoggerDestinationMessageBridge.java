@@ -107,6 +107,11 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
 
   @Override
   public void logConsumerWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap) {
+
+    if (!acceptor.isInfoEnabled()) {
+      return;
+    }
+
     StringBuilder sb = new StringBuilder();
 
     sb.append("Consumer worker config: consumer = `").append(consumerInfo)
@@ -120,7 +125,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
         sb.append("\n    ").append(e.getKey()).append(" = `").append(e.getValue()).append("`")
       );
 
-    acceptor.error(sb.toString());
+    acceptor.info(sb.toString());
 
   }
 
