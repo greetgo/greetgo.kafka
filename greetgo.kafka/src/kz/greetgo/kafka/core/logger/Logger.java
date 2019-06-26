@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core.logger;
 
+import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import org.apache.kafka.common.errors.WakeupException;
 
 import java.lang.reflect.Method;
@@ -95,6 +96,13 @@ public class Logger implements LoggerExternal {
     LoggerDestination d = this.destination;
     if (d != null) {
       d.logConsumerIllegalAccessExceptionInvokingMethod(e, consumerName, controller, method);
+    }
+  }
+
+  public void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount) {
+    LoggerDestination d = this.destination;
+    if (d != null) {
+      d.logConsumerReactorRefresh(consumerDefinition, currentCount, workerCount);
     }
   }
 }

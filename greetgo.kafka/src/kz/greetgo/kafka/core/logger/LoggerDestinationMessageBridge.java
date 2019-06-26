@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core.logger;
 
+import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import org.apache.kafka.common.errors.WakeupException;
 
 import java.io.ByteArrayOutputStream;
@@ -145,4 +146,13 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
     acceptor.error(sb.toString());
   }
 
+  @Override
+  public void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount) {
+    if (!acceptor.isInfoEnabled()) {
+      return;
+    }
+
+    acceptor.info("Refresh consumer : currentCount = "
+      + currentCount + ", newCount = " + workerCount + "; " + consumerDefinition.logDisplay());
+  }
 }

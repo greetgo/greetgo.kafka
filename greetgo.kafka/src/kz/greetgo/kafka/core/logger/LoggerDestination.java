@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core.logger;
 
+import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import org.apache.kafka.common.errors.WakeupException;
 
 import java.lang.reflect.Method;
@@ -26,5 +27,7 @@ public interface LoggerDestination {
                                                        Object controller, Method method);
 
   void debug(Supplier<String> message);
+
+  void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount);
 
 }

@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_FINISH_WORKER;
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_REACTOR_REFRESH;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_WAKEUP_EXCEPTION_HAPPENED;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_START_CONSUMER_WORKER;
 import static kz.greetgo.kafka.core.logger.LoggerType.SHOW_CONSUMER_WORKER_CONFIG;
@@ -89,6 +90,10 @@ public class ConsumerReactorImpl implements ConsumerReactor {
     toDelete.forEach(workers::remove);
 
     int workerCount = consumerConfigWorker.getWorkerCount();
+
+    if (logger.isShow(LOG_CONSUMER_REACTOR_REFRESH)) {
+      logger.logConsumerReactorRefresh(consumerDefinition, currentCount, workerCount);
+    }
 
     if (workerCount > currentCount) {
       for (int i = 0, n = workerCount - currentCount; i < n; i++) {
