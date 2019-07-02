@@ -10,6 +10,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,6 +58,10 @@ public class ProducerFacade {
 
     return producer.updateAndGet(current -> current != null ? current : createProducer());
 
+  }
+
+  public Map<String, Object> getConfigData() {
+    return source.getConfigFor(producerName);
   }
 
   private Producer<byte[], Box> createProducer() {

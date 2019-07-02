@@ -7,6 +7,8 @@ import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
+import java.util.Map;
+
 public interface ProducerSource {
 
   StrConverter getStrConverter();
@@ -18,6 +20,8 @@ public interface ProducerSource {
   String author();
 
   long getProducerConfigUpdateTimestamp(String producerName);
+
+  Map<String, Object> getConfigFor(String producerName);
 
   Producer<byte[], Box> createProducer(String producerName,
                                        ByteArraySerializer keySerializer,

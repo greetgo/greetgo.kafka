@@ -124,11 +124,16 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
     }
 
     @Override
+    public Map<String, Object> getConfigFor(String producerName) {
+      return producerConfigWorker.getConfigFor(producerName);
+    }
+
+    @Override
     public Producer<byte[], Box> createProducer(String producerName,
                                                 ByteArraySerializer keySerializer,
                                                 BoxSerializer valueSerializer) {
 
-      Map<String, Object> configMap = producerConfigWorker.getConfigFor(producerName);
+      Map<String, Object> configMap = getConfigFor(producerName);
       configMap.put("bootstrap.servers", bootstrapServers.get());
       if (logger.isShow(LoggerType.SHOW_PRODUCER_CONFIG)) {
         logger.logProducerConfigOnCreating(producerName, configMap);
