@@ -42,7 +42,7 @@ public class ProducerFacade {
 
   private final AtomicLong creationTimestamp = new AtomicLong(0);
 
-  private Producer<byte[], Box> getProducer() {
+  public Producer<byte[], Box> getNativeProducer() {
 
     if (creationTimestamp.get() < source.getProducerConfigUpdateTimestamp(producerName)) {
       reset();
@@ -133,7 +133,11 @@ public class ProducerFacade {
 
         byte[] key = source.extractKey(body);
 
-        return new KafkaFuture(getProducer().send(new ProducerRecord<>(topic, partition, timestamp, key, box, headers)));
+        return new KafkaFuture(
+          getNativeProducer().send(
+            new ProducerRecord<>(topic, partition, timestamp, key, box, headers)
+          )
+        );
 
       }
 
