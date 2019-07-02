@@ -1,8 +1,8 @@
 package kz.greetgo.kafka.producer;
 
-import kz.greetgo.kafka.core.config.EventRegistration;
 import kz.greetgo.kafka.core.config.ConfigEventType;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
+import kz.greetgo.kafka.core.config.EventRegistration;
 import kz.greetgo.kafka.util.ConfigLines;
 
 import java.util.ArrayList;
@@ -10,13 +10,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class ProducerConfigWorker {
   private final Supplier<EventConfigStorage> configStorage;
+  private final Consumer<ConfigLines> putDefaultValues;
 
-  public ProducerConfigWorker(Supplier<EventConfigStorage> configStorage) {
+  public ProducerConfigWorker(Supplier<EventConfigStorage> configStorage, Consumer<ConfigLines> putDefaultValues) {
     this.configStorage = configStorage;
+    this.putDefaultValues = putDefaultValues;
   }
 
   private String configPath(String producerName) {
@@ -118,18 +121,7 @@ public class ProducerConfigWorker {
     {
       ConfigLines ret = new ConfigLines(configPath);
 
-      ret.putValue("prod.acts                    ", "all");
-      ret.putValue("prod.buffer.memory           ", "33554432");
-      ret.putValue("prod.compression.type        ", "none");
-      ret.putValue("prod.batch.size              ", "16384");
-      ret.putValue("prod.connections.max.idle.ms ", "540000");
-      ret.putValue("prod.request.timeout.ms      ", "30000");
-      ret.putValue("prod.linger.ms               ", "1");
-      ret.putValue("prod.batch.size              ", "16384");
-
-      ret.putValue("prod.retries                               ", "2147483647");
-      ret.putValue("prod.max.in.flight.requests.per.connection ", "1");
-      ret.putValue("prod.delivery.timeout.ms                   ", "35000");
+      putDefaultValues.accept(ret);
 
       return ret;
     }

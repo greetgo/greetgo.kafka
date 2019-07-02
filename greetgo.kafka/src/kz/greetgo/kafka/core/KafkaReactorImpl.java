@@ -10,6 +10,7 @@ import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.ProducerConfigWorker;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
+import kz.greetgo.kafka.util.ConfigLines;
 import kz.greetgo.kafka.util.KeyUtil;
 import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -71,7 +72,24 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
   }
 
-  private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> producerConfigStorage);
+  private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(
+    () -> producerConfigStorage, this::putProducerDefaultValues
+  );
+
+  protected void putProducerDefaultValues(ConfigLines configLines) {
+    configLines.putValue("prod.acts                    ", "all");
+    configLines.putValue("prod.buffer.memory           ", "33554432");
+    configLines.putValue("prod.compression.type        ", "none");
+    configLines.putValue("prod.batch.size              ", "16384");
+    configLines.putValue("prod.connections.max.idle.ms ", "540000");
+    configLines.putValue("prod.request.timeout.ms      ", "30000");
+    configLines.putValue("prod.linger.ms               ", "1");
+    configLines.putValue("prod.batch.size              ", "16384");
+
+    configLines.putValue("prod.retries                               ", "2147483647");
+    configLines.putValue("prod.max.in.flight.requests.per.connection ", "1");
+    configLines.putValue("prod.delivery.timeout.ms                   ", "35000");
+  }
 
   @Override
   public ProducerSource getProducerSource() {
