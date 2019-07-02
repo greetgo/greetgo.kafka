@@ -71,6 +71,11 @@ public class KafkaSimulator extends KafkaReactorAbstract {
     }
 
     @Override
+    public Map<String, Object> getConfigFor(String producerName) {
+      return new HashMap<>();
+    }
+
+    @Override
     public Producer<byte[], Box> createProducer(String producerName,
                                                 ByteArraySerializer keySerializer,
                                                 BoxSerializer valueSerializer) {
