@@ -37,7 +37,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
   public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
   public String hostId;
-  public ConsumerConfigDefaults consumerConfigDefaults = ConsumerConfigDefaults.withDefaults();
+  public Supplier<ConsumerConfigDefaults> consumerConfigDefaults;
 
   /**
    * Start reactor
@@ -73,7 +73,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
   private final ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(
     () -> configStorage,
     this::refresh,
-    () -> consumerConfigDefaults
+    () -> consumerConfigDefaults.get()
   );
 
   private final AtomicBoolean working = new AtomicBoolean(true);

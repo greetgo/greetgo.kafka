@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core;
 
+import kz.greetgo.kafka.consumer.ConsumerConfigDefaults;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.ConsumerReactor;
 import kz.greetgo.kafka.consumer.ConsumerReactorImpl;
@@ -26,6 +27,8 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
   private final List<ConsumerReactorImpl> consumerReactorList = new ArrayList<>();
 
+  public ConsumerConfigDefaults consumerConfigDefaults = ConsumerConfigDefaults.withDefaults();
+
   @Override
   public void startConsumers() {
     verifyControllerList();
@@ -48,6 +51,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       consumerReactor.configStorage = consumerConfigStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
       consumerReactor.hostId = hostId;
+      consumerReactor.consumerConfigDefaults = () -> consumerConfigDefaults;
       consumerReactor.start();
     }
   }
