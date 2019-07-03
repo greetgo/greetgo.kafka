@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 public class ConsumerConfigWorker implements AutoCloseable {
   private final Supplier<EventConfigStorage> configStorage;
   private final Handler configDataChanged;
+  private final Supplier<ConsumerConfigDefaults> defaults;
   private String configPathPrefix;
   private String hostId;
 
@@ -32,9 +33,12 @@ public class ConsumerConfigWorker implements AutoCloseable {
     }
   }
 
-  public ConsumerConfigWorker(Supplier<EventConfigStorage> configStorage, Handler configDataChanged) {
+  public ConsumerConfigWorker(Supplier<EventConfigStorage> configStorage,
+                              Handler configDataChanged,
+                              Supplier<ConsumerConfigDefaults> defaults) {
     this.configStorage = configStorage;
     this.configDataChanged = configDataChanged;
+    this.defaults = defaults;
   }
 
   private final AtomicReference<ConsumerConfigFileWorker> worker = new AtomicReference<>(null);
@@ -61,7 +65,9 @@ public class ConsumerConfigWorker implements AutoCloseable {
       parentConfigError,
       hostConfig,
       hostConfigError,
-      hostConfigActualValues
+      hostConfigActualValues,
+
+      defaults
 
     );
 

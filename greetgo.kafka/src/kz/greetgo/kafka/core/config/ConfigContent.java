@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.core.config;
 
+import kz.greetgo.kafka.consumer.ConsumerConfigDefaults;
 import kz.greetgo.kafka.util.StrUtil;
 
 import java.nio.charset.StandardCharsets;
@@ -19,18 +20,19 @@ public class ConfigContent {
   private final List<ConfigLine> lines;
   public final byte[] contentInBytes;
 
-  public ConfigContent(byte[] contentInBytes) {
-    this(contentInBytes, null);
+  public ConfigContent(ConsumerConfigDefaults defaults, byte[] contentInBytes) {
+    this(defaults, contentInBytes, null);
   }
 
-  public ConfigContent(byte[] contentInBytes, Supplier<ConfigContent> parent) {
+  public ConfigContent(ConsumerConfigDefaults defaults, byte[] contentInBytes, Supplier<ConfigContent> parent) {
     this.contentInBytes = contentInBytes;
 
     List<ConfigLine> lines = new ArrayList<>();
     Map<String, Supplier<Optional<String>>> valueSupplierMap = new HashMap<>();
 
     for (String lineStr : new String(contentInBytes, StandardCharsets.UTF_8).split("\n")) {
-      ConfigLine line = ConfigLine.parse(lineStr);
+      ConfigLine line = ConfigLine.parse(defaults,
+        lineStr);
       lines.add(line);
       if (line.key != null) {
         valueSupplierMap.put(line.key, line.createValueSupplier(parent));

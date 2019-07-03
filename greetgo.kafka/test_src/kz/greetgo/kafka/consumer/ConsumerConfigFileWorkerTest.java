@@ -27,6 +27,26 @@ public class ConsumerConfigFileWorkerTest {
   @BeforeMethod
   public void prepareFileWorker() {
 
+    ConsumerConfigDefaults defaults = new ConsumerConfigDefaults();
+    defaults.addDefinition(" Long   con.auto.commit.interval.ms           1000  ");
+    defaults.addDefinition(" Long   con.session.timeout.ms               30000  ");
+    defaults.addDefinition(" Long   con.heartbeat.interval.ms            10000  ");
+    defaults.addDefinition(" Long   con.fetch.min.bytes                      1  ");
+    defaults.addDefinition(" Long   con.max.partition.fetch.bytes      1048576  ");
+    defaults.addDefinition(" Long   con.connections.max.idle.ms         540000  ");
+    defaults.addDefinition(" Long   con.default.api.timeout.ms           60000  ");
+    defaults.addDefinition(" Long   con.fetch.max.bytes               52428800  ");
+    defaults.addDefinition(" Long   con.max.poll.interval.ms            300000  ");
+    defaults.addDefinition(" Long   con.max.poll.records                   500  ");
+    defaults.addDefinition(" Long   con.receive.buffer.bytes             65536  ");
+    defaults.addDefinition(" Long   con.request.timeout.ms               30000  ");
+    defaults.addDefinition(" Long   con.send.buffer.bytes               131072  ");
+    defaults.addDefinition(" Long   con.fetch.max.wait.ms                  500  ");
+
+    defaults.addDefinition(" Int out.worker.count        1  ");
+    defaults.addDefinition(" Int out.poll.duration.ms  800  ");
+
+
     configDataChanged = new TestHandler();
     parentConfig = new TestEventConfigFile();
     parentConfigError = new TestEventConfigFile();
@@ -41,7 +61,9 @@ public class ConsumerConfigFileWorkerTest {
       parentConfigError,
       hostConfig,
       hostConfigError,
-      hostConfigActualValues
+      hostConfigActualValues,
+
+      () -> defaults
     );
 
   }

@@ -58,4 +58,9 @@ public class TestLoggerDestination implements LoggerDestination {
 
   }
 
+  @Override
+  public void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount) {
+
+  }
+
 }

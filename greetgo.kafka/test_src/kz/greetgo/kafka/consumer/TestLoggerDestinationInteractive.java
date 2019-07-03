@@ -59,4 +59,9 @@ public class TestLoggerDestinationInteractive implements LoggerDestination {
     System.out.println("********************* logInfo " + message.get());
   }
 
+  @Override
+  public void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount) {
+    System.out.println("********************* logConsumerReactorRefresh");
+  }
+
 }

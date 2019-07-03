@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static kz.greetgo.kafka.consumer.ConsumerConfigDefaults.parameterDefinitionList;
 
 public class ConsumerConfigFileWorker {
 
@@ -26,11 +26,13 @@ public class ConsumerConfigFileWorker {
   private final EventConfigFile hostConfigActualValues;
   private final EventRegistration parentConfigEventRegistration;
   private final EventRegistration hostConfigEventRegistration;
+  private final Supplier<ConsumerConfigDefaults> defaults;
 
   public ConsumerConfigFileWorker(Handler configDataChanged,
                                   EventConfigFile parentConfig, EventConfigFile parentConfigError,
                                   EventConfigFile hostConfig, EventConfigFile hostConfigError,
-                                  EventConfigFile hostConfigActualValues) {
+                                  EventConfigFile hostConfigActualValues,
+                                  Supplier<ConsumerConfigDefaults> defaults) {
 
     this.configDataChanged = configDataChanged;
     this.parentConfig = parentConfig;
@@ -49,6 +51,7 @@ public class ConsumerConfigFileWorker {
         hostConfigUpdated();
       }
     });
+    this.defaults = defaults;
   }
 
   private final AtomicReference<ConfigContent> parentContent = new AtomicReference<>(null);
@@ -77,11 +80,11 @@ public class ConsumerConfigFileWorker {
 
     List<String> lines = new ArrayList<>();
 
-    for (ParameterDefinition pd : parameterDefinitionList()) {
+    for (ParameterDefinition pd : defaults.get().parameterDefinitionList()) {
       lines.add(pd.parameterName + " = " + pd.defaultValue);
     }
 
-    return new ConfigContent(String.join("\n", lines).getBytes(UTF_8));
+    return new ConfigContent(defaults.get(), String.join("\n", lines).getBytes(UTF_8));
 
   }
 
@@ -90,7 +93,7 @@ public class ConsumerConfigFileWorker {
     ConfigContent parent = this.parentContent.get();
 
     List<String> lines = new ArrayList<>();
-    for (ParameterDefinition pd : parameterDefinitionList()) {
+    for (ParameterDefinition pd : defaults.get().parameterDefinitionList()) {
       if (parent.parameterExists(pd.parameterName)) {
         lines.add(pd.parameterName + " : inherits");
       } else {
@@ -98,7 +101,7 @@ public class ConsumerConfigFileWorker {
       }
     }
 
-    return new ConfigContent(String.join("\n", lines).getBytes(UTF_8), this.parentContent::get);
+    return new ConfigContent(defaults.get(), String.join("\n", lines).getBytes(UTF_8), this.parentContent::get);
 
   }
 
@@ -106,7 +109,7 @@ public class ConsumerConfigFileWorker {
     {
       byte[] contentInBytes = parentConfig.readContent();
       if (contentInBytes != null) {
-        ConfigContent content = new ConfigContent(contentInBytes);
+        ConfigContent content = new ConfigContent(defaults.get(), contentInBytes);
         parentContent.set(content);
         parentConfigError.writeContent(content.generateErrorsInBytes());
       } else {
@@ -122,7 +125,7 @@ public class ConsumerConfigFileWorker {
     {
       byte[] contentInBytes = hostConfig.readContent();
       if (contentInBytes != null) {
-        ConfigContent content = new ConfigContent(contentInBytes, parentContent::get);
+        ConfigContent content = new ConfigContent(defaults.get(), contentInBytes, parentContent::get);
         hostContent.set(content);
         hostConfigError.writeContent(content.generateErrorsInBytes());
         hostConfigActualValues.writeContent(content.generateActualValuesInBytes());
@@ -145,7 +148,7 @@ public class ConsumerConfigFileWorker {
       return;
     }
 
-    ConfigContent content = new ConfigContent(contentInBytes);
+    ConfigContent content = new ConfigContent(defaults.get(), contentInBytes);
     parentContent.set(content);
     parentConfig.writeContent(content.contentInBytes);
     parentConfigError.writeContent(content.generateErrorsInBytes());
@@ -159,7 +162,7 @@ public class ConsumerConfigFileWorker {
       return;
     }
 
-    ConfigContent content = new ConfigContent(contentInBytes, parentContent::get);
+    ConfigContent content = new ConfigContent(defaults.get(), contentInBytes, parentContent::get);
     hostContent.set(content);
     hostConfig.writeContent(content.contentInBytes);
     hostConfigError.writeContent(content.generateErrorsInBytes());

@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.producer;
 
 import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
+import kz.greetgo.kafka.util.ConfigLines;
 import org.fest.assertions.data.MapEntry;
 import org.testng.annotations.Test;
 
@@ -11,12 +12,27 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 public class ProducerConfigWorkerTest {
 
+  private void putDefaultValues(ConfigLines configLines) {
+    configLines.putValue("prod.acts                    ", "all");
+    configLines.putValue("prod.buffer.memory           ", "33554432");
+    configLines.putValue("prod.compression.type        ", "none");
+    configLines.putValue("prod.batch.size              ", "16384");
+    configLines.putValue("prod.connections.max.idle.ms ", "540000");
+    configLines.putValue("prod.request.timeout.ms      ", "30000");
+    configLines.putValue("prod.linger.ms               ", "1");
+    configLines.putValue("prod.batch.size              ", "16384");
+
+    configLines.putValue("prod.retries                               ", "2147483647");
+    configLines.putValue("prod.max.in.flight.requests.per.connection ", "1");
+    configLines.putValue("prod.delivery.timeout.ms                   ", "35000");
+  }
+
   @Test
   public void getConfigFor_defaultValues() {
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
-    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage);
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage, this::putDefaultValues);
 
     //
     //
@@ -54,13 +70,13 @@ public class ProducerConfigWorkerTest {
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     configStorage.addLines("testProducer.txt",
-        "prod.param1=value 1001",
-        "prod.param2=value 1002",
-        "prod.param3=value 1003",
-        "prod.param4=value 1004"
+      "prod.param1=value 1001",
+      "prod.param2=value 1002",
+      "prod.param3=value 1003",
+      "prod.param4=value 1004"
     );
 
-    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage);
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage, this::putDefaultValues);
 
     //
     //
@@ -80,10 +96,10 @@ public class ProducerConfigWorkerTest {
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
 
     configStorage.addLines("testProducer.txt",
-        "prod.param1=started value"
+      "prod.param1=started value"
     );
 
-    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage);
+    ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(() -> configStorage, this::putDefaultValues);
 
     Map<String, Object> startedConfig = producerConfigWorker.getConfigFor("testProducer");
 
@@ -92,10 +108,10 @@ public class ProducerConfigWorkerTest {
     configStorage.rememberState();
 
     configStorage.removeLines("testProducer.txt",
-        "prod.param1=started value"
+      "prod.param1=started value"
     );
     configStorage.addLines("testProducer.txt",
-        "prod.param1=another value"
+      "prod.param1=another value"
     );
 
     configStorage.fireEvents();
@@ -118,10 +134,10 @@ public class ProducerConfigWorkerTest {
 
 
     configStorage.removeLines("testProducer.txt",
-        "prod.param1=another value"
+      "prod.param1=another value"
     );
     configStorage.removeLines("testProducer.txt",
-        "prod.param1=last value"
+      "prod.param1=last value"
     );
 
     configStorage.fireEvents();

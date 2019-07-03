@@ -61,7 +61,7 @@ public class KafkaReactorImplTest {
 
   }
 
-  @Test
+  @Test(enabled = false)
   public void runKafkaReactor() throws Exception {
     EventConfigStorageZooKeeper storageZooKeeper = new EventConfigStorageZooKeeper(
       "greetgo_kafka/KafkaReactorImplTest", () -> "localhost:2181", () -> 30000

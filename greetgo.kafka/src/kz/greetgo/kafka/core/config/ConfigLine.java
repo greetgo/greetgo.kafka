@@ -8,13 +8,16 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class ConfigLine {
+  private final ConsumerConfigDefaults defaults;
   public final String line;
   public final String key;
   private final String value;
   private final boolean inherits;
   public final String parseError;
 
-  private ConfigLine(String line, String key, String value, boolean inherits, String parseError) {
+  private ConfigLine(ConsumerConfigDefaults defaults,
+                     String line, String key, String value, boolean inherits, String parseError) {
+    this.defaults = defaults;
     this.line = line;
     this.key = key;
     this.value = value;
@@ -22,15 +25,16 @@ public class ConfigLine {
     this.parseError = parseError;
   }
 
-  public static ConfigLine parse(String line) {
+  public static ConfigLine parse(ConsumerConfigDefaults defaults, String line) {
     String trimmed = line.trim();
     if (trimmed.isEmpty() || trimmed.startsWith("#")) {
-      return new ConfigLine(line, null, null, false, null);
+      return new ConfigLine(defaults, line, null, null, false, null);
     }
     int idxEqual = line.indexOf('=');
     int idxComma = line.indexOf(':');
     if (idxEqual < 0 && idxComma < 0) {
-      return new ConfigLine(line, null, null, false, "Unknown line format: must be <key> = <value> or <key> : inherits");
+      return new ConfigLine(defaults,
+        line, null, null, false, "Unknown line format: must be <key> = <value> or <key> : inherits");
     }
     int idx = idxEqual < 0 ? idxComma : (idxComma < 0 ? idxEqual : Math.min(idxEqual, idxComma));
     boolean comma = idx == idxComma;
@@ -39,18 +43,18 @@ public class ConfigLine {
     if (comma) {
 
       if ("inherits".equals(value.toLowerCase())) {
-        return new ConfigLine(line, key, value, true, null);
+        return new ConfigLine(defaults, line, key, value, true, null);
       } else {
-        return new ConfigLine(line, key, value, true, "Unknown command `" + value + "`");
+        return new ConfigLine(defaults, line, key, value, true, "Unknown command `" + value + "`");
       }
 
     }
 
-    return new ConfigLine(line, key, value, false, null);
+    return new ConfigLine(defaults, line, key, value, false, null);
   }
 
   public Supplier<Optional<String>> createValueSupplier(Supplier<ConfigContent> parent) {
-    ParameterDefinition definition = ConsumerConfigDefaults.getDefinition(key);
+    ParameterDefinition definition = defaults.getDefinition(key);
 
     if (inherits) {
 
@@ -92,7 +96,7 @@ public class ConfigLine {
       return;
     }
 
-    ParameterDefinition definition = ConsumerConfigDefaults.getDefinition(key);
+    ParameterDefinition definition = defaults.getDefinition(key);
     String validationError = definition.validator.validateValue(value);
 
     if (validationError == null) {

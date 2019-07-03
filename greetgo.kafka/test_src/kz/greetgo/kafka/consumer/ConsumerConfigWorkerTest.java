@@ -3,6 +3,7 @@ package kz.greetgo.kafka.consumer;
 import kz.greetgo.kafka.core.config.EventConfigStorageInMem;
 import kz.greetgo.kafka.util.StrUtil;
 import kz.greetgo.kafka.util.TestHandler;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -14,13 +15,40 @@ import static org.fest.assertions.data.MapEntry.entry;
 
 public class ConsumerConfigWorkerTest {
 
+  ConsumerConfigDefaults defaults;
+
+  @BeforeMethod
+  public void prepareDefaults() {
+
+    defaults = new ConsumerConfigDefaults();
+
+    defaults.addDefinition(" Long   con.auto.commit.interval.ms           1000  ");
+    defaults.addDefinition(" Long   con.session.timeout.ms               30000  ");
+    defaults.addDefinition(" Long   con.heartbeat.interval.ms            10000  ");
+    defaults.addDefinition(" Long   con.fetch.min.bytes                      1  ");
+    defaults.addDefinition(" Long   con.max.partition.fetch.bytes      1048576  ");
+    defaults.addDefinition(" Long   con.connections.max.idle.ms         540000  ");
+    defaults.addDefinition(" Long   con.default.api.timeout.ms           60000  ");
+    defaults.addDefinition(" Long   con.fetch.max.bytes               52428800  ");
+    defaults.addDefinition(" Long   con.max.poll.interval.ms            300000  ");
+    defaults.addDefinition(" Long   con.max.poll.records                   500  ");
+    defaults.addDefinition(" Long   con.receive.buffer.bytes             65536  ");
+    defaults.addDefinition(" Long   con.request.timeout.ms               30000  ");
+    defaults.addDefinition(" Long   con.send.buffer.bytes               131072  ");
+    defaults.addDefinition(" Long   con.fetch.max.wait.ms                  500  ");
+
+    defaults.addDefinition(" Int out.worker.count        1  ");
+    defaults.addDefinition(" Int out.poll.duration.ms  800  ");
+
+  }
+
   @Test
   public void testInitialStateInConfigStorage() {
 
     EventConfigStorageInMem configStorage = new EventConfigStorageInMem();
     TestHandler testHandler = new TestHandler();
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -99,7 +127,7 @@ public class ConsumerConfigWorkerTest {
       "con.another.var = status quo"
     );
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -137,7 +165,7 @@ public class ConsumerConfigWorkerTest {
       "out.worker.count = 173"
     );
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -172,7 +200,7 @@ public class ConsumerConfigWorkerTest {
       "out.worker.count : inherits"
     );
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -207,7 +235,7 @@ public class ConsumerConfigWorkerTest {
       "con.send.buffer.bytes=222"
     );
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -242,7 +270,7 @@ public class ConsumerConfigWorkerTest {
       "out.worker.count = left value"
     );
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -291,7 +319,7 @@ public class ConsumerConfigWorkerTest {
       "out.worker.count : inherits"
     );
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -359,7 +387,7 @@ public class ConsumerConfigWorkerTest {
 
     // Запускается система
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -437,7 +465,7 @@ public class ConsumerConfigWorkerTest {
 
     // Запускается система
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -508,7 +536,7 @@ public class ConsumerConfigWorkerTest {
 
     // Стартуем приложение
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -575,7 +603,7 @@ public class ConsumerConfigWorkerTest {
 
     // Стартуем приложение
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -643,7 +671,7 @@ public class ConsumerConfigWorkerTest {
 
     // Стартуем приложение
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
@@ -726,7 +754,7 @@ public class ConsumerConfigWorkerTest {
 
     // Стартуем приложение
 
-    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler);
+    ConsumerConfigWorker consumerConfigWorker = new ConsumerConfigWorker(() -> configStorage, testHandler, () -> defaults);
 
     consumerConfigWorker.setConfigPathPrefix("root/controller/method");
     consumerConfigWorker.setHostId("host-id");
