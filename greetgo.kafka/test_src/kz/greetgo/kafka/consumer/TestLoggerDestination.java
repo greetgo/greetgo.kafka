@@ -1,7 +1,6 @@
 package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.core.logger.LoggerDestination;
-import org.apache.kafka.common.errors.WakeupException;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -19,48 +18,36 @@ public class TestLoggerDestination implements LoggerDestination {
   }
 
   @Override
-  public void logProducerConfigOnCreating(String producerName, Map<String, Object> configMap) {
-
-  }
+  public void logProducerConfigOnCreating(String producerName, Map<String, Object> configMap) {}
 
   @Override
-  public void logProducerClosed(String producerName) {
-
-  }
+  public void logProducerClosed(String producerName) {}
 
   @Override
-  public void logConsumerWakeupExceptionHappened(WakeupException wakeupException) {
-
-  }
-
-  @Override
-  public void logConsumerStartWorker(String consumerInfo, long workerId) {
-
-  }
+  public void logConsumerIllegalAccessExceptionInvokingMethod
+    (IllegalAccessException e, String consumerName, Object controller, Method method) {}
 
   @Override
-  public void logConsumerFinishWorker(String consumerInfo, long workerId) {
-
-  }
+  public void debug(Supplier<String> message) {}
 
   @Override
-  public void logConsumerWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap) {
-
-  }
+  public void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount) {}
 
   @Override
-  public void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName, Object controller, Method method) {
-
-  }
+  public void logConsumerStartWorker(ConsumerDefinition consumerDefinition, long workerId) {}
 
   @Override
-  public void debug(Supplier<String> message) {
-
-  }
+  public void logConsumerFinishWorker(ConsumerDefinition consumerDefinition, long workerId) {}
 
   @Override
-  public void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount) {
+  public void logConsumerWorkerConfig
+    (ConsumerDefinition consumerDefinition, long workerId, Map<String, Object> configMap) {}
 
-  }
+  @Override
+  public void logConsumerPollExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {}
+
+  @Override
+  public void logConsumerCommitSyncExceptionHappened
+    (RuntimeException exception, ConsumerDefinition consumerDefinition) {}
 
 }

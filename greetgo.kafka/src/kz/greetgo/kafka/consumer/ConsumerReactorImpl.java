@@ -19,9 +19,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_FINISH_WORKER;
+import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_POLL_EXCEPTION_HAPPENED;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_REACTOR_REFRESH;
-import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_WAKEUP_EXCEPTION_HAPPENED;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_START_CONSUMER_WORKER;
 import static kz.greetgo.kafka.core.logger.LoggerType.SHOW_CONSUMER_WORKER_CONFIG;
 
@@ -158,7 +159,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         Thread.currentThread().setName("kafka-consumer-" + consumerDefinition.logDisplay() + "-" + id);
 
         if (logger.isShow(LOG_START_CONSUMER_WORKER)) {
-          logger.logConsumerStartWorker(consumerDefinition.logDisplay(), id);
+          logger.logConsumerStartWorker(consumerDefinition, id);
         }
 
         Map<String, Object> configMap = consumerConfigWorker.getConfigMap();
@@ -168,7 +169,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         configMap.put("enable.auto.commit", consumerDefinition.isAutoCommit() ? "true" : "false");
 
         if (logger.isShow(SHOW_CONSUMER_WORKER_CONFIG)) {
-          logger.logConsumerWorkerConfig(consumerDefinition.logDisplay(), id, configMap);
+          logger.logConsumerWorkerConfig(consumerDefinition, id, configMap);
         }
 
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
@@ -177,27 +178,43 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
           consumer.subscribe(consumerDefinition.topicList());
           while (working.get() && workers.containsKey(id)) {
+
+            final ConsumerRecords<byte[], Box> records;
+
             try {
-              ConsumerRecords<byte[], Box> records = consumer.poll(consumerConfigWorker.pollDuration());
-              if (consumerDefinition.invoke(records)) {
+              records = consumer.poll(consumerConfigWorker.pollDuration());
+            } catch (RuntimeException exception) {
+              if (logger.isShow(LOG_CONSUMER_POLL_EXCEPTION_HAPPENED)) {
+                logger.logConsumerPollExceptionHappened(exception, consumerDefinition);
+              }
+              continue;
+            }
+
+            if (consumerDefinition.invoke(records)) {
+
+              try {
                 consumer.commitSync();
-              } else {
-                workers.remove(id);
+              } catch (RuntimeException exception) {
+                if (logger.isShow(LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED)) {
+                  logger.logConsumerCommitSyncExceptionHappened(exception, consumerDefinition);
+                }
               }
 
-            } catch (org.apache.kafka.common.errors.WakeupException wakeupException) {
-              if (logger.isShow(LOG_CONSUMER_WAKEUP_EXCEPTION_HAPPENED)) {
-                logger.logConsumerWakeupExceptionHappened(wakeupException);
-              }
             }
+
+
           }
         }
 
       } finally {
+
         running.set(false);
+        workers.remove(id);
+
         if (logger.isShow(LOG_CONSUMER_FINISH_WORKER)) {
-          logger.logConsumerFinishWorker(consumerDefinition.logDisplay(), id);
+          logger.logConsumerFinishWorker(consumerDefinition, id);
         }
+
       }
     }
   }

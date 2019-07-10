@@ -13,15 +13,14 @@ public interface LoggerDestination {
 
   void logProducerClosed(String producerName);
 
-  void logConsumerWakeupExceptionHappened(WakeupException wakeupException);
+  void logConsumerStartWorker(ConsumerDefinition consumerDefinition, long workerId);
 
-  void logConsumerStartWorker(String consumerInfo, long workerId);
+  void logConsumerFinishWorker(ConsumerDefinition consumerDefinition, long workerId);
 
-  void logConsumerFinishWorker(String consumerInfo, long workerId);
+  void logConsumerErrorInMethod(Throwable throwable, String consumerName,
+                                Object controller, Method method);
 
-  void logConsumerErrorInMethod(Throwable throwable, String consumerName, Object controller, Method method);
-
-  void logConsumerWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap);
+  void logConsumerWorkerConfig(ConsumerDefinition consumerDefinition, long workerId, Map<String, Object> configMap);
 
   void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName,
                                                        Object controller, Method method);
@@ -30,4 +29,7 @@ public interface LoggerDestination {
 
   void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount);
 
+  void logConsumerPollExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition);
+
+  void logConsumerCommitSyncExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition);
 }

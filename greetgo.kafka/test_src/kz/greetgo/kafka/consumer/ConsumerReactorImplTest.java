@@ -70,6 +70,7 @@ public class ConsumerReactorImplTest {
     consumerReactor.logger = logger;
     consumerReactor.consumerDefinition = consumerDefinitionList.get(0);
     consumerReactor.hostId = cde.hostId;
+    consumerReactor.consumerConfigDefaults = ConsumerConfigDefaults::withDefaults;
 
     consumerReactor.start();
 

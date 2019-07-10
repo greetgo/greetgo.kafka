@@ -1,7 +1,6 @@
 package kz.greetgo.kafka.core.logger;
 
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
-import org.apache.kafka.common.errors.WakeupException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -60,25 +59,17 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
   }
 
   @Override
-  public void logConsumerWakeupExceptionHappened(WakeupException wakeupException) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("Wakeup exception happened:\n");
-    appendStackTrace(sb, wakeupException);
-    acceptor.error(sb.toString());
-  }
-
-  @Override
-  public void logConsumerStartWorker(String consumerInfo, long workerId) {
+  public void logConsumerStartWorker(ConsumerDefinition consumerDefinition, long workerId) {
     if (acceptor.isInfoEnabled()) {
-      acceptor.info("Started consumer worker `" + consumerInfo
+      acceptor.info("Started consumer worker `" + consumerDefinition.logDisplay()
         + "` with id = " + workerId + " in thread " + Thread.currentThread().getName());
     }
   }
 
   @Override
-  public void logConsumerFinishWorker(String consumerInfo, long workerId) {
+  public void logConsumerFinishWorker(ConsumerDefinition consumerDefinition, long workerId) {
     if (acceptor.isInfoEnabled()) {
-      acceptor.info("Finished consumer worker `" + consumerInfo + "` with id = " + workerId);
+      acceptor.info("Finished consumer worker `" + consumerDefinition.logDisplay() + "` with id = " + workerId);
     }
   }
 
@@ -107,7 +98,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
   }
 
   @Override
-  public void logConsumerWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap) {
+  public void logConsumerWorkerConfig(ConsumerDefinition consumerDefinition, long workerId, Map<String, Object> configMap) {
 
     if (!acceptor.isInfoEnabled()) {
       return;
@@ -115,7 +106,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
 
     StringBuilder sb = new StringBuilder();
 
-    sb.append("Consumer worker config: consumer = `").append(consumerInfo)
+    sb.append("Consumer worker config: consumer = `").append(consumerDefinition.logDisplay())
       .append("`, workerId = ").append(workerId).append("\n");
 
     configMap
@@ -131,7 +122,9 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
   }
 
   @Override
-  public void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName, Object controller, Method method) {
+  public void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName,
+                                                              Object controller, Method method) {
+
     StringBuilder sb = new StringBuilder();
     sb.append("IllegalAccessException invoking method in consumer `")
       .append(consumerName)
@@ -144,6 +137,34 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
     appendStackTrace(sb, e);
 
     acceptor.error(sb.toString());
+  }
+
+  @Override
+  public void logConsumerPollExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("Poll exception in consumer ")
+      .append(consumerDefinition.logDisplay())
+      .append(":\n");
+
+    appendStackTrace(sb, exception);
+
+    acceptor.error(sb.toString());
+
+  }
+
+  @Override
+  public void logConsumerCommitSyncExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("CommitSync exception in consumer ")
+      .append(consumerDefinition.logDisplay())
+      .append(":\n");
+
+    appendStackTrace(sb, exception);
+
+    acceptor.error(sb.toString());
+
   }
 
   @Override

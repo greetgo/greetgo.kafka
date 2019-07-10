@@ -1,7 +1,6 @@
 package kz.greetgo.kafka.core.logger;
 
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
-import org.apache.kafka.common.errors.WakeupException;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -56,47 +55,50 @@ public class Logger implements LoggerExternal {
     }
   }
 
-  public void logConsumerWakeupExceptionHappened(WakeupException wakeupException) {
+  public void logConsumerStartWorker(ConsumerDefinition consumerDefinition, long workerId) {
     LoggerDestination d = this.destination;
     if (d != null) {
-      d.logConsumerWakeupExceptionHappened(wakeupException);
+      d.logConsumerStartWorker(consumerDefinition, workerId);
     }
   }
 
-  public void logConsumerStartWorker(String consumerInfo, long workerId) {
+  public void logConsumerFinishWorker(ConsumerDefinition consumerDefinition, long workerId) {
     LoggerDestination d = this.destination;
     if (d != null) {
-      d.logConsumerStartWorker(consumerInfo, workerId);
+      d.logConsumerFinishWorker(consumerDefinition, workerId);
     }
   }
 
-  public void logConsumerFinishWorker(String consumerInfo, long workerId) {
-    LoggerDestination d = this.destination;
-    if (d != null) {
-      d.logConsumerFinishWorker(consumerInfo, workerId);
-    }
-  }
+  public void logConsumerErrorInMethod(Throwable throwable,
+                                       String consumerName,
+                                       Object controller, Method method) {
 
-  public void logConsumerErrorInMethod(Throwable throwable, String consumerName, Object controller, Method method) {
     LoggerDestination d = this.destination;
     if (d != null) {
       d.logConsumerErrorInMethod(throwable, consumerName, controller, method);
     }
+
   }
 
-  public void logConsumerWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap) {
+  public void logConsumerWorkerConfig(ConsumerDefinition consumerDefinition,
+                                      long workerId, Map<String, Object> configMap) {
+
     LoggerDestination d = this.destination;
     if (d != null) {
-      d.logConsumerWorkerConfig(consumerInfo, workerId, configMap);
+      d.logConsumerWorkerConfig(consumerDefinition, workerId, configMap);
     }
+
   }
 
-  public void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName,
+  public void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e,
+                                                              String consumerName,
                                                               Object controller, Method method) {
+
     LoggerDestination d = this.destination;
     if (d != null) {
       d.logConsumerIllegalAccessExceptionInvokingMethod(e, consumerName, controller, method);
     }
+
   }
 
   public void logConsumerReactorRefresh(ConsumerDefinition consumerDefinition, int currentCount, int workerCount) {
@@ -105,4 +107,19 @@ public class Logger implements LoggerExternal {
       d.logConsumerReactorRefresh(consumerDefinition, currentCount, workerCount);
     }
   }
+
+  public void logConsumerPollExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
+    LoggerDestination d = this.destination;
+    if (d != null) {
+      d.logConsumerPollExceptionHappened(exception, consumerDefinition);
+    }
+  }
+
+  public void logConsumerCommitSyncExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
+    LoggerDestination d = this.destination;
+    if (d != null) {
+      d.logConsumerCommitSyncExceptionHappened(exception, consumerDefinition);
+    }
+  }
+
 }

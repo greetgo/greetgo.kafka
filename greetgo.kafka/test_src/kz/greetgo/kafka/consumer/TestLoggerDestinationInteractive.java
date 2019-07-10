@@ -1,7 +1,6 @@
 package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.core.logger.LoggerDestination;
-import org.apache.kafka.common.errors.WakeupException;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -24,23 +23,19 @@ public class TestLoggerDestinationInteractive implements LoggerDestination {
     System.out.println("********************* logProducerClosed");
   }
 
-  @Override
-  public void logConsumerWakeupExceptionHappened(WakeupException wakeupException) {
-    System.out.println("********************* logConsumerWakeupExceptionHappened");
-  }
 
   @Override
-  public void logConsumerStartWorker(String consumerInfo, long workerId) {
+  public void logConsumerStartWorker(ConsumerDefinition consumerDefinition, long workerId) {
     System.out.println("********************* logConsumerStartWorker");
   }
 
   @Override
-  public void logConsumerFinishWorker(String consumerInfo, long workerId) {
+  public void logConsumerFinishWorker(ConsumerDefinition consumerDefinition, long workerId) {
     System.out.println("********************* logConsumerFinishWorker");
   }
 
   @Override
-  public void logConsumerWorkerConfig(String consumerInfo, long workerId, Map<String, Object> configMap) {
+  public void logConsumerWorkerConfig(ConsumerDefinition consumerDefinition, long workerId, Map<String, Object> configMap) {
     System.out.println("********************* logConsumerWorkerConfig");
   }
 
@@ -64,4 +59,13 @@ public class TestLoggerDestinationInteractive implements LoggerDestination {
     System.out.println("********************* logConsumerReactorRefresh");
   }
 
+  @Override
+  public void logConsumerPollExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
+    System.out.println("********************* logConsumerPollExceptionHappened");
+  }
+
+  @Override
+  public void logConsumerCommitSyncExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
+    System.out.println("********************* logConsumerCommitSyncExceptionHappened");
+  }
 }
