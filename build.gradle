@@ -4,7 +4,7 @@ allprojects {
   apply plugin: 'maven'
   apply plugin: 'idea'
 
-  version = '1.4.0'
+  version = '1.4.1'
 
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8

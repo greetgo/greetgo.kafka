@@ -88,9 +88,9 @@ public class ConsumerReactorImpl implements ConsumerReactor {
     for (Map.Entry<Long, Worker> e : workers.entrySet()) {
       if (!e.getValue().isRunning()) {
         toDelete.add(e.getKey());
-        continue;
+      } else {
+        currentCount++;
       }
-      currentCount++;
     }
 
     toDelete.forEach(workers::remove);
@@ -175,22 +175,27 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
         BoxDeserializer forValue = new BoxDeserializer(strConverterSupplier.get());
 
-        try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
-          consumer.subscribe(consumerDefinition.topicList());
-          while (working.get() && workers.containsKey(id)) {
+        OUT:
+        while (working.get() && workers.containsKey(id)) {
 
-            final ConsumerRecords<byte[], Box> records;
+          try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
+            consumer.subscribe(consumerDefinition.topicList());
+            while (working.get() && workers.containsKey(id)) {
 
-            try {
-              records = consumer.poll(consumerConfigWorker.pollDuration());
-            } catch (RuntimeException exception) {
-              if (logger.isShow(LOG_CONSUMER_POLL_EXCEPTION_HAPPENED)) {
-                logger.logConsumerPollExceptionHappened(exception, consumerDefinition);
+              final ConsumerRecords<byte[], Box> records;
+
+              try {
+                records = consumer.poll(consumerConfigWorker.pollDuration());
+              } catch (RuntimeException exception) {
+                if (logger.isShow(LOG_CONSUMER_POLL_EXCEPTION_HAPPENED)) {
+                  logger.logConsumerPollExceptionHappened(exception, consumerDefinition);
+                }
+                continue;
               }
-              continue;
-            }
 
-            if (consumerDefinition.invoke(records)) {
+              if (!consumerDefinition.invoke(records)) {
+                continue OUT;
+              }
 
               try {
                 consumer.commitSync();
@@ -198,12 +203,13 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                 if (logger.isShow(LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED)) {
                   logger.logConsumerCommitSyncExceptionHappened(exception, consumerDefinition);
                 }
+                continue OUT;
               }
 
+
             }
-
-
           }
+
         }
 
       } finally {
