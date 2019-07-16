@@ -83,8 +83,8 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
-      KAFKA_OPTS: "-javaagent:/configs/prometheus/jmx_prometheus_javaagent.jar=7071:/configs/prometheus/prom-jmx-agent-config.yml"
-      KAFKA_OFFSETS_TOPIC_TOPIC_REPLICATION_FACTOR: "2"
+      KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
@@ -109,8 +109,8 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
-      KAFKA_OPTS: "-javaagent:/configs/prometheus/jmx_prometheus_javaagent.jar=7071:/configs/prometheus/prom-jmx-agent-config.yml"
-      KAFKA_OFFSETS_TOPIC_TOPIC_REPLICATION_FACTOR: "2"
+      KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
@@ -135,8 +135,8 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
-      KAFKA_OPTS: "-javaagent:/configs/prometheus/jmx_prometheus_javaagent.jar=7071:/configs/prometheus/prom-jmx-agent-config.yml"
-      KAFKA_OFFSETS_TOPIC_TOPIC_REPLICATION_FACTOR: "2"
+      KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
@@ -161,8 +161,38 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
-      KAFKA_OPTS: "-javaagent:/configs/prometheus/jmx_prometheus_javaagent.jar=7071:/configs/prometheus/prom-jmx-agent-config.yml"
-      KAFKA_OFFSETS_TOPIC_TOPIC_REPLICATION_FACTOR: "2"
+      KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager
+    ports:
+      - 9077:9000
+    environment:
+      ZK_HOSTS: "zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183"
+      APPLICATION_SECRET: "letmein"
+
+  prometheus:
+    image: prom/prometheus:v2.10.0
+    volumes:
+      - "./volumes/prometheus:/prometheus"
+      - "./configs/etc_prometheus:/etc/prometheus"
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    command:
+      - "--kafka.server=kafka-1:9091"
+      - "--kafka.server=kafka-2:9092"
+      - "--kafka.server=kafka-3:9093"
+      - "--kafka.server=kafka-4:9094"
+
+  grafana:
+    image: grafana/grafana:5.4.3
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./grafana_volume:/var/lib/grafana"
+    user: root
