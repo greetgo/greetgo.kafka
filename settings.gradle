@@ -1,6 +1,5 @@
 rootProject.name = "greetgo.kafka"
 
-//include 'greetgo.kafka_old'
-//include 'greetgo.kafka_old.probes'
 include 'greetgo.kafka'
 include 'greetgo.str-converter'
+include 'massive.tests'

@@ -1,0 +1,71 @@
+version: "3.3"
+services:
+
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:5.2.2
+    ports:
+      - "2181:2181"
+    volumes:
+      - ./volumes/zookeeper-1/data:/var/lib/zookeeper/data
+      - ./volumes/zookeeper-1/log:/var/lib/zookeeper/log
+    environment:
+      ZOOKEEPER_SERVER_ID: "1"
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+      ZOOKEEPER_INIT_LIMIT: "5"
+      ZOOKEEPER_SYNC_LIMIT: "2"
+      ZOOKEEPER_SERVERS: "zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888"
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:5.2.2
+    ports:
+      - "2182:2181"
+    volumes:
+      - ./volumes/zookeeper-2/data:/var/lib/zookeeper/data
+      - ./volumes/zookeeper-2/log:/var/lib/zookeeper/log
+    environment:
+      ZOOKEEPER_SERVER_ID: "2"
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+      ZOOKEEPER_INIT_LIMIT: "5"
+      ZOOKEEPER_SYNC_LIMIT: "2"
+      ZOOKEEPER_SERVERS: "zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888"
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:5.2.2
+    ports:
+      - "2183:2181"
+    volumes:
+      - ./volumes/zookeeper-3/data:/var/lib/zookeeper/data
+      - ./volumes/zookeeper-3/log:/var/lib/zookeeper/log
+    environment:
+      ZOOKEEPER_SERVER_ID: "3"
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+      ZOOKEEPER_INIT_LIMIT: "5"
+      ZOOKEEPER_SYNC_LIMIT: "2"
+      ZOOKEEPER_SERVERS: "zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888"
+
+  zoo-navigator-api:
+    image: elkozmon/zoonavigator-api:0.6.0
+    environment:
+      API_HTTP_PORT: "9082"
+
+  zoo-navigator-web:
+    image: elkozmon/zoonavigator-web:0.6.0
+    ports:
+      - "9001:9001"
+    environment:
+      WEB_HTTP_PORT: "9001"
+      API_HOST: "zoo-navigator-api"
+      API_PORT: "9082"
+      AUTO_CONNECT_CONNECTION_STRING: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+    depends_on:
+      - zoo-navigator-api
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+
+  utools:
+    image: utools:0.0.1
+
