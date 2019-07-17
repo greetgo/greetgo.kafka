@@ -73,6 +73,7 @@ public class ConsumerDefinition {
     return controller.getClass();
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public boolean invoke(ConsumerRecords<byte[], Box> records) {
     return invoker.invoke(records);
   }
