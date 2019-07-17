@@ -20,10 +20,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -106,11 +104,11 @@ public class InvokerBuilder {
       public InvokeSession createSession() {
         return new InvokeSession() {
 
-          final Map<String, ProducerFacade> producerMap = new HashMap<>();
+          private final InvokeContext context = new InvokeContext();
 
           @Override
           public void putProducer(String producerName, ProducerFacade producer) {
-            producerMap.put(producerName, producer);
+            context.putProducer(producerName, producer);
           }
 
           @Override
@@ -165,7 +163,7 @@ public class InvokerBuilder {
 
           @Override
           public void close() {
-            producerMap.values().forEach(ProducerFacade::reset);
+            context.close();
           }
         };
       }
