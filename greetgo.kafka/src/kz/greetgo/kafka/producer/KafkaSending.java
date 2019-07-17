@@ -6,6 +6,14 @@ public interface KafkaSending {
 
   KafkaSending toPartition(int partition);
 
+  KafkaSending setTimestamp(Long timestamp);
+
+  KafkaSending addConsumerToIgnore(String consumerName);
+
+  KafkaSending setAuthor(String author);
+
+  KafkaSending addHeader(String key, byte[] value);
+
   KafkaFuture go();
 
 }

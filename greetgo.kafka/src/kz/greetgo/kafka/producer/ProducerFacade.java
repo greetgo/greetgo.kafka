@@ -14,7 +14,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 public class ProducerFacade {
 
@@ -98,7 +99,7 @@ public class ProducerFacade {
 
       Long timestamp = null;
 
-      @SuppressWarnings("unused")
+      @Override
       public KafkaSending setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
         return this;
@@ -106,7 +107,7 @@ public class ProducerFacade {
 
       final ArrayList<Header> headers = new ArrayList<>();
 
-      @SuppressWarnings("unused")
+      @Override
       public KafkaSending addHeader(String key, byte[] value) {
         headers.add(new Header() {
           @Override
@@ -124,9 +125,17 @@ public class ProducerFacade {
 
       final Set<String> ignorableConsumers = new HashSet<>();
 
-      @SuppressWarnings("unused")
+      @Override
       public KafkaSending addConsumerToIgnore(String consumerName) {
         ignorableConsumers.add(consumerName);
+        return this;
+      }
+
+      String author = source.author();
+
+      @Override
+      public KafkaSending setAuthor(String author) {
+        this.author = author;
         return this;
       }
 
@@ -138,8 +147,8 @@ public class ProducerFacade {
 
         Box box = new Box();
         box.body = body;
-        box.author = source.author();
-        box.ignorableConsumers = ignorableConsumers.stream().sorted().collect(Collectors.toList());
+        box.author = author;
+        box.ignorableConsumers = ignorableConsumers.stream().sorted().collect(toList());
 
         byte[] key = source.extractKey(body);
 
