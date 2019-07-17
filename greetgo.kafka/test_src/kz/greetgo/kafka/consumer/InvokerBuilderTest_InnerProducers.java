@@ -87,6 +87,8 @@ public class InvokerBuilderTest_InnerProducers {
 
     TestProducerFacade testProducer = new TestProducerFacade();
 
+    assertThat(invoker.getUsingProducerNames()).containsExactly("test_producer");
+
     try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
 
       invokeSession.putProducer("test_producer", testProducer);
@@ -122,7 +124,6 @@ public class InvokerBuilderTest_InnerProducers {
     assertThat(testProducer.sentList.get(2).topic).isEqualTo("outTest");
 
   }
-
 
   static class C2 {
 
@@ -179,6 +180,8 @@ public class InvokerBuilderTest_InnerProducers {
     InvokerBuilder builder = new InvokerBuilder(c, method, null);
 
     Invoker invoker = builder.build();
+
+    assertThat(invoker.getUsingProducerNames()).containsExactly("test_producer2");
 
     boolean toCommit;
 
@@ -276,6 +279,8 @@ public class InvokerBuilderTest_InnerProducers {
 
     Invoker invoker = builder.build();
 
+    assertThat(invoker.getUsingProducerNames()).containsExactly(KafkaReactor.DEFAULT_INNER_PRODUCER_NAME);
+
     boolean toCommit;
 
     TestProducerFacade testProducer = new TestProducerFacade();
@@ -314,6 +319,68 @@ public class InvokerBuilderTest_InnerProducers {
     assertThat(testProducer.sentList.get(1).topic).isEqualTo("outTest3");
     assertThat(testProducer.sentList.get(2).topic).isEqualTo("outTest3");
 
+  }
+
+  static class C4 {
+
+    final List<InputModel> inputModelList = new ArrayList<>();
+    final LinkedList<OutputModel> outputModelList = new LinkedList<>();
+
+    @Topic({"test1", "test2"})
+    @SuppressWarnings("unused")
+    @InnerProducerName("test_producer_777")
+    public void consumerMethod(InputModel inputModel,
+                               @ToTopic("outTest")
+                                 InnerProducer<OutputModel> producer
+    ) {
+      inputModelList.add(inputModel);
+      producer.send(outputModelList.removeLast());
+    }
+
+  }
+
+  @Test
+  public void build_invoke__InnerProducer__innerProducerNameFromMethod() {
+    C4 controller = new C4();
+    Method method = findMethod(controller, "consumerMethod");
+
+    InvokerBuilder builder = new InvokerBuilder(controller, method, null);
+
+    Invoker invoker = builder.build();
+
+    assertThat(invoker.getUsingProducerNames()).containsExactly("test_producer_777");
+  }
+
+
+  @InnerProducerName("test_producer_5423")
+  public static class C5 {
+
+    final List<InputModel> inputModelList = new ArrayList<>();
+    final LinkedList<OutputModel> outputModelList = new LinkedList<>();
+
+    @Topic({"test1", "test2"})
+    @SuppressWarnings("unused")
+
+    public void consumerMethod(InputModel inputModel,
+                               @ToTopic("outTest")
+                                 InnerProducer<OutputModel> producer
+    ) {
+      inputModelList.add(inputModel);
+      producer.send(outputModelList.removeLast());
+    }
+
+  }
+
+  @Test
+  public void build_invoke__InnerProducer__innerProducerNameFromClass() {
+    C4 controller = new C4();
+    Method method = findMethod(controller, "consumerMethod");
+
+    InvokerBuilder builder = new InvokerBuilder(controller, method, null);
+
+    Invoker invoker = builder.build();
+
+    assertThat(invoker.getUsingProducerNames()).containsExactly("test_producer_5423");
   }
 
 }

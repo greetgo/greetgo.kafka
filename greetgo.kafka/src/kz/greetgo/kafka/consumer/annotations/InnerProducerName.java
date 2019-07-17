@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * Defines name of {@link InnerProducer}
  */
 @Documented
-@Target({ElementType.PARAMETER})
+@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface InnerProducerName {
 
