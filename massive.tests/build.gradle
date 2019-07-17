@@ -2,4 +2,6 @@ dependencies {
 
   compile project(":greetgo.kafka")
 
+  compile "kz.greetgo.class_scanner:greetgo.class_scanner:2.0.3"
+
 }
