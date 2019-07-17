@@ -68,4 +68,9 @@ public class TestLoggerDestinationInteractive implements LoggerDestination {
   public void logConsumerCommitSyncExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
     System.out.println("********************* logConsumerCommitSyncExceptionHappened");
   }
+
+  @Override
+  public void logProducerCreated(String producerName) {
+    System.out.println("********************* logProducerCreated");
+  }
 }

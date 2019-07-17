@@ -69,6 +69,11 @@ public class ProducerFacade {
     BoxSerializer valueSerializer = new BoxSerializer(source.getStrConverter());
     Producer<byte[], Box> ret = source.createProducer(producerName, keySerializer, valueSerializer);
     creationTimestamp.set(source.getProducerConfigUpdateTimestamp(producerName));
+
+    if (source.logger().isShow(LoggerType.LOG_CREATE_PRODUCER)) {
+      source.logger().logProducerCreated(producerName);
+    }
+
     return ret;
   }
 

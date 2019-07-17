@@ -62,9 +62,11 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2, record3));
 
+    InvokerBuilder builder = new InvokerBuilder(c1, method, null);
+
     //
     //
-    boolean toCommit = new InvokerBuilder(c1, method, null).build().invoke(records);
+    boolean toCommit = builder.build().invoke(records);
     //
     //
 

@@ -122,4 +122,11 @@ public class Logger implements LoggerExternal {
     }
   }
 
+  public void logProducerCreated(String producerName) {
+    LoggerDestination d = this.destination;
+    if (d != null) {
+      d.logProducerCreated(producerName);
+    }
+  }
+
 }

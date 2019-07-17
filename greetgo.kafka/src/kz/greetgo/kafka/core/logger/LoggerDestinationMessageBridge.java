@@ -41,7 +41,16 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
 
   @Override
   public void logProducerClosed(String producerName) {
-    acceptor.info("Closed producer `" + producerName + "`");
+    if (acceptor.isInfoEnabled()) {
+      acceptor.info("Closed producer `" + producerName + "`");
+    }
+  }
+
+  @Override
+  public void logProducerCreated(String producerName) {
+    if (acceptor.isInfoEnabled()) {
+      acceptor.info("Created producer `" + producerName + "`");
+    }
   }
 
   private static void appendStackTrace(StringBuilder sb, Throwable throwable) {

@@ -50,4 +50,6 @@ public class TestLoggerDestination implements LoggerDestination {
   public void logConsumerCommitSyncExceptionHappened
     (RuntimeException exception, ConsumerDefinition consumerDefinition) {}
 
+  @Override
+  public void logProducerCreated(String producerName) {}
 }

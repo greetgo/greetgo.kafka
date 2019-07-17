@@ -1,7 +1,6 @@
 package kz.greetgo.kafka.core.logger;
 
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
-import org.apache.kafka.common.errors.WakeupException;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -32,4 +31,7 @@ public interface LoggerDestination {
   void logConsumerPollExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition);
 
   void logConsumerCommitSyncExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition);
+
+  void logProducerCreated(String producerName);
+
 }
