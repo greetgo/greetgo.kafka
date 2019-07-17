@@ -21,10 +21,20 @@ public class ProducerFacade {
 
   private final ProducerSource source;
   private final String producerName;
+  private final boolean autoResettable;
 
-  public ProducerFacade(String producerName, ProducerSource source) {
+  private ProducerFacade(String producerName, ProducerSource source, boolean autoResettable) {
     this.source = source;
     this.producerName = producerName;
+    this.autoResettable = autoResettable;
+  }
+
+  public static ProducerFacade createAutoResettable(String producerName, ProducerSource source) {
+    return new ProducerFacade(producerName, source, true);
+  }
+
+  public static ProducerFacade createPermanent(String producerName, ProducerSource source) {
+    return new ProducerFacade(producerName, source, false);
   }
 
   private final AtomicReference<Producer<byte[], Box>> producer = new AtomicReference<>(null);
@@ -46,7 +56,7 @@ public class ProducerFacade {
 
   public Producer<byte[], Box> getNativeProducer() {
 
-    if (creationTimestamp.get() < source.getProducerConfigUpdateTimestamp(producerName)) {
+    if (autoResettable && creationTimestamp.get() < source.getProducerConfigUpdateTimestamp(producerName)) {
       reset();
     }
 

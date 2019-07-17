@@ -3,6 +3,8 @@ package kz.greetgo.kafka.consumer;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
+import kz.greetgo.kafka.producer.ProducerFacade;
+import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxDeserializer;
 import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -39,6 +41,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
   public Supplier<String> bootstrapServers;
   public String hostId;
   public Supplier<ConsumerConfigDefaults> consumerConfigDefaults;
+  public ProducerSource producerSource;
 
   /**
    * Start reactor
@@ -178,36 +181,49 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         OUT:
         while (working.get() && workers.containsKey(id)) {
 
-          try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
-            consumer.subscribe(consumerDefinition.topicList());
-            while (working.get() && workers.containsKey(id)) {
+          Invoker invoker = consumerDefinition.getInvoker();
 
-              final ConsumerRecords<byte[], Box> records;
+          Set<String> usingProducerNames = invoker.getUsingProducerNames();
 
-              try {
-                records = consumer.poll(consumerConfigWorker.pollDuration());
-              } catch (RuntimeException exception) {
-                if (logger.isShow(LOG_CONSUMER_POLL_EXCEPTION_HAPPENED)) {
-                  logger.logConsumerPollExceptionHappened(exception, consumerDefinition);
-                }
-                continue;
-              }
+          try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
 
-              if (!consumerDefinition.invoke(records)) {
-                continue OUT;
-              }
-
-              try {
-                consumer.commitSync();
-              } catch (RuntimeException exception) {
-                if (logger.isShow(LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED)) {
-                  logger.logConsumerCommitSyncExceptionHappened(exception, consumerDefinition);
-                }
-                continue OUT;
-              }
-
-
+            for (String producerName : usingProducerNames) {
+              ProducerFacade producer = ProducerFacade.createPermanent(producerName, producerSource);
+              invokeSession.putProducer(producerName, producer);
             }
+
+            try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
+              consumer.subscribe(consumerDefinition.topicList());
+              while (working.get() && workers.containsKey(id)) {
+
+                final ConsumerRecords<byte[], Box> records;
+
+                try {
+                  records = consumer.poll(consumerConfigWorker.pollDuration());
+                } catch (RuntimeException exception) {
+                  if (logger.isShow(LOG_CONSUMER_POLL_EXCEPTION_HAPPENED)) {
+                    logger.logConsumerPollExceptionHappened(exception, consumerDefinition);
+                  }
+                  continue;
+                }
+
+                if (!invokeSession.invoke(records)) {
+                  continue OUT;
+                }
+
+                try {
+                  consumer.commitSync();
+                } catch (RuntimeException exception) {
+                  if (logger.isShow(LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED)) {
+                    logger.logConsumerCommitSyncExceptionHappened(exception, consumerDefinition);
+                  }
+                  continue OUT;
+                }
+
+
+              }
+            }
+
           }
 
         }

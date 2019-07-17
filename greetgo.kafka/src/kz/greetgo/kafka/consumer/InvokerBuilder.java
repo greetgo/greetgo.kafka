@@ -10,6 +10,7 @@ import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
+import kz.greetgo.kafka.producer.ProducerFacade;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -19,7 +20,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -89,57 +93,83 @@ public class InvokerBuilder {
 
     final Class<?> gettingBodyClass = tmpGettingBodyClass;
 
+    final Set<String> usingProducerNames = new HashSet<>();
+
     return new Invoker() {
+
       @Override
-      public boolean invoke(ConsumerRecords<byte[], Box> records) {
-
-        boolean invokedOk = true;
-
-        for (ConsumerRecord<byte[], Box> record : records) {
-
-          if (!isInFilter(record)) {
-            continue;
-          }
-
-          Object[] parameters = new Object[parametersCount];
-
-          for (int i = 0; i < parametersCount; i++) {
-            parameters[i] = parameterValueReaders[i].read(record);
-          }
-
-          if (!invokeMethod(parameters)) {
-            invokedOk = false;
-          }
-
-        }
-
-        return invokedOk;
+      public Set<String> getUsingProducerNames() {
+        return usingProducerNames;
       }
 
-      private boolean invokeMethod(Object[] parameters) {
-        try {
-          method.invoke(controller, parameters);
-          return true;
-        } catch (IllegalAccessException e) {
-          if (logger.isShow(LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD)) {
-            logger.logConsumerIllegalAccessExceptionInvokingMethod(e, consumerName, controller, method);
-          }
-          return false;
-        } catch (InvocationTargetException e) {
-          Throwable error = e.getTargetException();
-          if (logger.isShow(LOG_CONSUMER_ERROR_IN_METHOD)) {
-            logger.logConsumerErrorInMethod(error, consumerName, controller, method);
+      @Override
+      public InvokeSession createSession() {
+        return new InvokeSession() {
+
+          final Map<String, ProducerFacade> producerMap = new HashMap<>();
+
+          @Override
+          public void putProducer(String producerName, ProducerFacade producer) {
+            producerMap.put(producerName, producer);
           }
 
-          for (Class<?> aClass : commitOn) {
-            if (aClass.isInstance(error)) {
+          @Override
+          public boolean invoke(ConsumerRecords<byte[], Box> records) {
+            boolean invokedOk = true;
+
+            for (ConsumerRecord<byte[], Box> record : records) {
+
+              if (!isInFilter(record)) {
+                continue;
+              }
+
+              Object[] parameters = new Object[parametersCount];
+
+              for (int i = 0; i < parametersCount; i++) {
+                parameters[i] = parameterValueReaders[i].read(record);
+              }
+
+              if (!invokeMethod(parameters)) {
+                invokedOk = false;
+              }
+
+            }
+
+            return invokedOk;
+          }
+
+          private boolean invokeMethod(Object[] parameters) {
+            try {
+              method.invoke(controller, parameters);
               return true;
+            } catch (IllegalAccessException e) {
+              if (logger.isShow(LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD)) {
+                logger.logConsumerIllegalAccessExceptionInvokingMethod(e, consumerName, controller, method);
+              }
+              return false;
+            } catch (InvocationTargetException e) {
+              Throwable error = e.getTargetException();
+              if (logger.isShow(LOG_CONSUMER_ERROR_IN_METHOD)) {
+                logger.logConsumerErrorInMethod(error, consumerName, controller, method);
+              }
+
+              for (Class<?> aClass : commitOn) {
+                if (aClass.isInstance(error)) {
+                  return true;
+                }
+              }
+
+              return false;
             }
           }
 
-          return false;
-        }
+          @Override
+          public void close() {
+            producerMap.values().forEach(ProducerFacade::reset);
+          }
+        };
       }
+
 
       boolean isInFilter(ConsumerRecord<byte[], Box> record) {
         if (!topicSet.contains(record.topic())) {

@@ -91,7 +91,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
 
   @Override
   public ProducerFacade createProducer(String producerName) {
-    return new ProducerFacade(producerName, getProducerSource());
+    return ProducerFacade.createAutoResettable(producerName, getProducerSource());
   }
 
   protected void verifyControllerList() {

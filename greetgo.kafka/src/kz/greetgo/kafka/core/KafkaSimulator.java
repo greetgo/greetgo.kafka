@@ -1,9 +1,11 @@
 package kz.greetgo.kafka.core;
 
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
+import kz.greetgo.kafka.consumer.Invoker;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.model.BoxHolder;
+import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import kz.greetgo.kafka.util.BoxUtil;
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -133,9 +136,21 @@ public class KafkaSimulator extends KafkaReactorAbstract {
       ConsumerRecords<byte[], Box> singleList = new ConsumerRecords<>(map);
 
       for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {
-        if (!consumerDefinition.invoke(singleList)) {
-          throw new RuntimeException("Cannot invoke consumer " + consumerDefinition.logDisplay()
-            + " of record " + r.value());
+
+        Invoker invoker = consumerDefinition.getInvoker();
+        Set<String> usingProducerNames = invoker.getUsingProducerNames();
+
+        try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+          for (String producerName : usingProducerNames) {
+            ProducerFacade producerFacade = ProducerFacade.createPermanent(producerName, producerSource);
+            invokeSession.putProducer(producerName, producerFacade);
+          }
+
+          if (!invokeSession.invoke(singleList)) {
+            throw new RuntimeException("Cannot invoke consumer " + consumerDefinition.logDisplay()
+              + " of record " + r.value());
+          }
         }
       }
 

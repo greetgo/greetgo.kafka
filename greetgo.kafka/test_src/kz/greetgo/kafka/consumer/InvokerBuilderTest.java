@@ -64,11 +64,19 @@ public class InvokerBuilderTest {
 
     InvokerBuilder builder = new InvokerBuilder(c1, method, null);
 
-    //
-    //
-    boolean toCommit = builder.build().invoke(records);
-    //
-    //
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(c1.authors).contains(box1.author);
     assertThat(c1.authors).contains(box2.author);
@@ -110,11 +118,21 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2));
 
-    //
-    //
-    boolean toCommit = new InvokerBuilder(c2, method, null).build().invoke(records);
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c2, method, null);
+
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(c2.model).isSameAs(model1);
     assertThat(toCommit).isTrue();
@@ -144,11 +162,20 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
 
-    //
-    //
-    boolean toCommit = new InvokerBuilder(c3, method, null).build().invoke(records);
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c3, method, null);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(c3.author).isSameAs(box.author);
     assertThat(toCommit).isTrue();
@@ -180,11 +207,20 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
 
-    //
-    //
-    boolean toCommit = new InvokerBuilder(c4, method, null).build().invoke(records);
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c4, method, null);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(c4.timestamp).isEqualTo(timestamp.getTime());
     assertThat(c4.timestampDate).isEqualTo(timestamp);
@@ -232,11 +268,20 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2, record3, record4));
 
-    //
-    //
-    boolean toCommit = new InvokerBuilder(c5, method, null).build().invoke(records);
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c5, method, null);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(c5.authors).contains(box3.author);
     assertThat(c5.authors).contains(box4.author);
@@ -274,15 +319,20 @@ public class InvokerBuilderTest {
     logger.setDestination(testLoggerDestination);
     logger.setShowLogger(LOG_CONSUMER_ERROR_IN_METHOD, true);
 
-    //
-    //
-    //
-    InvokerBuilder invokerBuilder = new InvokerBuilder(c6, method, logger);
-    Invoker invoker = invokerBuilder.build();
-    boolean toCommit = invoker.invoke(records);
-    //
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c6, method, logger);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(testLoggerDestination.errorList).hasSize(1);
     assertThat(testLoggerDestination.errorList.get(0).getMessage()).isEqualTo(c6.errorMessage);
@@ -325,11 +375,20 @@ public class InvokerBuilderTest {
     logger.setDestination(testLoggerDestination);
     logger.setShowLogger(LOG_CONSUMER_ERROR_IN_METHOD, true);
 
-    //
-    //
-    boolean toCommit = new InvokerBuilder(c7, method, logger).build().invoke(records);
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c7, method, logger);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(testLoggerDestination.errorList).hasSize(2);
     assertThat(testLoggerDestination.errorList.get(0)).isSameAs((Error1) box1.body);
@@ -362,11 +421,20 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
 
-    //
-    //
-    boolean toCommit = new InvokerBuilder(c8, method, null).build().invoke(records);
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c8, method, null);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(c8.partition).isEqualTo(partition);
     assertThat(toCommit).isTrue();
@@ -398,11 +466,20 @@ public class InvokerBuilderTest {
 
     ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
 
-    //
-    //
-    boolean toCommit = new InvokerBuilder(c9, method, null).build().invoke(records);
-    //
-    //
+    InvokerBuilder builder = new InvokerBuilder(c9, method, null);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
 
     assertThat(c9.offset).isEqualTo(offset);
     assertThat(toCommit).isTrue();
