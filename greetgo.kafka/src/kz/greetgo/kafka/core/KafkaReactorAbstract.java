@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static kz.greetgo.kafka.producer.ProducerFacadeBridge.createAutoResettableBridge;
+
 public abstract class KafkaReactorAbstract implements KafkaReactor {
   protected Supplier<String> authorGetter;
   protected EventConfigStorage consumerConfigStorage;
@@ -91,7 +93,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
 
   @Override
   public ProducerFacade createProducer(String producerName) {
-    return ProducerFacade.createAutoResettable(producerName, getProducerSource());
+    return createAutoResettableBridge(producerName, getProducerSource());
   }
 
   protected void verifyControllerList() {

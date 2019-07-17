@@ -6,6 +6,7 @@ import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.model.BoxHolder;
 import kz.greetgo.kafka.producer.ProducerFacade;
+import kz.greetgo.kafka.producer.ProducerFacadeBridge;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import kz.greetgo.kafka.util.BoxUtil;
@@ -33,6 +34,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
 import static jdk.nashorn.internal.runtime.JSType.toLong;
+import static kz.greetgo.kafka.producer.ProducerFacadeBridge.createPermanentBridge;
 
 public class KafkaSimulator extends KafkaReactorAbstract {
 
@@ -143,7 +145,7 @@ public class KafkaSimulator extends KafkaReactorAbstract {
         try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
 
           for (String producerName : usingProducerNames) {
-            ProducerFacade producerFacade = ProducerFacade.createPermanent(producerName, producerSource);
+            ProducerFacade producerFacade = createPermanentBridge(producerName, producerSource);
             invokeSession.putProducer(producerName, producerFacade);
           }
 

@@ -27,6 +27,7 @@ import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_POLL_EXCEPTIO
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_REACTOR_REFRESH;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_START_CONSUMER_WORKER;
 import static kz.greetgo.kafka.core.logger.LoggerType.SHOW_CONSUMER_WORKER_CONFIG;
+import static kz.greetgo.kafka.producer.ProducerFacadeBridge.createPermanentBridge;
 
 public class ConsumerReactorImpl implements ConsumerReactor {
 
@@ -188,7 +189,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
           try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
 
             for (String producerName : usingProducerNames) {
-              ProducerFacade producer = ProducerFacade.createPermanent(producerName, producerSource);
+              ProducerFacade producer = createPermanentBridge(producerName, producerSource);
               invokeSession.putProducer(producerName, producer);
             }
 

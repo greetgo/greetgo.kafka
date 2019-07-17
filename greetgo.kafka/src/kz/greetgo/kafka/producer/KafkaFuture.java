@@ -30,6 +30,7 @@ public class KafkaFuture {
     return source.isDone();
   }
 
+  @SuppressWarnings("UnusedReturnValue")
   public RecordMetadata awaitAndGet() {
     try {
       return source.get();
