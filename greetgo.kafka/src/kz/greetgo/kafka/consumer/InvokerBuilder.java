@@ -93,6 +93,10 @@ public class InvokerBuilder {
 
     final Set<String> usingProducerNames = new HashSet<>();
 
+    for (ParameterValueReader parameterValueReader : parameterValueReaders) {
+      usingProducerNames.addAll(parameterValueReader.getProducerNames());
+    }
+
     return new Invoker() {
 
       @Override
@@ -104,7 +108,7 @@ public class InvokerBuilder {
       public InvokeSession createSession() {
         return new InvokeSession() {
 
-          private final InvokeContext context = new InvokeContext();
+          private final InvokeSessionContext context = new InvokeSessionContext();
 
           @Override
           public void putProducer(String producerName, ProducerFacade producer) {
@@ -124,7 +128,7 @@ public class InvokerBuilder {
               Object[] parameters = new Object[parametersCount];
 
               for (int i = 0; i < parametersCount; i++) {
-                parameters[i] = parameterValueReaders[i].read(record);
+                parameters[i] = parameterValueReaders[i].read(record, context);
               }
 
               if (!invokeMethod(parameters)) {
@@ -219,22 +223,24 @@ public class InvokerBuilder {
         if (!isOfClass(parameterType, int.class) && !isOfClass(parameterType, Integer.class)) {
           throw new IllegalParameterType("Parameter with @Partition must be `int` or `Integer`");
         }
-        return ConsumerRecord::partition;
+
+        return (record, invokeSessionContext) -> record.partition();
       }
 
       if (annotation instanceof Offset) {
         if (!isOfClass(parameterType, long.class) && !isOfClass(parameterType, Long.class)) {
           throw new IllegalParameterType("Parameter with @Offset must be `long` or `Long`");
         }
-        return ConsumerRecord::offset;
+
+        return (record, invokeSessionContext) -> record.offset();
       }
 
       if (annotation instanceof Timestamp) {
         if (isOfClass(parameterType, Date.class)) {
-          return record -> new Date(record.timestamp());
+          return (record, invokeSessionContext) -> new Date(record.timestamp());
         }
         if (isOfClass(parameterType, long.class) || isOfClass(parameterType, Long.class)) {
-          return ConsumerRecord::timestamp;
+          return (record, invokeSessionContext) -> record.timestamp();
         }
 
         throw new IllegalParameterType("Parameter with @Offset must be `long` or `Long` or `java.util.Date`");
@@ -245,17 +251,20 @@ public class InvokerBuilder {
           throw new IllegalParameterType("Parameter with @Author must be `String`");
         }
 
-        return record -> record.value().author;
+        return (record, invokeSessionContext) -> record.value().author;
       }
     }
 
     if (isOfClass(parameterType, Box.class)) {
-      return ConsumerRecord::value;
+      return (record, invokeSessionContext) -> record.value();
     }
 
+    //TODO seyit
+
     return new ParameterValueReader() {
+
       @Override
-      public Object read(ConsumerRecord<byte[], Box> record) {
+      public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
         return record.value().body;
       }
 
