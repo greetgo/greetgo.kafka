@@ -1,15 +1,14 @@
 package kz.greetgo.kafka.consumer;
 
-import kz.greetgo.kafka.consumer.annotations.Author;
-import kz.greetgo.kafka.consumer.annotations.ConsumerName;
-import kz.greetgo.kafka.consumer.annotations.KafkaCommitOn;
-import kz.greetgo.kafka.consumer.annotations.Offset;
-import kz.greetgo.kafka.consumer.annotations.Partition;
-import kz.greetgo.kafka.consumer.annotations.Timestamp;
-import kz.greetgo.kafka.consumer.annotations.Topic;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import kz.greetgo.kafka.consumer.annotations.*;
+import kz.greetgo.kafka.core.KafkaReactor;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
+import kz.greetgo.kafka.producer.KafkaFuture;
+import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -17,12 +16,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_ERROR_IN_METHOD;
@@ -67,6 +64,11 @@ public class InvokerBuilder {
     }
     final Class<?>[] commitOn = tmpCommitOn;
 
+    InnerProducerName parentProducerName = method.getAnnotation(InnerProducerName.class);
+    if (parentProducerName == null) {
+      parentProducerName = controller.getClass().getAnnotation(InnerProducerName.class);
+    }
+
     final Set<String> topicSet = Arrays.stream(topic.value()).collect(Collectors.toSet());
 
     Type[] parameterTypes = method.getGenericParameterTypes();
@@ -78,7 +80,7 @@ public class InvokerBuilder {
     ParameterValueReader[] parameterValueReaders = new ParameterValueReader[parametersCount];
 
     for (int i = 0; i < parametersCount; i++) {
-      parameterValueReaders[i] = createParameterValueReader(parameterTypes[i], parameterAnnotations[i]);
+      parameterValueReaders[i] = createParameterValueReader(parameterTypes[i], parameterAnnotations[i], parentProducerName);
     }
 
     Class<?> tmpGettingBodyClass = null;
@@ -119,6 +121,8 @@ public class InvokerBuilder {
           public boolean invoke(ConsumerRecords<byte[], Box> records) {
             boolean invokedOk = true;
 
+            List<KafkaFuture> kafkaFutures = Lists.newArrayList();
+
             for (ConsumerRecord<byte[], Box> record : records) {
 
               if (!isInFilter(record)) {
@@ -135,7 +139,13 @@ public class InvokerBuilder {
                 invokedOk = false;
               }
 
+              for (int i = 0; i < parametersCount; i++) {
+                kafkaFutures.addAll(parameterValueReaders[i].getKafkaFutures());
+              }
+
             }
+
+            kafkaFutures.forEach(KafkaFuture::awaitAndGet);
 
             return invokedOk;
           }
@@ -215,7 +225,10 @@ public class InvokerBuilder {
     };
   }
 
-  private ParameterValueReader createParameterValueReader(Type parameterType, Annotation[] parameterAnnotations) {
+  private ParameterValueReader createParameterValueReader(Type parameterType, Annotation[] parameterAnnotations, InnerProducerName producerName) {
+
+    ToTopic toTopic = null;
+    AtomicReference<String> finalProducerName = new AtomicReference<>(KafkaReactor.DEFAULT_INNER_PRODUCER_NAME);
 
     for (Annotation annotation : parameterAnnotations) {
 
@@ -253,13 +266,133 @@ public class InvokerBuilder {
 
         return (record, invokeSessionContext) -> record.value().author;
       }
+
+      if (annotation instanceof InnerProducerName) {
+        producerName = (InnerProducerName) annotation;
+      }
+
+      if (annotation instanceof ToTopic) {
+        toTopic = (ToTopic) annotation;
+      }
     }
 
     if (isOfClass(parameterType, Box.class)) {
       return (record, invokeSessionContext) -> record.value();
     }
 
-    //TODO seyit
+    if (isOfClass(parameterType, InnerProducerSender.class)) {
+      if (producerName != null) {
+        finalProducerName.set(producerName.value());
+      }
+
+      return new ParameterValueReader() {
+
+        private List<KafkaFuture> kafkaFutures = Lists.newArrayList();
+
+        @Override
+        public Set<String> getProducerNames() {
+          return Sets.newHashSet(finalProducerName.get());
+        }
+
+        @Override
+        public List<KafkaFuture> getKafkaFutures() {
+          return kafkaFutures;
+        }
+
+        @Override
+        public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
+          return new InnerProducerSender() {
+            @Override
+            public Sending sending(Object model) {
+              return new Sending() {
+                private KafkaSending kafkaSending = invokeSessionContext.getProducer(finalProducerName.get())
+                    .sending(model);
+
+                @Override
+                public Sending toTopic(String topic) {
+                  kafkaSending.toTopic(topic);
+                  return this;
+                }
+
+                @Override
+                public Sending toPartition(int partition) {
+                  kafkaSending.toPartition(partition);
+                  return this;
+                }
+
+                @Override
+                public Sending setTimestamp(Long timestamp) {
+                  kafkaSending.setTimestamp(timestamp);
+                  return this;
+                }
+
+                @Override
+                public Sending addHeader(String key, byte[] value) {
+                  kafkaSending.addHeader(key, value);
+                  return this;
+                }
+
+                @Override
+                public Sending addConsumerToIgnore(String consumerName) {
+                  kafkaSending.addConsumerToIgnore(consumerName);
+                  return this;
+                }
+
+                @Override
+                public Sending setAuthor(String author) {
+                  kafkaSending.setAuthor(author);
+                  return this;
+                }
+
+                @Override
+                public void go() {
+                  kafkaFutures.add(kafkaSending.go());
+                }
+              };
+            }
+
+
+          };
+        }
+      };
+    }
+
+    if (isOfClass(parameterType, InnerProducer.class)) {
+      if (producerName != null) {
+        finalProducerName.set(producerName.value());
+      }
+
+      if (toTopic == null) {
+        throw new IllegalStateException("No annotation ToTopic for parameter " + parameterType);
+      }
+
+      ToTopic finalToTopic = toTopic;
+
+      return new ParameterValueReader() {
+
+        private List<KafkaFuture> kafkaFutures = Lists.newArrayList();
+
+        @Override
+        public Set<String> getProducerNames() {
+          return Sets.newHashSet(finalProducerName.get());
+        }
+
+        @Override
+        public List<KafkaFuture> getKafkaFutures() {
+          return kafkaFutures;
+        }
+
+        @Override
+        public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
+          return (InnerProducer) model -> {
+            kafkaFutures.add(invokeSessionContext.getProducer(finalProducerName.get())
+                .sending(model)
+                .toTopic(finalToTopic.value())
+                .go());
+          };
+        }
+      };
+    }
 
     return new ParameterValueReader() {
 

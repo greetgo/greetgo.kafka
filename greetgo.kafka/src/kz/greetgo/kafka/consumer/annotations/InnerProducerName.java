@@ -19,6 +19,6 @@ public @interface InnerProducerName {
   /**
    * @return producer name
    */
-  String[] value();
+  String value();
 
 }

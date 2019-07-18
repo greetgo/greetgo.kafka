@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class InvokerBuilderTest_InnerProducers {
     final List<InputModel> inputModelList = new ArrayList<>();
     final LinkedList<OutputModel> outputModelList = new LinkedList<>();
 
-    @Topic({"test1", "test2"})
+    @Topic({"test1", "test2", "test3"})
     @SuppressWarnings("unused")
     public void consumerMethod(InputModel inputModel,
                                @ToTopic("outTest")
@@ -103,9 +104,7 @@ public class InvokerBuilderTest_InnerProducers {
 
     assertThat(toCommit).isTrue();
 
-    assertThat(controller.inputModelList.get(0)).isEqualTo(inputModel1);
-    assertThat(controller.inputModelList.get(1)).isEqualTo(inputModel2);
-    assertThat(controller.inputModelList.get(2)).isEqualTo(inputModel3);
+    assertThat(controller.inputModelList).containsAll(Arrays.asList(inputModel1, inputModel2, inputModel3));
     assertThat(controller.inputModelList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).model).isEqualTo(outputModel1);
@@ -201,9 +200,7 @@ public class InvokerBuilderTest_InnerProducers {
 
     assertThat(toCommit).isTrue();
 
-    assertThat(c.inputModelList.get(0)).isEqualTo(inputModel1);
-    assertThat(c.inputModelList.get(1)).isEqualTo(inputModel2);
-    assertThat(c.inputModelList.get(2)).isEqualTo(inputModel3);
+    assertThat(c.inputModelList).containsAll(Arrays.asList(inputModel1, inputModel2, inputModel3));
     assertThat(c.inputModelList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).model).isEqualTo(outputModel1);
@@ -299,9 +296,7 @@ public class InvokerBuilderTest_InnerProducers {
 
     assertThat(toCommit).isTrue();
 
-    assertThat(controller.inputModelList.get(0)).isEqualTo(inputModel1);
-    assertThat(controller.inputModelList.get(1)).isEqualTo(inputModel2);
-    assertThat(controller.inputModelList.get(2)).isEqualTo(inputModel3);
+    assertThat(controller.inputModelList).containsAll(Arrays.asList(inputModel1, inputModel2, inputModel3));
     assertThat(controller.inputModelList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).model).isEqualTo(outputModel1);
