@@ -1,16 +1,23 @@
 package kz.greetgo.kafka.consumer;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import kz.greetgo.kafka.consumer.annotations.*;
+import kz.greetgo.kafka.consumer.annotations.Author;
+import kz.greetgo.kafka.consumer.annotations.ConsumerName;
+import kz.greetgo.kafka.consumer.annotations.InnerProducerName;
+import kz.greetgo.kafka.consumer.annotations.KafkaCommitOn;
+import kz.greetgo.kafka.consumer.annotations.Offset;
+import kz.greetgo.kafka.consumer.annotations.Partition;
+import kz.greetgo.kafka.consumer.annotations.Timestamp;
+import kz.greetgo.kafka.consumer.annotations.ToTopic;
+import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.consumer.parameters.InnerProducerSenderValueReader;
 import kz.greetgo.kafka.consumer.parameters.InnerProducerValueReader;
 import kz.greetgo.kafka.core.KafkaReactor;
 import kz.greetgo.kafka.core.logger.Logger;
+import kz.greetgo.kafka.errors.AbsentAnnotationToTopicOverInnerProducer;
 import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.KafkaFuture;
-import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -18,9 +25,12 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -227,7 +237,11 @@ public class InvokerBuilder {
     };
   }
 
-  private ParameterValueReader createParameterValueReader(Type parameterType, Annotation[] parameterAnnotations, InnerProducerName producerName) {
+  private ParameterValueReader createParameterValueReader(Type parameterType,
+                                                          Annotation[] parameterAnnotations,
+                                                          InnerProducerName parentProducerName) {
+
+    InnerProducerName producerName = parentProducerName;
 
     ToTopic toTopic = null;
     AtomicReference<String> finalProducerName = new AtomicReference<>(KafkaReactor.DEFAULT_INNER_PRODUCER_NAME);
@@ -296,12 +310,10 @@ public class InvokerBuilder {
       }
 
       if (toTopic == null) {
-        throw new IllegalParameterType("No annotation ToTopic for parameter " + parameterType);
+        throw new AbsentAnnotationToTopicOverInnerProducer();
       }
 
-      ToTopic finalToTopic = toTopic;
-
-      return new InnerProducerValueReader(finalProducerName.get(), finalToTopic.value());
+      return new InnerProducerValueReader(finalProducerName.get(), toTopic.value());
     }
 
     return new ParameterValueReader() {

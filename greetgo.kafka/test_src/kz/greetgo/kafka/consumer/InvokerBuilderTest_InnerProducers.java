@@ -6,7 +6,7 @@ import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.consumer.test_models.InputModel;
 import kz.greetgo.kafka.consumer.test_models.OutputModel;
 import kz.greetgo.kafka.core.KafkaReactor;
-import kz.greetgo.kafka.errors.IllegalParameterType;
+import kz.greetgo.kafka.errors.AbsentAnnotationToTopicOverInnerProducer;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.util_for_tests.TestProducerFacade;
 import kz.greetgo.util.RND;
@@ -16,7 +16,6 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -420,8 +419,8 @@ public class InvokerBuilderTest_InnerProducers {
 
   }
 
-  @Test(expectedExceptions = IllegalParameterType.class)
-  public void build_invoke__InnerProducer__withouttotopic() {
+  @Test(expectedExceptions = AbsentAnnotationToTopicOverInnerProducer.class)
+  public void build_invoke__InnerProducer__withoutToTopic() {
     C6 controller = new C6();
     Method method = findMethod(controller, "consumerMethod");
 
