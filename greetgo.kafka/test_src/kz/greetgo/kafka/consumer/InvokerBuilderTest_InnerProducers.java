@@ -129,7 +129,7 @@ public class InvokerBuilderTest_InnerProducers {
     final List<InputModel> inputModelList = new ArrayList<>();
     final LinkedList<OutputModel> outputModelList = new LinkedList<>();
 
-    @Topic({"test1", "test2"})
+    @Topic({"test1", "test2", "test3"})
     @SuppressWarnings("unused")
     public void consumerMethod(InputModel inputModel,
                                @InnerProducerName("test_producer2")
@@ -225,7 +225,7 @@ public class InvokerBuilderTest_InnerProducers {
     final List<InputModel> inputModelList = new ArrayList<>();
     final LinkedList<OutputModel> outputModelList = new LinkedList<>();
 
-    @Topic({"test1", "test2"})
+    @Topic({"test1", "test2", "test3"})
     @SuppressWarnings("unused")
     public void consumerMethod(InputModel inputModel,
                                @ToTopic("outTest3")
@@ -368,7 +368,7 @@ public class InvokerBuilderTest_InnerProducers {
 
   @Test
   public void build_invoke__InnerProducer__innerProducerNameFromClass() {
-    C4 controller = new C4();
+    C5 controller = new C5();
     Method method = findMethod(controller, "consumerMethod");
 
     InvokerBuilder builder = new InvokerBuilder(controller, method, null);
@@ -377,5 +377,33 @@ public class InvokerBuilderTest_InnerProducers {
 
     assertThat(invoker.getUsingProducerNames()).containsExactly("test_producer_5423");
   }
+
+  @InnerProducerName("test_producer_5423")
+  public static class C6 {
+
+    final List<InputModel> inputModelList = new ArrayList<>();
+    final LinkedList<OutputModel> outputModelList = new LinkedList<>();
+
+    @Topic({"test1", "test2"})
+    @SuppressWarnings("unused")
+    public void consumerMethod(InputModel inputModel,
+                                   InnerProducer<OutputModel> producer
+    ) {
+      inputModelList.add(inputModel);
+      producer.send(outputModelList.removeLast());
+    }
+
+  }
+
+  @Test(expectedExceptions = IllegalStateException.class)
+  public void build_invoke__InnerProducer__withouttotopic() {
+    C6 controller = new C6();
+    Method method = findMethod(controller, "consumerMethod");
+
+    InvokerBuilder builder = new InvokerBuilder(controller, method, null);
+
+    builder.build();
+  }
+
 
 }
