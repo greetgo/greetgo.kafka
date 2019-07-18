@@ -50,6 +50,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       consumerReactor.bootstrapServers = bootstrapServers;
       consumerReactor.configStorage = consumerConfigStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
+      consumerReactor.producerSource = getProducerSource();
       consumerReactor.hostId = hostId;
       consumerReactor.consumerConfigDefaults = () -> consumerConfigDefaults;
       consumerReactor.start();
