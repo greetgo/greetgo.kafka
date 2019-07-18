@@ -6,6 +6,7 @@ import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.consumer.test_models.InputModel;
 import kz.greetgo.kafka.consumer.test_models.OutputModel;
 import kz.greetgo.kafka.core.KafkaReactor;
+import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.util_for_tests.TestProducerFacade;
 import kz.greetgo.util.RND;
@@ -32,7 +33,7 @@ public class InvokerBuilderTest_InnerProducers {
     final List<InputModel> inputModelList = new ArrayList<>();
     final LinkedList<OutputModel> outputModelList = new LinkedList<>();
 
-    @Topic({"test1", "test2", "test3"})
+    @Topic({"test1"})
     @SuppressWarnings("unused")
     public void consumerMethod(InputModel inputModel,
                                @ToTopic("outTest")
@@ -40,7 +41,7 @@ public class InvokerBuilderTest_InnerProducers {
                                  InnerProducer<OutputModel> producer
     ) {
       inputModelList.add(inputModel);
-      producer.send(outputModelList.removeLast());
+      producer.send(outputModelList.removeFirst());
     }
 
   }
@@ -75,8 +76,8 @@ public class InvokerBuilderTest_InnerProducers {
     box3.body = inputModel3;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
-    ConsumerRecord<byte[], Box> record2 = recordOf("test2", new byte[0], box2);
-    ConsumerRecord<byte[], Box> record3 = recordOf("test3", new byte[0], box3);
+    ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
+    ConsumerRecord<byte[], Box> record3 = recordOf("test1", new byte[0], box3);
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2, record3));
 
@@ -104,7 +105,9 @@ public class InvokerBuilderTest_InnerProducers {
 
     assertThat(toCommit).isTrue();
 
-    assertThat(controller.inputModelList).containsAll(Arrays.asList(inputModel1, inputModel2, inputModel3));
+    assertThat(controller.inputModelList.get(0)).isEqualTo(inputModel1);
+    assertThat(controller.inputModelList.get(1)).isEqualTo(inputModel2);
+    assertThat(controller.inputModelList.get(2)).isEqualTo(inputModel3);
     assertThat(controller.inputModelList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).model).isEqualTo(outputModel1);
@@ -115,8 +118,14 @@ public class InvokerBuilderTest_InnerProducers {
     assertThat(testProducer.sentList.get(0).awaitAndGetIndex)
       .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
+    assertThat(testProducer.sentList.get(1).awaitAndGetIndex)
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+
     assertThat(testProducer.sentList.get(2).awaitAndGetIndex)
-      .isGreaterThan(testProducer.lastResetIndex);
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+
+    assertThat(testProducer.lastResetIndex)
+      .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
 
     assertThat(testProducer.sentList.get(0).topic).isEqualTo("outTest");
     assertThat(testProducer.sentList.get(1).topic).isEqualTo("outTest");
@@ -129,14 +138,14 @@ public class InvokerBuilderTest_InnerProducers {
     final List<InputModel> inputModelList = new ArrayList<>();
     final LinkedList<OutputModel> outputModelList = new LinkedList<>();
 
-    @Topic({"test1", "test2", "test3"})
+    @Topic({"test1"})
     @SuppressWarnings("unused")
     public void consumerMethod(InputModel inputModel,
                                @InnerProducerName("test_producer2")
                                  InnerProducerSender producer
     ) {
       inputModelList.add(inputModel);
-      producer.sending(outputModelList.removeLast()).toTopic("super_topic").go();
+      producer.sending(outputModelList.removeFirst()).toTopic("super_topic").go();
     }
 
   }
@@ -171,8 +180,8 @@ public class InvokerBuilderTest_InnerProducers {
     box3.body = inputModel3;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
-    ConsumerRecord<byte[], Box> record2 = recordOf("test2", new byte[0], box2);
-    ConsumerRecord<byte[], Box> record3 = recordOf("test3", new byte[0], box3);
+    ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
+    ConsumerRecord<byte[], Box> record3 = recordOf("test1", new byte[0], box3);
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2, record3));
 
@@ -200,7 +209,9 @@ public class InvokerBuilderTest_InnerProducers {
 
     assertThat(toCommit).isTrue();
 
-    assertThat(c.inputModelList).containsAll(Arrays.asList(inputModel1, inputModel2, inputModel3));
+    assertThat(c.inputModelList.get(0)).isEqualTo(inputModel1);
+    assertThat(c.inputModelList.get(1)).isEqualTo(inputModel2);
+    assertThat(c.inputModelList.get(2)).isEqualTo(inputModel3);
     assertThat(c.inputModelList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).model).isEqualTo(outputModel1);
@@ -209,10 +220,16 @@ public class InvokerBuilderTest_InnerProducers {
     assertThat(testProducer.sentList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).awaitAndGetIndex)
-      .isGreaterThan(testProducer.sentList.get(2).goIndex);
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+
+    assertThat(testProducer.sentList.get(1).awaitAndGetIndex)
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(2).awaitAndGetIndex)
-      .isGreaterThan(testProducer.lastResetIndex);
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+
+    assertThat(testProducer.lastResetIndex)
+        .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
 
     assertThat(testProducer.sentList.get(0).topic).isEqualTo("super_topic");
     assertThat(testProducer.sentList.get(1).topic).isEqualTo("super_topic");
@@ -225,14 +242,14 @@ public class InvokerBuilderTest_InnerProducers {
     final List<InputModel> inputModelList = new ArrayList<>();
     final LinkedList<OutputModel> outputModelList = new LinkedList<>();
 
-    @Topic({"test1", "test2", "test3"})
+    @Topic({"test1"})
     @SuppressWarnings("unused")
     public void consumerMethod(InputModel inputModel,
                                @ToTopic("outTest3")
                                  InnerProducer<OutputModel> producer
     ) {
       inputModelList.add(inputModel);
-      producer.send(outputModelList.removeLast());
+      producer.send(outputModelList.removeFirst());
     }
 
   }
@@ -267,8 +284,8 @@ public class InvokerBuilderTest_InnerProducers {
     box3.body = inputModel3;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
-    ConsumerRecord<byte[], Box> record2 = recordOf("test2", new byte[0], box2);
-    ConsumerRecord<byte[], Box> record3 = recordOf("test3", new byte[0], box3);
+    ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
+    ConsumerRecord<byte[], Box> record3 = recordOf("test1", new byte[0], box3);
 
     ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2, record3));
 
@@ -296,7 +313,9 @@ public class InvokerBuilderTest_InnerProducers {
 
     assertThat(toCommit).isTrue();
 
-    assertThat(controller.inputModelList).containsAll(Arrays.asList(inputModel1, inputModel2, inputModel3));
+    assertThat(controller.inputModelList.get(0)).isEqualTo(inputModel1);
+    assertThat(controller.inputModelList.get(1)).isEqualTo(inputModel2);
+    assertThat(controller.inputModelList.get(2)).isEqualTo(inputModel3);
     assertThat(controller.inputModelList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).model).isEqualTo(outputModel1);
@@ -305,10 +324,16 @@ public class InvokerBuilderTest_InnerProducers {
     assertThat(testProducer.sentList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).awaitAndGetIndex)
-      .isGreaterThan(testProducer.sentList.get(2).goIndex);
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+
+    assertThat(testProducer.sentList.get(1).awaitAndGetIndex)
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(2).awaitAndGetIndex)
-      .isGreaterThan(testProducer.lastResetIndex);
+        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+
+    assertThat(testProducer.lastResetIndex)
+        .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
 
     assertThat(testProducer.sentList.get(0).topic).isEqualTo("outTest3");
     assertThat(testProducer.sentList.get(1).topic).isEqualTo("outTest3");
@@ -321,7 +346,7 @@ public class InvokerBuilderTest_InnerProducers {
     final List<InputModel> inputModelList = new ArrayList<>();
     final LinkedList<OutputModel> outputModelList = new LinkedList<>();
 
-    @Topic({"test1", "test2"})
+    @Topic({"test1"})
     @SuppressWarnings("unused")
     @InnerProducerName("test_producer_777")
     public void consumerMethod(InputModel inputModel,
@@ -329,7 +354,7 @@ public class InvokerBuilderTest_InnerProducers {
                                  InnerProducer<OutputModel> producer
     ) {
       inputModelList.add(inputModel);
-      producer.send(outputModelList.removeLast());
+      producer.send(outputModelList.removeFirst());
     }
 
   }
@@ -361,7 +386,7 @@ public class InvokerBuilderTest_InnerProducers {
                                  InnerProducer<OutputModel> producer
     ) {
       inputModelList.add(inputModel);
-      producer.send(outputModelList.removeLast());
+      producer.send(outputModelList.removeFirst());
     }
 
   }
@@ -390,12 +415,12 @@ public class InvokerBuilderTest_InnerProducers {
                                    InnerProducer<OutputModel> producer
     ) {
       inputModelList.add(inputModel);
-      producer.send(outputModelList.removeLast());
+      producer.send(outputModelList.removeFirst());
     }
 
   }
 
-  @Test(expectedExceptions = IllegalStateException.class)
+  @Test(expectedExceptions = IllegalParameterType.class)
   public void build_invoke__InnerProducer__withouttotopic() {
     C6 controller = new C6();
     Method method = findMethod(controller, "consumerMethod");

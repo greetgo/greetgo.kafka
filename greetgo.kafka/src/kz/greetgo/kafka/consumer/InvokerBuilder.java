@@ -363,7 +363,7 @@ public class InvokerBuilder {
       }
 
       if (toTopic == null) {
-        throw new IllegalStateException("No annotation ToTopic for parameter " + parameterType);
+        throw new IllegalParameterType("No annotation ToTopic for parameter " + parameterType);
       }
 
       ToTopic finalToTopic = toTopic;
