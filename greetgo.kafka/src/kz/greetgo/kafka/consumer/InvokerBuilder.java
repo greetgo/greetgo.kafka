@@ -3,6 +3,8 @@ package kz.greetgo.kafka.consumer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import kz.greetgo.kafka.consumer.annotations.*;
+import kz.greetgo.kafka.consumer.parameters.InnerProducerSenderValueReader;
+import kz.greetgo.kafka.consumer.parameters.InnerProducerValueReader;
 import kz.greetgo.kafka.core.KafkaReactor;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.errors.IllegalParameterType;
@@ -285,76 +287,7 @@ public class InvokerBuilder {
         finalProducerName.set(producerName.value());
       }
 
-      return new ParameterValueReader() {
-
-        private List<KafkaFuture> kafkaFutures = Lists.newArrayList();
-
-        @Override
-        public Set<String> getProducerNames() {
-          return Sets.newHashSet(finalProducerName.get());
-        }
-
-        @Override
-        public List<KafkaFuture> getKafkaFutures() {
-          return kafkaFutures;
-        }
-
-        @Override
-        public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
-          return new InnerProducerSender() {
-            @Override
-            public Sending sending(Object model) {
-              return new Sending() {
-                private KafkaSending kafkaSending = invokeSessionContext.getProducer(finalProducerName.get())
-                    .sending(model);
-
-                @Override
-                public Sending toTopic(String topic) {
-                  kafkaSending.toTopic(topic);
-                  return this;
-                }
-
-                @Override
-                public Sending toPartition(int partition) {
-                  kafkaSending.toPartition(partition);
-                  return this;
-                }
-
-                @Override
-                public Sending setTimestamp(Long timestamp) {
-                  kafkaSending.setTimestamp(timestamp);
-                  return this;
-                }
-
-                @Override
-                public Sending addHeader(String key, byte[] value) {
-                  kafkaSending.addHeader(key, value);
-                  return this;
-                }
-
-                @Override
-                public Sending addConsumerToIgnore(String consumerName) {
-                  kafkaSending.addConsumerToIgnore(consumerName);
-                  return this;
-                }
-
-                @Override
-                public Sending setAuthor(String author) {
-                  kafkaSending.setAuthor(author);
-                  return this;
-                }
-
-                @Override
-                public void go() {
-                  kafkaFutures.add(kafkaSending.go());
-                }
-              };
-            }
-
-
-          };
-        }
-      };
+      return new InnerProducerSenderValueReader(finalProducerName.get());
     }
 
     if (isOfClass(parameterType, InnerProducer.class)) {
@@ -368,30 +301,7 @@ public class InvokerBuilder {
 
       ToTopic finalToTopic = toTopic;
 
-      return new ParameterValueReader() {
-
-        private List<KafkaFuture> kafkaFutures = Lists.newArrayList();
-
-        @Override
-        public Set<String> getProducerNames() {
-          return Sets.newHashSet(finalProducerName.get());
-        }
-
-        @Override
-        public List<KafkaFuture> getKafkaFutures() {
-          return kafkaFutures;
-        }
-
-        @Override
-        public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
-          return (InnerProducer) model -> {
-            kafkaFutures.add(invokeSessionContext.getProducer(finalProducerName.get())
-                .sending(model)
-                .toTopic(finalToTopic.value())
-                .go());
-          };
-        }
-      };
+      return new InnerProducerValueReader(finalProducerName.get(), finalToTopic.value());
     }
 
     return new ParameterValueReader() {
