@@ -4,4 +4,6 @@ dependencies {
 
   compile "kz.greetgo.class_scanner:greetgo.class_scanner:2.0.3"
 
+  compile group: 'org.postgresql', name: 'postgresql', version: '9.4-1202-jdbc42'
+  compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.1.1'
 }

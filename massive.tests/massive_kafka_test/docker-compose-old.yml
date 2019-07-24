@@ -175,8 +175,7 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
-      #      KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
-      KAFKA_OPTS: "-javaagent:/configs/kafka-2/jmx_prometheus_javaagent-0.6.jar=7071:/configs/kafka-2/javaagent-kafka-0-8-2.yml"
+      KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
@@ -189,19 +188,15 @@ services:
     environment:
       ZK_HOSTS: "zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183"
       APPLICATION_SECRET: "letmein"
-    restart: always
 
   prometheus:
     image: prom/prometheus:v2.10.0
     volumes:
       - "./persistent/prometheus:/prometheus"
       - "./configs/etc_prometheus:/etc/prometheus"
-    user: root
-    restart: always
 
   kafka-exporter:
     image: danielqsj/kafka-exporter
-    restart: always
     command:
       - "--kafka.server=kafka-1:9091"
       - "--kafka.server=kafka-2:9092"
@@ -210,7 +205,6 @@ services:
 
   grafana:
     image: grafana/grafana:5.4.3
-    restart: always
     ports:
       - "3000:3000"
     volumes:

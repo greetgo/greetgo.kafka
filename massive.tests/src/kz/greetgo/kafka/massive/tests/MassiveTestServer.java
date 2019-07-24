@@ -1,92 +1,130 @@
 package kz.greetgo.kafka.massive.tests;
 
 import kz.greetgo.kafka.consumer.ConsumerConfigDefaults;
+import kz.greetgo.kafka.consumer.InnerProducer;
 import kz.greetgo.kafka.consumer.annotations.ConsumerName;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
+import kz.greetgo.kafka.consumer.annotations.ToTopic;
 import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.KafkaReactorImpl;
 import kz.greetgo.kafka.core.config.EventConfigStorageZooKeeper;
 import kz.greetgo.kafka.core.logger.LoggerType;
 import kz.greetgo.kafka.massive.tests.model.Client;
-import kz.greetgo.kafka.producer.KafkaFuture;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.util.ConfigLines;
 import kz.greetgo.util.RND;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
-import static kz.greetgo.kafka.massive.tests.TimeUtil.nanosRead;
 
 public class MassiveTestServer {
+  private static ConcurrentHashMap<Long, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<Long, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
+
+  private static final AtomicBoolean printClientToStdout = new AtomicBoolean(false);
+  private static final AtomicBoolean generateErrors = new AtomicBoolean(false);
+
+  static DataSource dataSource;
+
+  static {
+    BasicDataSource pool = new BasicDataSource();
+
+    pool.setDriverClassName("org.postgresql.Driver");
+    pool.setUrl("jdbc:postgresql://localhost:5432/kafka_test");
+    pool.setUsername("kafka");
+    pool.setPassword("111");
+
+    pool.setInitialSize(0);
+
+    dataSource = pool;
+  }
 
   public static class Consumers {
-    private final Path workingDir;
-
-    public Consumers(Path workingDir) {
-      this.workingDir = workingDir;
-    }
 
     private final ConcurrentHashMap<String, String> errors = new ConcurrentHashMap<>();
 
+    @GroupId("asd-1")
     @Topic("CLIENT")
     @ConsumerName("CLIENT")
-    @GroupId("asd")
-    public void readClient(Client client) {
+    public void readClient(Client client,
+                           @ToTopic("CLIENT-OUT")
+                             InnerProducer<Client> clientProducer) {
+
+      long second = System.nanoTime() / 1000_000_000L;
+      increment(readClientRuns, second);
+
       if ("ok".equals(client.name)) {
-        printClient(client);
+        client.name = RND.str(10);
+        clientProducer.send(client);
         return;
       }
 
-      if (errors.containsKey(client.id)) {
-        printClient(client);
+      if (!generateErrors.get() || errors.containsKey(client.id)) {
+        client.name = RND.str(10);
+        clientProducer.send(client);
         return;
       }
 
       errors.put(client.id, "1");
 
-      System.out.println("rv35hvg345 ERROR THROWS");
+      System.out.println("rv35hvg345 :: ERROR THROWS");
       throw new RuntimeException("ERROR");
 
     }
 
-    private void printClient(Client client) {
-      Path come = workingDir.resolve("come");
-      come.toFile().mkdirs();
-      Path file = come.resolve(client.id);
-      if (!Files.exists(file)) {
-        createFile(file);
-      } else {
-        for (int i = 2; ; i++) {
-          Path f = come.resolve(client.id + "-" + i);
-          if (!Files.exists(f)) {
-            createFile(f);
-            break;
-          }
+    final AtomicLong sleepClientOut = new AtomicLong(200);
+
+    @Topic("CLIENT-OUT")
+    @ConsumerName("CLIENT-OUT")
+    @GroupId("asd-out")
+    public void readClientOut(Client client) throws Exception {
+      long second = System.nanoTime() / 1000_000_000L;
+      increment(readClientOutRuns, second);
+      insertClient("CLIENT-OUT", client);
+      Thread.sleep(sleepClientOut.get());
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void insertClient(String consumerName, Client client) throws SQLException {
+
+      try (Connection connection = dataSource.getConnection()) {
+
+        try (PreparedStatement ps = connection.prepareStatement(
+          "insert into client_id (id, consumer_name) values (?, ?)")
+        ) {
+          ps.setString(1, client.id);
+          ps.setString(2, consumerName);
+          ps.executeUpdate();
         }
+
       }
 
-      System.out.println("Come client " + client + " from " + Thread.currentThread().getName());
-    }
-  }
+      if (printClientToStdout.get()) {
+        System.out.println("Come client " + client + " from " + Thread.currentThread().getName());
+      }
 
-  private static void createFile(Path pathToFile) {
-    try {
-      pathToFile.toFile().createNewFile();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -99,8 +137,6 @@ public class MassiveTestServer {
     Files.createDirectories(workingDir);
 
     Path workingFile = workingDir.resolve("working.file");
-    Path clientExistsFile = workingDir.resolve("exists").resolve("client-exists.file");
-    Files.createDirectories(clientExistsFile.resolve("..").normalize());
 
     workingFile.toFile().createNewFile();
 
@@ -112,17 +148,26 @@ public class MassiveTestServer {
 
     try (AdminClient adminClient = KafkaAdminClient.create(conf)) {
 
+      Path existsDir = workingDir.resolve("exists");
+      existsDir.toFile().mkdirs();
+
+      Path clientExistsFile = existsDir.resolve("CLIENT");
       if (!clientExistsFile.toFile().exists()) {
         NewTopic newTopic = new NewTopic("CLIENT", 480, (short) 2);
-
         adminClient.createTopics(singletonList(newTopic)).all();
-
         clientExistsFile.toFile().createNewFile();
+      }
+
+      Path clientOutExistsFile = existsDir.resolve("CLIENT-OUT");
+      if (!clientOutExistsFile.toFile().exists()) {
+        NewTopic newTopic = new NewTopic("CLIENT-OUT", 480, (short) 2);
+        adminClient.createTopics(singletonList(newTopic)).all();
+        clientOutExistsFile.toFile().createNewFile();
       }
 
     }
 
-    Consumers consumers = new Consumers(workingDir);
+    Consumers consumers = new Consumers();
 
     KafkaReactorImpl reactor = createReactor(kafkaServers, zookeeperServers);
 
@@ -139,81 +184,43 @@ public class MassiveTestServer {
 
       System.out.println("Start waiting process");
 
-      Path insertClientPortionFile = workingDir.resolve("insert-client-portion");
+      LongParameter portion = new LongParameter(workingDir, "portion", 300L);
+      LongParameter portionCount = new LongParameter(workingDir, "portionCount", 3L);
+      LongParameter sleepClientOut = new LongParameter(workingDir, "sleepClientOut", consumers.sleepClientOut);
 
-      Path insertClientPortionFileParallel = workingDir.resolve("insert-client-portion-parallel");
+      BoolParameter printClientToStdoutP = new BoolParameter(workingDir, "printClientToStdout", printClientToStdout);
+      BoolParameter generateErrorsP = new BoolParameter(workingDir, "generateErrors", generateErrors);
 
-      insertClientPortionFile.toFile().createNewFile();
-      insertClientPortionFileParallel.toFile().createNewFile();
+      BoolParameter insertClientPortionParallel = new BoolParameter(workingDir, "insertClientPortionParallel", true);
+      Command insertClientPortion = new Command(workingDir, "insertClientPortion");
 
-      Path setPortion300 = workingDir.resolve("setPortion300");
-      Path setPortion3000 = workingDir.resolve("setPortion3000");
-      Path setPortion30000 = workingDir.resolve("setPortion30000");
+      ClientPortionInserting clientPortionInserting = new ClientPortionInserting(
+        portion, portionCount, mainProducer, insertClientPortionParallel
+      );
 
-      setPortion300.toFile().createNewFile();
-      setPortion3000.toFile().createNewFile();
-      setPortion30000.toFile().createNewFile();
-
-      AtomicInteger portion = new AtomicInteger(300);
+      Command reportsShow = new Command(workingDir, "reportsShow");
+      Command reportsClear = new Command(workingDir, "reportsClear");
 
       while (workingFile.toFile().exists()) {
 
-        setPortion(setPortion300, portion, 300);
-        setPortion(setPortion3000, portion, 3000);
-        setPortion(setPortion30000, portion, 30000);
+        portion.ping();
+        portionCount.ping();
+        sleepClientOut.ping();
+        printClientToStdoutP.ping();
+        generateErrorsP.ping();
+        insertClientPortionParallel.ping();
 
-        if (!insertClientPortionFile.toFile().exists()) {
-          insertClientPortionFile.toFile().createNewFile();
-
-          String id = RND.str(3);
-
-          long started = System.nanoTime();
-          int count = portion.get();
-          for (int i = 0; i < count; i++) {
-            Client client = new Client();
-            client.id = id + "-" + i;
-            client.surname = RND.str(10);
-            client.name = i == 10 ? "err" : "ok";
-
-            mainProducer
-              .sending(client)
-              .toTopic("CLIENT")
-              .go()
-              .awaitAndGet();
-          }
-          System.out.println("g5v43gh2v5 :: Inserted for " + nanosRead(System.nanoTime() - started));
-
+        if (insertClientPortion.run()) {
+          clientPortionInserting.execute();
         }
 
-        if (!insertClientPortionFileParallel.toFile().exists()) {
-          insertClientPortionFileParallel.toFile().createNewFile();
-
-          List<KafkaFuture> futures = new ArrayList<>();
-
-          String id = RND.str(3);
-
-          int count = portion.get();
-          long started = System.nanoTime();
-          for (int i = 0; i < count; i++) {
-            Client client = new Client();
-            client.id = id + "-" + i;
-            client.surname = RND.str(10);
-            client.name = i == 10 ? "err" : "ok";
-
-            futures.add(mainProducer
-              .sending(client)
-              .toTopic("CLIENT")
-              .go());
-          }
-          long middle = System.nanoTime();
-
-          futures.forEach(KafkaFuture::awaitAndGet);
-
-          long end = System.nanoTime();
-
-          System.out.println("5hb4326gv :: Inserted for " + nanosRead(end - started)
-            + " : middle for " + nanosRead(middle - started));
-
+        if (reportsShow.run()) {
+          printReports(workingDir);
+        }
+        if (reportsClear.run()) {
+          readClientRuns.clear();
+          readClientOutRuns.clear();
+          System.out.println("Reports cleared");
         }
 
         Thread.sleep(700);
@@ -225,17 +232,40 @@ public class MassiveTestServer {
       reactor.stopConsumers();
     }
 
+    printReports(workingDir);
+
     System.out.println("Finished");
+
 
   }
 
-  private static void setPortion(Path setPortion, AtomicInteger portionBack, int portion) {
-    if (setPortion.toFile().exists()) {
-      return;
+  private static void printReports(Path workingDir) throws IOException {
+    SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
+    String suffix = sdf.format(new Date());
+    {
+      Path reportsFile = workingDir.resolve("reports").resolve("readClientRuns-" + suffix + ".txt");
+      printReportTo(readClientRuns, reportsFile);
     }
-    createFile(setPortion);
-    portionBack.set(portion);
-    System.out.println("v34g5gv75 :: set portion to " + portion);
+    {
+      Path reportsFile = workingDir.resolve("reports").resolve("readClientOutRuns-" + suffix + ".txt");
+      printReportTo(readClientOutRuns, reportsFile);
+    }
+
+    System.out.println("Reports printed");
+  }
+
+  private static void printReportTo(ConcurrentHashMap<Long, AtomicLong> countMap, Path reportsFile) throws IOException {
+    List<String> lines = countMap
+      .entrySet()
+      .stream()
+      .sorted(Comparator.comparing(Map.Entry::getKey))
+      .map(e -> e.getKey() + " " + e.getValue().get())
+      .collect(Collectors.toList());
+
+    reportsFile.toFile().getParentFile().mkdirs();
+
+    Files.write(reportsFile, lines);
+
   }
 
   private static KafkaReactorImpl createReactor(String kafkaServers, String zookeeperServers) {
@@ -312,5 +342,9 @@ public class MassiveTestServer {
 
 
     return reactor;
+  }
+
+  private static void increment(ConcurrentHashMap<Long, AtomicLong> countMap, long key) {
+    countMap.computeIfAbsent(key, x -> new AtomicLong(0)).incrementAndGet();
   }
 }

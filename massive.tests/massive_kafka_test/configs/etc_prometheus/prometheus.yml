@@ -2,23 +2,23 @@ global:
   scrape_interval: 10s
 
 scrape_configs:
-  - job_name: kafka-1-server
+  - job_name: kafka-1
     static_configs:
       - targets: ['kafka-1:7071']
 
-  - job_name: kafka-2-server
+  - job_name: kafka-2
     static_configs:
       - targets: ['kafka-2:7071']
 
-  - job_name: kafka-3-server
+  - job_name: kafka-3
     static_configs:
       - targets: ['kafka-3:7071']
 
-  - job_name: kafka-4-server
+  - job_name: kafka-4
     static_configs:
       - targets: ['kafka-4:7071']
 
-  - job_name: kafka-all-servers
+  - job_name: kafka
     static_configs:
       - targets: ['kafka-1:7071', 'kafka-2:7071', 'kafka-3:7071', 'kafka-4:7071']
 
