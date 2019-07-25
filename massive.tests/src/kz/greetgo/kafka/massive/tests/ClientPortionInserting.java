@@ -5,6 +5,7 @@ import kz.greetgo.kafka.producer.KafkaFuture;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.util.RND;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,26 +18,31 @@ public class ClientPortionInserting {
   private final ProducerFacade mainProducer;
   private final BoolParameter parallel;
   private final Path workingFile;
+  private final Command insertClientPortion;
 
   public ClientPortionInserting(LongParameter portion,
                                 LongParameter portionCount,
                                 ProducerFacade mainProducer,
                                 BoolParameter parallel,
-                                Path workingFile) {
+                                Path workingFile,
+                                Command insertClientPortion) {
     this.portion = portion;
     this.portionCount = portionCount;
     this.mainProducer = mainProducer;
     this.parallel = parallel;
     this.workingFile = workingFile;
+    this.insertClientPortion = insertClientPortion;
   }
 
-  public void execute() {
+  public void execute() throws IOException {
     boolean parallel = this.parallel.value();
 
     int portionCount = this.portionCount.getAsInt();
 
     long startedAt = System.nanoTime();
     int clientTotalCount = 0;
+
+    int insertedPortions = 0;
 
     for (int u = 0; u < portionCount && workingFile.toFile().exists(); u++) {
 
@@ -89,18 +95,34 @@ public class ClientPortionInserting {
             .toTopic("CLIENT")
             .go()
             .awaitAndGet();
+
+          clientTotalCount++;
+
         }
 
         System.out.println("g5v43gh2v5 :: Inserted " + count
           + " clients for " + nanosRead(System.nanoTime() - started));
       }
 
+      insertedPortions++;
+
+      if (insertClientPortion.run()) {
+        break;
+      }
+
+
     }
 
     long finishedAt = System.nanoTime();
 
-    System.out.println("5jb426hb :: Inserted " + portionCount +
+    System.out.println("5jb426hb :: Inserted " + insertedPortions +
       " portions and " + clientTotalCount + " clients for " + nanosRead(finishedAt - startedAt));
 
+  }
+
+  public void ping() throws IOException {
+    if (insertClientPortion.run()) {
+      execute();
+    }
   }
 }

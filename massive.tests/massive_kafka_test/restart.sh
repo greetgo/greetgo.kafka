@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+cd $(dirname $0)
 
 docker-compose down
 

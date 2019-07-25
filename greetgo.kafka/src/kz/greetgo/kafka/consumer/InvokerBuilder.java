@@ -142,6 +142,8 @@ public class InvokerBuilder {
                 continue;
               }
 
+              context.kafkaFutures.clear();
+
               Object[] parameters = new Object[parametersCount];
 
               for (int i = 0; i < parametersCount; i++) {
@@ -153,8 +155,10 @@ public class InvokerBuilder {
               }
 
               for (int i = 0; i < parametersCount; i++) {
-                kafkaFutures.addAll(parameterValueReaders[i].getKafkaFutures());
+                kafkaFutures.addAll(context.kafkaFutures);
               }
+
+              context.kafkaFutures.clear();
 
             }
 

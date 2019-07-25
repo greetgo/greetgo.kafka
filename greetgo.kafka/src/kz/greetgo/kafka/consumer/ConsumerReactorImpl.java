@@ -193,7 +193,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
             invokeSession.putProducer(producerName, producer);
           }
 
-          long min = 1000000000000000000L, max = 0;
+//          long min = 1000000000000000000L, max = 0;
 
           OUT:
           while (working.get() && workers.containsKey(id)) {
@@ -205,7 +205,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
 
                 final ConsumerRecords<byte[], Box> records;
 
-                long startedAt = System.nanoTime();
+//                long startedAt = System.nanoTime();
 
                 try {
                   records = consumer.poll(consumerConfigWorker.pollDuration());
@@ -221,40 +221,40 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                   continue;
                 }
 
-                long pollCalledAt = System.nanoTime();
+//                long pollCalledAt = System.nanoTime();
 
                 if (!invokeSession.invoke(records)) {
                   continue OUT;
                 }
 
-                long invokedAt = System.nanoTime();
+//                long invokedAt = System.nanoTime();
 
                 try {
                   consumer.commitSync();
 
-                  long committedAt = System.nanoTime();
+//                  long committedAt = System.nanoTime();
+//
+//                  long totalDelay = committedAt - startedAt;
+//                  if (min > totalDelay) {
+//                    min = totalDelay;
+//                  }
+//                  if (max < totalDelay) {
+//                    max = totalDelay;
+//                  }
 
-                  long totalDelay = committedAt - startedAt;
-                  if (min > totalDelay) {
-                    min = totalDelay;
-                  }
-                  if (max < totalDelay) {
-                    max = totalDelay;
-                  }
+//                  long pollDelay = pollCalledAt - startedAt;
+//                  long invokeDelay = invokedAt - pollCalledAt;
+//                  long commitDelay = committedAt - invokedAt;
 
-                  long pollDelay = pollCalledAt - startedAt;
-                  long invokeDelay = invokedAt - pollCalledAt;
-                  long commitDelay = committedAt - invokedAt;
-
-                  if (records.count() > 0) {
-                    System.out.println("54jb326b6 :: perform " + records.count()
-                      + " records : poll " + ((double) pollDelay / 1e9)
-                      + " + invoke " + ((double) invokeDelay / 1e9)
-                      + " + commit " + ((double) commitDelay / 1e9)
-                      + " = " + ((double) totalDelay / 1e9)
-                      + " : totalDelay min…max = " + ((double) min / 1e9) + "…" + ((double) max / 1e9)
-                      + " : in " + Thread.currentThread().getName());
-                  }
+//                  if (records.count() > 0) {
+//                    System.out.println("54jb326b6 :: perform " + records.count()
+//                      + " records : poll " + ((double) pollDelay / 1e9)
+//                      + " + invoke " + ((double) invokeDelay / 1e9)
+//                      + " + commit " + ((double) commitDelay / 1e9)
+//                      + " = " + ((double) totalDelay / 1e9)
+//                      + " : totalDelay min…max = " + ((double) min / 1e9) + "…" + ((double) max / 1e9)
+//                      + " : in " + Thread.currentThread().getName());
+//                  }
 
                 } catch (RuntimeException exception) {
                   if (logger.isShow(LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED)) {

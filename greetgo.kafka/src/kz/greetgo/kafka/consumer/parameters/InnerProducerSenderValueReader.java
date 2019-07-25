@@ -5,16 +5,12 @@ import kz.greetgo.kafka.consumer.InnerProducerSender;
 import kz.greetgo.kafka.consumer.InvokeSessionContext;
 import kz.greetgo.kafka.consumer.ParameterValueReader;
 import kz.greetgo.kafka.model.Box;
-import kz.greetgo.kafka.producer.KafkaFuture;
 import kz.greetgo.kafka.producer.KafkaSending;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 public class InnerProducerSenderValueReader implements ParameterValueReader {
-  private List<KafkaFuture> kafkaFutures = new ArrayList<>();
   private String producerName;
 
   public InnerProducerSenderValueReader(String producerName) {
@@ -27,18 +23,12 @@ public class InnerProducerSenderValueReader implements ParameterValueReader {
   }
 
   @Override
-  public List<KafkaFuture> getKafkaFutures() {
-    return kafkaFutures;
-  }
-
-  @Override
   public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
     return new InnerProducerSender() {
       @Override
       public Sending sending(Object model) {
         return new Sending() {
-          private KafkaSending kafkaSending = invokeSessionContext.getProducer(producerName)
-            .sending(model);
+          private final KafkaSending kafkaSending = invokeSessionContext.getProducer(producerName).sending(model);
 
           @Override
           public Sending toTopic(String topic) {
@@ -78,7 +68,7 @@ public class InnerProducerSenderValueReader implements ParameterValueReader {
 
           @Override
           public void go() {
-            kafkaFutures.add(kafkaSending.go());
+            invokeSessionContext.kafkaFutures.add(kafkaSending.go());
           }
         };
       }

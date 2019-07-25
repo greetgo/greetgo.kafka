@@ -19,7 +19,4 @@ public interface ParameterValueReader {
     return null;
   }
 
-  default List<KafkaFuture> getKafkaFutures() {
-    return Collections.emptyList();
-  }
 }

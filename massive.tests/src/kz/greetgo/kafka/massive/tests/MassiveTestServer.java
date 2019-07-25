@@ -42,6 +42,7 @@ import static java.util.Collections.singletonList;
 public class MassiveTestServer {
   private static ConcurrentHashMap<String, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
   private static ConcurrentHashMap<String, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<String, AtomicLong> readClientOut2Runs = new ConcurrentHashMap<>();
 
   private static final AtomicBoolean printClientToStdout = new AtomicBoolean(false);
   private static final AtomicBoolean generateErrors = new AtomicBoolean(false);
@@ -93,24 +94,40 @@ public class MassiveTestServer {
 
     }
 
-    final AtomicLong sleepClientOut = new AtomicLong(200);
+    final AtomicLong sleepClientOut = new AtomicLong(0);
+    final AtomicLong sleepClientOut2 = new AtomicLong(0);
 
     @Topic("CLIENT-OUT")
     @ConsumerName("CLIENT-OUT")
     @GroupId("asd-out")
     public void readClientOut(Client client) throws Exception {
       increment(readClientOutRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
-      insertClient("CLIENT-OUT", client);
-      Thread.sleep(sleepClientOut.get());
+      insertClient("CLIENT-OUT", client, "client_id");
+      if (sleepClientOut.get() > 0) {
+        Thread.sleep(sleepClientOut.get());
+      }
+    }
+
+    @Topic("CLIENT-OUT")
+    @ConsumerName("CLIENT-OUT-2")
+    @GroupId("asd-out-2")
+    public void readClientOut2(Client client) throws Exception {
+      increment(readClientOut2Runs, new SimpleDateFormat("HH:mm:ss").format(new Date()));
+      insertClient("CLIENT-OUT-2", client, "client_id2");
+      if (sleepClientOut2.get() > 0) {
+        Thread.sleep(sleepClientOut2.get());
+      }
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void insertClient(String consumerName, Client client) throws SQLException {
+    private void insertClient(String consumerName, Client client, String table) throws SQLException {
 
       try (Connection connection = dataSource.getConnection()) {
 
-        try (PreparedStatement ps = connection.prepareStatement(
-          "insert into client_id (id, consumer_name) values (?, ?)")
+        //noinspection SqlResolve
+        String sql = "insert into " + table + " (id, consumer_name) values (?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)
         ) {
           ps.setString(1, client.id);
           ps.setString(2, consumerName);
@@ -185,6 +202,7 @@ public class MassiveTestServer {
       LongParameter portion = new LongParameter(workingDir, "portion", 300L);
       LongParameter portionCount = new LongParameter(workingDir, "portionCount", 3L);
       LongParameter sleepClientOut = new LongParameter(workingDir, "sleepClientOut", consumers.sleepClientOut);
+      LongParameter sleepClientOut2 = new LongParameter(workingDir, "sleepClientOut2", consumers.sleepClientOut2);
 
       BoolParameter printClientToStdoutP = new BoolParameter(workingDir, "printClientToStdout", printClientToStdout);
       BoolParameter generateErrorsP = new BoolParameter(workingDir, "generateErrors", generateErrors);
@@ -193,7 +211,7 @@ public class MassiveTestServer {
       Command insertClientPortion = new Command(workingDir, "insertClientPortion");
 
       ClientPortionInserting clientPortionInserting = new ClientPortionInserting(
-        portion, portionCount, mainProducer, insertClientPortionParallel, workingFile
+        portion, portionCount, mainProducer, insertClientPortionParallel, workingFile, insertClientPortion
       );
 
       Command reportsShow = new Command(workingDir, "reportsShow");
@@ -204,13 +222,12 @@ public class MassiveTestServer {
         portion.ping();
         portionCount.ping();
         sleepClientOut.ping();
+        sleepClientOut2.ping();
         printClientToStdoutP.ping();
         generateErrorsP.ping();
         insertClientPortionParallel.ping();
 
-        if (insertClientPortion.run()) {
-          clientPortionInserting.execute();
-        }
+        clientPortionInserting.ping();
 
         if (reportsShow.run()) {
           printReports(workingDir);
@@ -304,13 +321,13 @@ public class MassiveTestServer {
     ccd.addDefinition(" Long   con.send.buffer.bytes               131072  ");
     ccd.addDefinition(" Long   con.fetch.max.wait.ms                  500  ");
 
-    ccd.addDefinition(" Int out.worker.count        1  ");
-    ccd.addDefinition(" Int out.poll.duration.ms  800  ");
+    ccd.addDefinition(" Int out.worker.count         0  ");
+    ccd.addDefinition(" Int out.poll.duration.ms  2000  ");
 
     reactor.consumerConfigDefaults = ccd;
 
     reactor.logger().setDestination(new SimplePrinter());
-    reactor.logger().setShowLogger(LoggerType.SHOW_CONSUMER_WORKER_CONFIG, true);
+    reactor.logger().setShowLogger(LoggerType.SHOW_CONSUMER_WORKER_CONFIG, false);
     reactor.logger().setShowLogger(LoggerType.SHOW_PRODUCER_CONFIG, true);
     reactor.logger().setShowLogger(LoggerType.LOG_CLOSE_PRODUCER, true);
     reactor.logger().setShowLogger(LoggerType.LOG_CONSUMER_ERROR_IN_METHOD, true);
