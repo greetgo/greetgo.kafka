@@ -1,4 +1,4 @@
-version: "3.3"
+version: "2.2"
 services:
 
   zookeeper-1:
@@ -71,6 +71,7 @@ services:
 
   kafka-1:
     image: wurstmeister/kafka:2.12-2.2.1
+    cpu_percent: 10
     volumes:
       - "./volumes/kafka-1:/kafka"
       - "./configs:/configs"
@@ -99,6 +100,7 @@ services:
 
   kafka-2:
     image: wurstmeister/kafka:2.12-2.2.1
+    cpu_percent: 10
     volumes:
       - "./volumes/kafka-2:/kafka"
       - "./configs:/configs"
@@ -127,6 +129,7 @@ services:
 
   kafka-3:
     image: wurstmeister/kafka:2.12-2.2.1
+    cpu_percent: 10
     volumes:
       - "./volumes/kafka-3:/kafka"
       - "./configs:/configs"
@@ -155,6 +158,7 @@ services:
 
   kafka-4:
     image: wurstmeister/kafka:2.12-2.2.1
+    cpu_percent: 10
     volumes:
       - "./volumes/kafka-4:/kafka"
       - "./configs:/configs"

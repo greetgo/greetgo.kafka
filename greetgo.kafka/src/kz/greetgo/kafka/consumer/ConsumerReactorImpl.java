@@ -172,6 +172,9 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         configMap.put("group.id", consumerDefinition.getGroupId());
         configMap.put("enable.auto.commit", consumerDefinition.isAutoCommit() ? "true" : "false");
 
+        //TODO pompei убрать надо или вынести в конфиг
+        configMap.put("internal.leave.group.on.close", "false");
+
         if (logger.isShow(SHOW_CONSUMER_WORKER_CONFIG)) {
           logger.logConsumerWorkerConfig(consumerDefinition, id, configMap);
         }
@@ -179,28 +182,38 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         ByteArrayDeserializer forKey = new ByteArrayDeserializer();
         BoxDeserializer forValue = new BoxDeserializer(strConverterSupplier.get());
 
-        OUT:
-        while (working.get() && workers.containsKey(id)) {
+        Invoker invoker = consumerDefinition.getInvoker();
 
-          Invoker invoker = consumerDefinition.getInvoker();
+        Set<String> usingProducerNames = invoker.getUsingProducerNames();
 
-          Set<String> usingProducerNames = invoker.getUsingProducerNames();
+        try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
 
-          try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+          for (String producerName : usingProducerNames) {
+            ProducerFacade producer = createPermanentBridge(producerName, producerSource);
+            invokeSession.putProducer(producerName, producer);
+          }
 
-            for (String producerName : usingProducerNames) {
-              ProducerFacade producer = createPermanentBridge(producerName, producerSource);
-              invokeSession.putProducer(producerName, producer);
-            }
+          long min = 1000000000000000000L, max = 0;
+
+          OUT:
+          while (working.get() && workers.containsKey(id)) {
 
             try (KafkaConsumer<byte[], Box> consumer = new KafkaConsumer<>(configMap, forKey, forValue)) {
               consumer.subscribe(consumerDefinition.topicList());
+              INNER:
               while (working.get() && workers.containsKey(id)) {
 
                 final ConsumerRecords<byte[], Box> records;
 
+                long startedAt = System.nanoTime();
+
                 try {
                   records = consumer.poll(consumerConfigWorker.pollDuration());
+
+                  if (records.count() == 0) {
+                    continue INNER;
+                  }
+
                 } catch (RuntimeException exception) {
                   if (logger.isShow(LOG_CONSUMER_POLL_EXCEPTION_HAPPENED)) {
                     logger.logConsumerPollExceptionHappened(exception, consumerDefinition);
@@ -208,12 +221,41 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                   continue;
                 }
 
+                long pollCalledAt = System.nanoTime();
+
                 if (!invokeSession.invoke(records)) {
                   continue OUT;
                 }
 
+                long invokedAt = System.nanoTime();
+
                 try {
                   consumer.commitSync();
+
+                  long committedAt = System.nanoTime();
+
+                  long totalDelay = committedAt - startedAt;
+                  if (min > totalDelay) {
+                    min = totalDelay;
+                  }
+                  if (max < totalDelay) {
+                    max = totalDelay;
+                  }
+
+                  long pollDelay = pollCalledAt - startedAt;
+                  long invokeDelay = invokedAt - pollCalledAt;
+                  long commitDelay = committedAt - invokedAt;
+
+                  if (records.count() > 0) {
+                    System.out.println("54jb326b6 :: perform " + records.count()
+                      + " records : poll " + ((double) pollDelay / 1e9)
+                      + " + invoke " + ((double) invokeDelay / 1e9)
+                      + " + commit " + ((double) commitDelay / 1e9)
+                      + " = " + ((double) totalDelay / 1e9)
+                      + " : totalDelay min…max = " + ((double) min / 1e9) + "…" + ((double) max / 1e9)
+                      + " : in " + Thread.currentThread().getName());
+                  }
+
                 } catch (RuntimeException exception) {
                   if (logger.isShow(LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED)) {
                     logger.logConsumerCommitSyncExceptionHappened(exception, consumerDefinition);

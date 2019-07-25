@@ -5,6 +5,7 @@ import kz.greetgo.kafka.producer.KafkaFuture;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.util.RND;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,15 +16,18 @@ public class ClientPortionInserting {
   private final LongParameter portionCount;
   private final ProducerFacade mainProducer;
   private final BoolParameter parallel;
+  private final Path workingFile;
 
   public ClientPortionInserting(LongParameter portion,
                                 LongParameter portionCount,
                                 ProducerFacade mainProducer,
-                                BoolParameter parallel) {
+                                BoolParameter parallel,
+                                Path workingFile) {
     this.portion = portion;
     this.portionCount = portionCount;
     this.mainProducer = mainProducer;
     this.parallel = parallel;
+    this.workingFile = workingFile;
   }
 
   public void execute() {
@@ -34,7 +38,7 @@ public class ClientPortionInserting {
     long startedAt = System.nanoTime();
     int clientTotalCount = 0;
 
-    for (int u = 0; u < portionCount; u++) {
+    for (int u = 0; u < portionCount && workingFile.toFile().exists(); u++) {
 
       if (parallel) {
 
@@ -78,7 +82,7 @@ public class ClientPortionInserting {
           Client client = new Client();
           client.id = id + "-" + i;
           client.surname = RND.str(10);
-          client.name = i == 10 ? "err" : "ok";
+          client.name = ((i == 10) || (i % 2000 == 0)) ? "err" : "ok";
 
           mainProducer
             .sending(client)

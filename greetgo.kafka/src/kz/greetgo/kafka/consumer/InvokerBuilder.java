@@ -1,6 +1,5 @@
 package kz.greetgo.kafka.consumer;
 
-import com.google.common.collect.Lists;
 import kz.greetgo.kafka.consumer.annotations.Author;
 import kz.greetgo.kafka.consumer.annotations.ConsumerName;
 import kz.greetgo.kafka.consumer.annotations.InnerProducerName;
@@ -26,10 +25,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -133,7 +134,7 @@ public class InvokerBuilder {
           public boolean invoke(ConsumerRecords<byte[], Box> records) {
             boolean invokedOk = true;
 
-            List<KafkaFuture> kafkaFutures = Lists.newArrayList();
+            List<KafkaFuture> kafkaFutures = new ArrayList<>();
 
             for (ConsumerRecord<byte[], Box> record : records) {
 
@@ -157,7 +158,7 @@ public class InvokerBuilder {
 
             }
 
-            kafkaFutures.forEach(KafkaFuture::awaitAndGet);
+            kafkaFutures.stream().filter(Objects::nonNull).forEach(KafkaFuture::awaitAndGet);
 
             return invokedOk;
           }

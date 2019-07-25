@@ -40,8 +40,8 @@ import java.util.stream.Collectors;
 import static java.util.Collections.singletonList;
 
 public class MassiveTestServer {
-  private static ConcurrentHashMap<Long, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
-  private static ConcurrentHashMap<Long, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<String, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<String, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
 
   private static final AtomicBoolean printClientToStdout = new AtomicBoolean(false);
   private static final AtomicBoolean generateErrors = new AtomicBoolean(false);
@@ -72,8 +72,7 @@ public class MassiveTestServer {
                            @ToTopic("CLIENT-OUT")
                              InnerProducer<Client> clientProducer) {
 
-      long second = System.nanoTime() / 1000_000_000L;
-      increment(readClientRuns, second);
+      increment(readClientRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
 
       if ("ok".equals(client.name)) {
         client.name = RND.str(10);
@@ -100,8 +99,7 @@ public class MassiveTestServer {
     @ConsumerName("CLIENT-OUT")
     @GroupId("asd-out")
     public void readClientOut(Client client) throws Exception {
-      long second = System.nanoTime() / 1000_000_000L;
-      increment(readClientOutRuns, second);
+      increment(readClientOutRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
       insertClient("CLIENT-OUT", client);
       Thread.sleep(sleepClientOut.get());
     }
@@ -195,7 +193,7 @@ public class MassiveTestServer {
       Command insertClientPortion = new Command(workingDir, "insertClientPortion");
 
       ClientPortionInserting clientPortionInserting = new ClientPortionInserting(
-        portion, portionCount, mainProducer, insertClientPortionParallel
+        portion, portionCount, mainProducer, insertClientPortionParallel, workingFile
       );
 
       Command reportsShow = new Command(workingDir, "reportsShow");
@@ -243,18 +241,18 @@ public class MassiveTestServer {
     SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
     String suffix = sdf.format(new Date());
     {
-      Path reportsFile = workingDir.resolve("reports").resolve("readClientRuns-" + suffix + ".txt");
+      Path reportsFile = workingDir.resolve("reports").resolve(suffix + "-a-readClientRuns.txt");
       printReportTo(readClientRuns, reportsFile);
     }
     {
-      Path reportsFile = workingDir.resolve("reports").resolve("readClientOutRuns-" + suffix + ".txt");
+      Path reportsFile = workingDir.resolve("reports").resolve(suffix + "-b-readClientOutRuns.txt");
       printReportTo(readClientOutRuns, reportsFile);
     }
 
     System.out.println("Reports printed");
   }
 
-  private static void printReportTo(ConcurrentHashMap<Long, AtomicLong> countMap, Path reportsFile) throws IOException {
+  private static void printReportTo(ConcurrentHashMap<String, AtomicLong> countMap, Path reportsFile) throws IOException {
     List<String> lines = countMap
       .entrySet()
       .stream()
@@ -344,7 +342,7 @@ public class MassiveTestServer {
     return reactor;
   }
 
-  private static void increment(ConcurrentHashMap<Long, AtomicLong> countMap, long key) {
+  private static void increment(ConcurrentHashMap<String, AtomicLong> countMap, String key) {
     countMap.computeIfAbsent(key, x -> new AtomicLong(0)).incrementAndGet();
   }
 }

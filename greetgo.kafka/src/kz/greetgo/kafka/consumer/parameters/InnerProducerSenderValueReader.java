@@ -1,6 +1,5 @@
 package kz.greetgo.kafka.consumer.parameters;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import kz.greetgo.kafka.consumer.InnerProducerSender;
 import kz.greetgo.kafka.consumer.InvokeSessionContext;
@@ -10,11 +9,12 @@ import kz.greetgo.kafka.producer.KafkaFuture;
 import kz.greetgo.kafka.producer.KafkaSending;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public class InnerProducerSenderValueReader implements ParameterValueReader {
-  private List<KafkaFuture> kafkaFutures = Lists.newArrayList();
+  private List<KafkaFuture> kafkaFutures = new ArrayList<>();
   private String producerName;
 
   public InnerProducerSenderValueReader(String producerName) {
@@ -38,7 +38,7 @@ public class InnerProducerSenderValueReader implements ParameterValueReader {
       public Sending sending(Object model) {
         return new Sending() {
           private KafkaSending kafkaSending = invokeSessionContext.getProducer(producerName)
-              .sending(model);
+            .sending(model);
 
           @Override
           public Sending toTopic(String topic) {
