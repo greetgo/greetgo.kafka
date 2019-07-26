@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -40,114 +41,14 @@ import java.util.stream.Collectors;
 import static java.util.Collections.singletonList;
 
 public class MassiveTestServer {
-  private static ConcurrentHashMap<String, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
-  private static ConcurrentHashMap<String, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
-  private static ConcurrentHashMap<String, AtomicLong> readClientOut2Runs = new ConcurrentHashMap<>();
-
-  private static final AtomicBoolean printClientToStdout = new AtomicBoolean(false);
-  private static final AtomicBoolean generateErrors = new AtomicBoolean(false);
-
-  static DataSource dataSource;
-
-  static {
-    BasicDataSource pool = new BasicDataSource();
-
-    pool.setDriverClassName("org.postgresql.Driver");
-    pool.setUrl("jdbc:postgresql://localhost:5432/kafka_test");
-    pool.setUsername("kafka");
-    pool.setPassword("111");
-
-    pool.setInitialSize(0);
-
-    dataSource = pool;
-  }
-
-  public static class Consumers {
-
-    private final ConcurrentHashMap<String, String> errors = new ConcurrentHashMap<>();
-
-    @GroupId("asd-1")
-    @Topic("CLIENT")
-    @ConsumerName("CLIENT")
-    public void readClient(Client client,
-                           @ToTopic("CLIENT-OUT")
-                             InnerProducer<Client> clientProducer) {
-
-      increment(readClientRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
-
-      if ("ok".equals(client.name)) {
-        client.name = RND.str(10);
-        clientProducer.send(client);
-        return;
-      }
-
-      if (!generateErrors.get() || errors.containsKey(client.id)) {
-        client.name = RND.str(10);
-        clientProducer.send(client);
-        return;
-      }
-
-      errors.put(client.id, "1");
-
-      System.out.println("rv35hvg345 :: ERROR THROWS");
-      throw new RuntimeException("ERROR");
-
-    }
-
-    final AtomicLong sleepClientOut = new AtomicLong(0);
-    final AtomicLong sleepClientOut2 = new AtomicLong(0);
-
-    @Topic("CLIENT-OUT")
-    @ConsumerName("CLIENT-OUT")
-    @GroupId("asd-out")
-    public void readClientOut(Client client) throws Exception {
-      increment(readClientOutRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
-      insertClient("CLIENT-OUT", client, "client_id");
-      if (sleepClientOut.get() > 0) {
-        Thread.sleep(sleepClientOut.get());
-      }
-    }
-
-    @Topic("CLIENT-OUT")
-    @ConsumerName("CLIENT-OUT-2")
-    @GroupId("asd-out-2")
-    public void readClientOut2(Client client) throws Exception {
-      increment(readClientOut2Runs, new SimpleDateFormat("HH:mm:ss").format(new Date()));
-      insertClient("CLIENT-OUT-2", client, "client_id2");
-      if (sleepClientOut2.get() > 0) {
-        Thread.sleep(sleepClientOut2.get());
-      }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private void insertClient(String consumerName, Client client, String table) throws SQLException {
-
-      try (Connection connection = dataSource.getConnection()) {
-
-        //noinspection SqlResolve
-        String sql = "insert into " + table + " (id, consumer_name) values (?, ?)";
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)
-        ) {
-          ps.setString(1, client.id);
-          ps.setString(2, consumerName);
-          ps.executeUpdate();
-        }
-
-      }
-
-      if (printClientToStdout.get()) {
-        System.out.println("Come client " + client + " from " + Thread.currentThread().getName());
-      }
-
-    }
-  }
 
   public static void main(String[] args) throws IOException, InterruptedException {
 
     Path pwd = new File(".").getAbsoluteFile().toPath().normalize();
 
-    Path workingDir = pwd.resolve("build").resolve("MassiveTestServer");
+    Path workingDir = pwd.resolve(
+      env("MASS_WORKING_DIR", "build/MassiveTestServer")
+    );
 
     Files.createDirectories(workingDir);
 
@@ -155,31 +56,44 @@ public class MassiveTestServer {
 
     workingFile.toFile().createNewFile();
 
-    String kafkaServers = "localhost:9091,localhost:9092,localhost:9093,localhost:9094";
-    String zookeeperServers = "localhost:2181,localhost:2182,localhost:2183";
+    String kafkaServers = env("MASS_KAFKA_SERVERS", "localhost:9091,localhost:9092,localhost:9093,localhost:9094");
+    String zookeeperServers = env("MASS_ZOO_SERVERS", "localhost:2181,localhost:2182,localhost:2183");
 
     Map<String, Object> conf = new HashMap<>();
     conf.put("bootstrap.servers", kafkaServers);
 
-    try (AdminClient adminClient = KafkaAdminClient.create(conf)) {
+    Path liquibaseDir = workingDir.resolve("liquibase");
 
-      Path existsDir = workingDir.resolve("exists");
-      existsDir.toFile().mkdirs();
+    if (useDocker()) {
 
-      Path clientExistsFile = existsDir.resolve("CLIENT");
-      if (!clientExistsFile.toFile().exists()) {
-        NewTopic newTopic = new NewTopic("CLIENT", 480, (short) 2);
-        adminClient.createTopics(singletonList(newTopic)).all();
-        clientExistsFile.toFile().createNewFile();
+      String massLiquibaseDir = env("MASS_LIQUIBASE_DIR", null);
+      if (massLiquibaseDir == null) {
+        liquibaseDir = null;
+      } else {
+        liquibaseDir = Paths.get(massLiquibaseDir);
       }
 
-      Path clientOutExistsFile = existsDir.resolve("CLIENT-OUT");
-      if (!clientOutExistsFile.toFile().exists()) {
-        NewTopic newTopic = new NewTopic("CLIENT-OUT", 480, (short) 2);
-        adminClient.createTopics(singletonList(newTopic)).all();
-        clientOutExistsFile.toFile().createNewFile();
-      }
+    }
 
+    if (liquibaseDir != null) {
+      try (AdminClient adminClient = KafkaAdminClient.create(conf)) {
+
+        liquibaseDir.toFile().mkdirs();
+
+        Path clientExistsFile = liquibaseDir.resolve("CLIENT");
+        if (!clientExistsFile.toFile().exists()) {
+          NewTopic newTopic = new NewTopic("CLIENT", 480, (short) 2);
+          adminClient.createTopics(singletonList(newTopic)).all();
+          clientExistsFile.toFile().createNewFile();
+        }
+
+        Path clientOutExistsFile = liquibaseDir.resolve("CLIENT-OUT");
+        if (!clientOutExistsFile.toFile().exists()) {
+          NewTopic newTopic = new NewTopic("CLIENT-OUT", 480, (short) 2);
+          adminClient.createTopics(singletonList(newTopic)).all();
+          clientOutExistsFile.toFile().createNewFile();
+        }
+      }
     }
 
     Consumers consumers = new Consumers();
@@ -250,7 +164,126 @@ public class MassiveTestServer {
     printReports(workingDir);
 
     System.out.println("Finished");
+  }
 
+  private static boolean useDocker() {
+    return "yes".equals(env("USE_DOCKER", "no"));
+  }
+
+  private static String env(String envName, String defaultValue) {
+    String aValue = System.getenv(envName);
+    if (aValue == null) {
+      return defaultValue;
+    }
+    aValue = aValue.trim();
+    if (aValue.length() == 0) {
+      return defaultValue;
+    }
+    return aValue;
+  }
+
+  private static ConcurrentHashMap<String, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<String, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<String, AtomicLong> readClientOut2Runs = new ConcurrentHashMap<>();
+
+  private static final AtomicBoolean printClientToStdout = new AtomicBoolean(false);
+  private static final AtomicBoolean generateErrors = new AtomicBoolean(false);
+
+  static DataSource dataSource;
+
+  static {
+    BasicDataSource pool = new BasicDataSource();
+
+    pool.setDriverClassName("org.postgresql.Driver");
+    pool.setUrl("jdbc:postgresql://localhost:5432/kafka_test");
+    pool.setUsername("kafka");
+    pool.setPassword("111");
+
+    pool.setInitialSize(0);
+
+    dataSource = pool;
+  }
+
+  public static class Consumers {
+
+    private final ConcurrentHashMap<String, String> errors = new ConcurrentHashMap<>();
+
+    @GroupId("asd-1")
+    @Topic("CLIENT")
+    @ConsumerName("CLIENT")
+    public void readClient(Client client,
+                           @ToTopic("CLIENT-OUT")
+                             InnerProducer<Client> clientProducer) {
+
+      increment(readClientRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
+
+      if ("ok".equals(client.name)) {
+        client.name = RND.str(10);
+        clientProducer.send(client);
+        return;
+      }
+
+      if (!generateErrors.get() || errors.containsKey(client.id)) {
+        client.name = RND.str(10);
+        clientProducer.send(client);
+        return;
+      }
+
+      errors.put(client.id, "1");
+
+      System.out.println("rv35hvg345 :: ERROR THROWS");
+
+      throw new RuntimeException("AN ERROR");
+
+    }
+
+    final AtomicLong sleepClientOut = new AtomicLong(0);
+    final AtomicLong sleepClientOut2 = new AtomicLong(0);
+
+    @Topic("CLIENT-OUT")
+    @ConsumerName("CLIENT-OUT")
+    @GroupId("asd-out")
+    public void readClientOut(Client client) throws Exception {
+      increment(readClientOutRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
+      insertClient("CLIENT-OUT", client, "client_id");
+      if (sleepClientOut.get() > 0) {
+        Thread.sleep(sleepClientOut.get());
+      }
+    }
+
+    @Topic("CLIENT-OUT")
+    @ConsumerName("CLIENT-OUT-2")
+    @GroupId("asd-out-2")
+    public void readClientOut2(Client client) throws Exception {
+      increment(readClientOut2Runs, new SimpleDateFormat("HH:mm:ss").format(new Date()));
+      insertClient("CLIENT-OUT-2", client, "client_id2");
+      if (sleepClientOut2.get() > 0) {
+        Thread.sleep(sleepClientOut2.get());
+      }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void insertClient(String consumerName, Client client, String table) throws SQLException {
+
+      try (Connection connection = dataSource.getConnection()) {
+
+        //noinspection SqlResolve
+        String sql = "insert into " + table + " (id, consumer_name) values (?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)
+        ) {
+          ps.setString(1, client.id);
+          ps.setString(2, consumerName);
+          ps.executeUpdate();
+        }
+
+      }
+
+      if (printClientToStdout.get()) {
+        System.out.println("Come client " + client + " from " + Thread.currentThread().getName());
+      }
+
+    }
 
   }
 

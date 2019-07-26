@@ -67,7 +67,7 @@ subprojects {
       attributes 'Implementation-Version': version
       attributes 'Implementation-Vendor': "greetgo!"
       attributes 'Created-By': System.getProperty("user.name")
-      attributes 'Created-At': new Date().format("yyyy-MM-dd/HH:mm:ss")
+      //attributes 'Created-At': new Date().format("yyyy-MM-dd/HH:mm:ss")
     }
   }
 }

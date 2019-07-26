@@ -7,3 +7,20 @@ dependencies {
   compile group: 'org.postgresql', name: 'postgresql', version: '9.4-1202-jdbc42'
   compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.1.1'
 }
+
+task prepareJarDepends(type: Copy) {
+  group "admin"
+  from configurations.compile
+  into project.buildDir.toPath().resolve("libs").resolve("deps")
+}
+
+jar {
+
+  dependsOn prepareJarDepends
+
+  manifest {
+    attributes "Class-Path": configurations.compile.collect { "deps/" + it.getName() }.join(' ')
+    attributes "Main-Class": "kz.greetgo.kafka.massive.tests.MassiveTestServer"
+  }
+
+}
