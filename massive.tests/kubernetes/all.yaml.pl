@@ -10,11 +10,12 @@ my $outDir = "$myDir/out";
 my $baseName = basename($me);
 $baseName =~ s/\.pl$//;
 
-&runPerl("$myDir/zoo/zoo_volumes_1.yaml.pl");
+&runPerl("$myDir/zoo/volumes_zoo_1.yaml.pl");
+&runPerl("$myDir/zoo/volumes_kafka_1.yaml.pl");
 
 my $volumesContent = '';
 
-$volumesContent .= &assemble("zoo", "zoo_volumes_");
+$volumesContent .= &assemble("volumes", "volumes_");
 
 &writeFile("$outDir/volumes.yaml", $volumesContent);
 

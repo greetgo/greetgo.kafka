@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mass-volume-kafka-1-data
+  labels:
+    name: mass-volume-kafka-1-data
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 40Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/mass/volumes/kafka-1-data"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: mass-volume-kafka-1-data
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mass-volume-kafka-1-data
+spec:
+  volumeName: mass-volume-kafka-1-data
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Gi
+  selector:
+    matchLabels:
+      name: mass-volume-kafka-1-data
+#################################################################################
+#################################################################################
+#################################################################################

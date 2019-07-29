@@ -23,10 +23,12 @@ my @letLabels =
       [ qw/dock3 mass-volume-kafka-4 true/ ],
 
       [ qw/dock2 mass-volume-zoo-1-data true/ ],
-      [ qw/dock2 mass-volume-zoo-1-log true/ ],
-
       [ qw/dock2 mass-volume-zoo-2-data true/ ],
+      [ qw/dock2 mass-volume-zoo-3-data true/ ],
+
+      [ qw/dock2 mass-volume-zoo-1-log true/ ],
       [ qw/dock2 mass-volume-zoo-2-log true/ ],
+      [ qw/dock2 mass-volume-zoo-3-log true/ ],
 
       [ qw/dock1 mass-server true/ ],
 

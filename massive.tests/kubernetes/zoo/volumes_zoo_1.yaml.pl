@@ -28,7 +28,7 @@ sub make {
   my $newName = $baseName;
   $newName =~ s/1/$N/;
 
-  &writeFile("$outDir/zoo/$newName", $content);
+  &writeFile("$outDir/volumes/$newName", $content);
 }
 
 sub writeFile {
