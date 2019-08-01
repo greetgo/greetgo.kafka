@@ -10,14 +10,22 @@ my $outDir = "$myDir/out";
 my $baseName = basename($me);
 $baseName =~ s/\.pl$//;
 
-&runPerl("$myDir/zoo/volumes_zoo_1.yaml.pl");
-&runPerl("$myDir/zoo/volumes_kafka_1.yaml.pl");
+&runPerl("$myDir/templates/volumes_zoo_1.yaml.pl");
+&runPerl("$myDir/templates/volumes_kafka_1.yaml.pl");
+&runPerl("$myDir/templates/pod_zoo_1.yaml.pl");
+&runPerl("$myDir/templates/pod_kafka_1.yaml.pl");
 
 my $volumesContent = '';
+my $podContent = '';
 
 $volumesContent .= &assemble("volumes", "volumes_");
+$podContent .= &assemble("pod", "pod_");
+
+$podContent .= &readFile("$myDir/templates/pod_kafka_manager.yaml");
+$podContent .= &readFile("$myDir/templates/pod_zoo_navigator.yaml");
 
 &writeFile("$outDir/volumes.yaml", $volumesContent);
+&writeFile("$outDir/pod.yaml", $podContent);
 
 exit(1);
 

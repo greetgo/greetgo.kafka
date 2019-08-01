@@ -1,0 +1,12 @@
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/7"
+
+  config.vm.network "public_network", auto_config: false
+
+  config.vm.provision "shell",
+      run: "always",
+      inline: "ip addr add 192.168.18.51/16 dev eth1"
+
+end

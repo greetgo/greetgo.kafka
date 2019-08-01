@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: kafka-manager
+  labels:
+    app: kafka-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-manager
+  template:
+    metadata:
+      labels:
+        app: kafka-manager
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kafka-manager
+                    operator: In
+                    values:
+                      - "true"
+      containers:
+        - name: kafka-manager
+          image: sheepkiller/kafka-manager
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9000
+              protocol: TCP
+          env:
+            - name: ZOO1
+              value: "zookeeper-1-0.zookeeper-1.default.svc.cluster.local"
+            - name: ZOO2
+              value: "zookeeper-2-0.zookeeper-2.default.svc.cluster.local"
+            - name: ZOO3
+              value: "zookeeper-3-0.zookeeper-3.default.svc.cluster.local"
+            - name: ZK_HOSTS
+              value: "$(ZOO1):2181,$(ZOO2):2181,$(ZOO3):2181"
+            - name: APPLICATION_SECRET
+              value: "letmein"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-manager
+spec:
+  type: NodePort
+  selector:
+    app: kafka-manager
+  ports:
+    - port: 9000
+      nodePort: 29002
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################

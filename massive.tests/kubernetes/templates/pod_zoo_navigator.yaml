@@ -1,0 +1,113 @@
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: zoo-navigator-web
+  labels:
+    app: zoo-navigator-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zoo-navigator-web
+  template:
+    metadata:
+      labels:
+        app: zoo-navigator-web
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: zoo-navigator-web
+                    operator: In
+                    values:
+                      - "true"
+      containers:
+        - name: zoo-navigator-web
+          image: elkozmon/zoonavigator-web:0.6.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9001
+              protocol: TCP
+          env:
+            - name: ZOO1
+              value: "zookeeper-1-0.zookeeper-1.default.svc.cluster.local"
+            - name: ZOO2
+              value: "zookeeper-2-0.zookeeper-2.default.svc.cluster.local"
+            - name: ZOO3
+              value: "zookeeper-3-0.zookeeper-3.default.svc.cluster.local"
+            - name: WEB_HTTP_PORT
+              value: "9001"
+            - name: API_HOST
+              value: "zoo-navigator-api.default.svc.cluster.local"
+            - name: API_PORT
+              value: "9082"
+            - name: AUTO_CONNECT_CONNECTION_STRING
+              value: "$(ZOO1):2181,$(ZOO2):2181,$(ZOO3):2181"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zoo-navigator-web
+spec:
+  type: NodePort
+  selector:
+    app: zoo-navigator-web
+  ports:
+    - port: 9001
+      nodePort: 29001
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: zoo-navigator-api
+  labels:
+    app: zoo-navigator-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zoo-navigator-api
+  template:
+    metadata:
+      labels:
+        app: zoo-navigator-api
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: zoo-navigator-api
+                    operator: In
+                    values:
+                      - "true"
+      containers:
+        - name: zoo-navigator-api
+          image: elkozmon/zoonavigator-api:0.6.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9001
+              protocol: TCP
+          env:
+            - name: API_HTTP_PORT
+              value: "9082"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zoo-navigator-api
+spec:
+  selector:
+    app: zoo-navigator-api
+  ports:
+    - port: 9082
+      targetPort: 9082
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
