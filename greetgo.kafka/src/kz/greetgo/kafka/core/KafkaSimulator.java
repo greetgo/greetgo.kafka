@@ -6,7 +6,6 @@ import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.model.BoxHolder;
 import kz.greetgo.kafka.producer.ProducerFacade;
-import kz.greetgo.kafka.producer.ProducerFacadeBridge;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import kz.greetgo.kafka.util.BoxUtil;
