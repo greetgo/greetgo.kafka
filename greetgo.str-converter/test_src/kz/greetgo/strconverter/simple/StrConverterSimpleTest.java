@@ -30,6 +30,7 @@ public class StrConverterSimpleTest {
     converter.convertRegistry().register(ExampleModel.class, "ExampleModel");
     converter.convertRegistry().register(ForTest.class, "ForTest");
     converter.convertRegistry().register(TestEnum.class, "TestEnum");
+    converter.convertRegistry().register(TestEnumAbstract.class, "TestEnumAbstract");
   }
 
   @Test
@@ -566,6 +567,26 @@ public class StrConverterSimpleTest {
     HI, BI
   }
 
+  public enum TestEnumAbstract {
+    WOW {
+      @Override
+      String saySome() {
+        return "some";
+      }
+    },
+
+    STORY {
+      @Override
+      String saySome() {
+        return "xxx";
+      }
+    },
+
+    ;
+
+    abstract String saySome();
+  }
+
   public static class ForTest {
     public TestEnum testEnum;
 
@@ -598,6 +619,32 @@ public class StrConverterSimpleTest {
     Object actual = converter.fromStr(s);
 
     assertThat(actual).isEqualTo(TestEnum.HI);
+  }
+
+  @Test
+  public void enumWithAbstract() {
+
+    String s = converter.toStr(TestEnumAbstract.WOW);
+
+    assertThat(s).isEqualTo("QTestEnumAbstract{WOW}");
+
+    Object actual = converter.fromStr(s);
+
+    assertThat(actual).isEqualTo(TestEnumAbstract.WOW);
+
+    String someSaid = ((TestEnumAbstract) actual).saySome();
+    assertThat(someSaid).isEqualTo("some");
+
+  }
+
+  @Test
+  public void enumWithAbstract_onlyParse() {
+    Object actual = converter.fromStr("QTestEnumAbstract{STORY}");
+
+    assertThat(actual).isEqualTo(TestEnumAbstract.STORY);
+
+    String someSaid = ((TestEnumAbstract) actual).saySome();
+    assertThat(someSaid).isEqualTo("xxx");
   }
 
   static class CustomField {

@@ -187,6 +187,20 @@ public class Writer {
       }
     }
 
+    {
+      Class<?> superclass = objectClass.getSuperclass();
+      if (superclass != null && superclass.isEnum()) {
+
+        String alias = convertRegistry.classAliasMap.get(superclass);
+        if (alias != null) {
+          Enum<?> e = (Enum<?>) object;
+          res.append('Q').append(alias).append('{').append(e.name()).append('}');
+          return;
+        }
+
+      }
+    }
+
     throw new CannotSerializeClass(object.getClass());
   }
 
