@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_ERROR_IN_METHOD;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD;
+import static kz.greetgo.kafka.util.AnnotationUtil.getAnnotation;
 import static kz.greetgo.kafka.util.GenericUtil.extractClass;
 import static kz.greetgo.kafka.util.GenericUtil.isOfClass;
 
@@ -54,14 +55,14 @@ public class InvokerBuilder {
 
   public Invoker build() {
 
-    Topic topic = method.getAnnotation(Topic.class);
+    Topic topic = getAnnotation(method, Topic.class);
     if (topic == null) {
       throw new IllegalStateException("No annotation Topic for " + method);
     }
 
     String tmpConsumerName = method.getName();
     {
-      ConsumerName annotation = method.getAnnotation(ConsumerName.class);
+      ConsumerName annotation = getAnnotation(method, ConsumerName.class);
       if (annotation != null) {
         tmpConsumerName = annotation.value();
       }
@@ -70,16 +71,16 @@ public class InvokerBuilder {
 
     Class<?>[] tmpCommitOn = new Class<?>[0];
     {
-      KafkaCommitOn commitOn = method.getAnnotation(KafkaCommitOn.class);
+      KafkaCommitOn commitOn = getAnnotation(method, KafkaCommitOn.class);
       if (commitOn != null) {
         tmpCommitOn = commitOn.value();
       }
     }
     final Class<?>[] commitOn = tmpCommitOn;
 
-    InnerProducerName parentProducerName = method.getAnnotation(InnerProducerName.class);
+    InnerProducerName parentProducerName = getAnnotation(method, InnerProducerName.class);
     if (parentProducerName == null) {
-      parentProducerName = controller.getClass().getAnnotation(InnerProducerName.class);
+      parentProducerName = getAnnotation(controller.getClass(), InnerProducerName.class);
     }
 
     final Set<String> topicSet = Arrays.stream(topic.value()).collect(Collectors.toSet());

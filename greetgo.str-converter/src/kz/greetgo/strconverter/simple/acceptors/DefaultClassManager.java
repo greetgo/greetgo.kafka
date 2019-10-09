@@ -1,7 +1,5 @@
 package kz.greetgo.strconverter.simple.acceptors;
 
-import kz.greetgo.strconverter.simple.core.NameValue;
-
 import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

@@ -2,10 +2,13 @@ package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.logger.Logger;
+import kz.greetgo.kafka.util.AnnotationUtil;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
+import static kz.greetgo.kafka.util.AnnotationUtil.getAnnotation;
 
 public class ConsumerDefinitionExtractor {
 
@@ -18,7 +21,7 @@ public class ConsumerDefinitionExtractor {
 
     for (Method method : controller.getClass().getMethods()) {
 
-      Topic topic = method.getAnnotation(Topic.class);
+      Topic topic = getAnnotation(method, Topic.class);
       if (topic == null) {
         continue;
       }

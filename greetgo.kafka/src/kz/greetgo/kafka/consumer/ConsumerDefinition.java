@@ -5,14 +5,14 @@ import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.KafkaNotifier;
 import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.logger.Logger;
-import kz.greetgo.kafka.model.Box;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static kz.greetgo.kafka.util.AnnotationUtil.getAnnotation;
 
 public class ConsumerDefinition {
 
@@ -37,20 +37,20 @@ public class ConsumerDefinition {
     this.method = method;
 
     {
-      ConsumersFolder consumersFolder = controller.getClass().getAnnotation(ConsumersFolder.class);
+      ConsumersFolder consumersFolder = getAnnotation(controller.getClass(), ConsumersFolder.class);
       folderPath = consumersFolder == null ? null : consumersFolder.value();
     }
 
     invoker = new InvokerBuilder(controller, method, logger).build();
 
     {
-      autoOffsetReset = method.getAnnotation(KafkaNotifier.class) == null
+      autoOffsetReset = getAnnotation(method, KafkaNotifier.class) == null
         ? AutoOffsetReset.EARLIEST : AutoOffsetReset.LATEST;
     }
 
     {
       final String tmpGroupId;
-      GroupId annotation = method.getAnnotation(GroupId.class);
+      GroupId annotation = getAnnotation(method, GroupId.class);
       if (annotation != null) {
         tmpGroupId = annotation.value();
       } else {
@@ -73,9 +73,9 @@ public class ConsumerDefinition {
     return controller.getClass();
   }
 
- public Invoker getInvoker() {
+  public Invoker getInvoker() {
     return invoker;
- }
+  }
 
   /**
    * @return строка для описания в логах этого консюмера
