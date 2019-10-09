@@ -15,8 +15,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
@@ -482,6 +484,62 @@ public class InvokerBuilderTest {
     }
 
     assertThat(c9.offset).isEqualTo(offset);
+    assertThat(toCommit).isTrue();
+  }
+
+  static class C10_Model1 {}
+
+  static class C10_Model2 {}
+
+  static class C10 {
+
+    final List<Object> models=new ArrayList<>();
+
+    @Topic("test1")
+    @SuppressWarnings("unused")
+    public void method1(Object model) {
+      this.models.add(model);
+    }
+
+  }
+
+  @Test
+  public void build_invoke__innerType_Object() {
+    C10 controller = new C10();
+    Method method = findMethod(controller, "method1");
+
+    C10_Model1 model1 = new C10_Model1();
+    C10_Model2 model2 = new C10_Model2();
+
+    Box box1 = new Box();
+    box1.body = model1;
+    Box box2 = new Box();
+    box2.body = model2;
+
+    ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
+    ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
+
+    ConsumerRecords<byte[], Box> records = recordsOf(asList(record1, record2));
+
+    InvokerBuilder builder = new InvokerBuilder(controller, method, null);
+
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
+
+    assertThat(controller.models).hasSize(2);
+    assertThat(controller.models.get(0)).isSameAs(model1);
+    assertThat(controller.models.get(1)).isSameAs(model2);
     assertThat(toCommit).isTrue();
   }
 
