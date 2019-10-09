@@ -493,7 +493,7 @@ public class InvokerBuilderTest {
 
   static class C10 {
 
-    final List<Object> models=new ArrayList<>();
+    final List<Object> models = new ArrayList<>();
 
     @Topic("test1")
     @SuppressWarnings("unused")
@@ -540,6 +540,71 @@ public class InvokerBuilderTest {
     assertThat(controller.models).hasSize(2);
     assertThat(controller.models.get(0)).isSameAs(model1);
     assertThat(controller.models.get(1)).isSameAs(model2);
+    assertThat(toCommit).isTrue();
+  }
+
+
+  static class C11_Model {}
+
+  @SuppressWarnings("InnerClassMayBeStatic")
+  class C11 {
+
+    @Topic("test1")
+    @SuppressWarnings("unused")
+    public void method1(C11_Model model) {
+      throw new RuntimeException("error 3v78jbn2k");
+    }
+
+  }
+
+  class C11_Child extends C11 {
+    @Override
+    public void method1(C11_Model model) {
+      throw new RuntimeException("error 4h3g52v");
+    }
+  }
+
+  class C11_Child_Child extends C11_Child {
+
+    C11_Model model;
+
+    @Override
+    public void method1(C11_Model model) {
+      this.model = model;
+    }
+  }
+
+  @Test
+  public void build_invoke__annotationInSuperMethod() {
+    C11_Child_Child controller = new C11_Child_Child();
+    Method method = findMethod(controller, "method1");
+
+    C11_Model model1 = new C11_Model();
+
+    Box box1 = new Box();
+    box1.body = model1;
+
+    ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
+
+    ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
+
+    InvokerBuilder builder = new InvokerBuilder(controller, method, null);
+
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
+
+    assertThat(controller.model).isSameAs(model1);
     assertThat(toCommit).isTrue();
   }
 
