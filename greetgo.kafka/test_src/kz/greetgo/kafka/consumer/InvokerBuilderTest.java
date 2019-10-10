@@ -608,4 +608,60 @@ public class InvokerBuilderTest {
     assertThat(toCommit).isTrue();
   }
 
+
+  static class C12 {
+
+    @Topic("test1")
+    @SuppressWarnings("unused")
+    public void method1(Box box, @Author String author) {
+      throw new RuntimeException("5b3426vg");
+    }
+
+  }
+
+  static class C12_Child extends C12 {
+    @Override
+    public void method1(Box box, String author) {
+      super.method1(box, author);
+    }
+  }
+
+  static class C12_Child_Child extends C12_Child {
+    String author;
+    @Override
+    public void method1(Box box, String author) {
+      this.author = author;
+    }
+  }
+
+  @Test
+  public void build_invoke__author_fromParentParent() {
+    C12_Child_Child controller = new C12_Child_Child();
+    Method method = findMethod(controller, "method1");
+
+    Box box = new Box();
+    box.author = RND.str(10);
+
+    ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box);
+
+    ConsumerRecords<byte[], Box> records = recordsOf(singletonList(record1));
+
+    InvokerBuilder builder = new InvokerBuilder(controller, method, null);
+    Invoker invoker = builder.build();
+
+    boolean toCommit;
+
+    try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
+
+      //
+      //
+      toCommit = invokeSession.invoke(records);
+      //
+      //
+
+    }
+
+    assertThat(controller.author).isSameAs(box.author);
+    assertThat(toCommit).isTrue();
+  }
 }
