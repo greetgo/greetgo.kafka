@@ -119,11 +119,11 @@ public class ConsumerDefinition {
   }
 
   public List<String> topicList() {
-    return Arrays.stream(
-      method
-        .getAnnotation(Topic.class)
-        .value()
-    ).collect(Collectors.toList());
+    Topic topic = getAnnotation(method, Topic.class);
+    if (topic == null) {
+      throw new RuntimeException("No @" + Topic.class.getSimpleName() + " over " + method);
+    }
+    return Arrays.stream(topic.value()).collect(Collectors.toList());
   }
 
   public String getConfigPath() {
