@@ -18,6 +18,7 @@ import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.KafkaFuture;
 import kz.greetgo.kafka.producer.ProducerFacade;
+import kz.greetgo.kafka.util.AnnotationUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -86,7 +87,7 @@ public class InvokerBuilder {
     final Set<String> topicSet = Arrays.stream(topic.value()).collect(Collectors.toSet());
 
     Type[] parameterTypes = method.getGenericParameterTypes();
-    Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+    Annotation[][] parameterAnnotations = AnnotationUtil.getParameterAnnotations(method);
     assert parameterTypes.length == parameterAnnotations.length;
 
     final int parametersCount = parameterTypes.length;

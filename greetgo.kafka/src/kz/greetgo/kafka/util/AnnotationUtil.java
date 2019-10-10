@@ -2,7 +2,10 @@ package kz.greetgo.kafka.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class AnnotationUtil {
@@ -64,6 +67,60 @@ public class AnnotationUtil {
     }
 
     return getAnnotationInner(source.getSuperclass(), annotation, cache);
+  }
+
+  public static Annotation[][] getParameterAnnotations(Method method) {
+    Objects.requireNonNull(method);
+
+    List<Annotation[][]> all = new ArrayList<>();
+
+    putParameterAnnotations(method, all);
+
+    Annotation[][] ret = new Annotation[method.getParameterCount()][];
+
+    int[] totalLengths = new int[ret.length];
+    for (Annotation[][] annotations : all) {
+      for (int i = 0; i < ret.length; i++) {
+        totalLengths[i] += annotations[i].length;
+      }
+    }
+    for (int i = 0; i < ret.length; i++) {
+      ret[i] = new Annotation[totalLengths[i]];
+    }
+
+    int[] indexes = new int[ret.length];
+    for (Annotation[][] annotations : all) {
+      for (int i = 0; i < ret.length; i++) {
+        for (int j = 0; j < annotations[i].length; j++) {
+          ret[i][indexes[i]++] = annotations[i][j];
+        }
+      }
+    }
+
+    return ret;
+  }
+
+  private static void putParameterAnnotations(Method method, List<Annotation[][]> dest) {
+
+    Set<Class<?>> cache = new HashSet<>();
+
+    Class<?> current = method.getDeclaringClass();
+
+    while (current != null) {
+
+      if (cache.contains(current)) {
+        return;
+      }
+      cache.add(current);
+
+      try {
+        Method m = current.getDeclaredMethod(method.getName(), method.getParameterTypes());
+        dest.add(m.getParameterAnnotations());
+      } catch (NoSuchMethodException ignore) {
+      }
+
+      current = current.getSuperclass();
+    }
   }
 
 }
