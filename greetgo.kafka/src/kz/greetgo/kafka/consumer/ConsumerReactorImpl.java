@@ -13,6 +13,7 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +70,27 @@ public class ConsumerReactorImpl implements ConsumerReactor {
         consumerConfigWorker.close();
       }
     }
+  }
+
+  /**
+   * Waits for all consumers to finish their work.
+   * <p>
+   * You can call this method after called {@link #stop()} to wait for all consumer finished their work.
+   */
+  public void join() {
+
+    while (true) {
+      Iterator<Worker> iterator = workers.values().iterator();
+      if (!iterator.hasNext()) {
+        return;
+      }
+      try {
+        iterator.next().join();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
   }
 
   //
