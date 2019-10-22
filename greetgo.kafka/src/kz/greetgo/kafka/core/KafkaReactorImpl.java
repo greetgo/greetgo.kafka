@@ -77,6 +77,10 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
   }
 
+  public void joinToConsumers() {
+    consumerReactorList.forEach(ConsumerReactorImpl::join);
+  }
+
   private final ProducerConfigWorker producerConfigWorker = new ProducerConfigWorker(
     () -> producerConfigStorage, this::putProducerDefaultValues
   );
