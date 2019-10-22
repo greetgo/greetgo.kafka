@@ -32,8 +32,8 @@ import java.util.stream.Collectors;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
-import static jdk.nashorn.internal.runtime.JSType.toLong;
 import static kz.greetgo.kafka.producer.ProducerFacadeBridge.createPermanentBridge;
+import static kz.greetgo.kafka.util.GenericUtil.longNullAsZero;
 
 public class KafkaSimulator extends KafkaReactorAbstract {
 
@@ -124,7 +124,7 @@ public class KafkaSimulator extends KafkaReactorAbstract {
 
     ConsumerRecord<byte[], Box> consumerRecord = new ConsumerRecord<>(
       topicPartition.topic(), topicPartition.partition(), 1L,
-      toLong(r.timestamp()), TimestampType.CREATE_TIME, 1L, 1, 1, r.key(), serialization(r.value()), r.headers()
+      longNullAsZero(r.timestamp()), TimestampType.CREATE_TIME, 1L, 1, 1, r.key(), serialization(r.value()), r.headers()
     );
 
     List<ConsumerDefinition> consumerDefinitionList = this.consumerDefinitionList;

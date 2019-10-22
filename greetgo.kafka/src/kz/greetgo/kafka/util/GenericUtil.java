@@ -34,4 +34,8 @@ public class GenericUtil {
 
     throw new IllegalArgumentException("Cannot extract class from " + someType);
   }
+
+  public static long longNullAsZero(Long value) {
+    return value == null ? 0L : value;
+  }
 }
