@@ -71,7 +71,6 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
   public void stopConsumers() {
 
     consumerReactorList.forEach(ConsumerReactorImpl::stop);
-    consumerReactorList.clear();
 
     producerConfigWorker.close();
 
