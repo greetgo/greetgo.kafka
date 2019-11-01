@@ -6,6 +6,8 @@ dependencies {
 
   compile group: 'org.postgresql', name: 'postgresql', version: '9.4-1202-jdbc42'
   compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.1.1'
+
+  compile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
 }
 
 task prepareJarDepends(type: Copy) {

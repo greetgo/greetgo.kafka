@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  compile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
+  testCompile "kz.greetgo.util:greetgo.util:$greetgoUtilVersion"
 }
 
 uploadToMavenCentral {
