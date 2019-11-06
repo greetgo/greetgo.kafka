@@ -11,6 +11,9 @@ import static java.util.Comparator.comparingInt;
 
 public class ExampleModel {
 
+  @SuppressWarnings("unused")
+  public static final int SOME_CONST = 13;
+
   public String strField;
   public int intField;
   public long longField;

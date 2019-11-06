@@ -4,6 +4,7 @@ import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,7 +73,12 @@ public class DefaultClassManager implements ClassManager {
 
   private void fillWithFieldSetters(Class<?> aClass) {
     for (final Field field : aClass.getFields()) {
-      if (field.getAnnotation(Transient.class) != null) continue;
+      if (field.getAnnotation(Transient.class) != null) {
+        continue;
+      }
+      if (Modifier.isStatic(field.getModifiers())) {
+        continue;
+      }
 
       orderList.add(field.getName());
 
