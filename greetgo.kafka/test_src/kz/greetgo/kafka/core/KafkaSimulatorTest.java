@@ -76,10 +76,52 @@ public class KafkaSimulatorTest {
     assertThat(controller.modelList).isEmpty();
     assertThat(controller.model2List).isEmpty();
 
-    simulator.push();
+    simulator.push(TestConsumer.class);
 
     assertThat(controller.modelList).hasSize(1);
     assertThat(controller.model2List).hasSize(1);
+  }
+
+  @Test
+  public void testSimulator__filterClosed() {
+
+    TestConsumer controller = new TestConsumer();
+
+    KafkaSimulator simulator = new KafkaSimulator();
+
+    simulator.authorGetter = () -> "asd";
+    simulator.hostId = "asd";
+
+    simulator.addController(controller);
+
+    StrConverterSimple strConverter = new StrConverterSimple();
+    strConverter.convertRegistry().register(Box.class);
+    strConverter.convertRegistry().register(ModelKryo.class);
+    strConverter.convertRegistry().register(ModelKryo2.class);
+
+    simulator.setStrConverterSupplier(() -> strConverter);
+
+    simulator.startConsumers();
+
+    ProducerFacade producer = simulator.createProducer("test");
+
+    ModelKryo object1 = new ModelKryo();
+    object1.name = RND.str(10);
+    object1.wow = 234L;
+    producer.sending(object1).toTopic("test_topic1").go().awaitAndGet();
+
+    ModelKryo2 object2 = new ModelKryo2();
+    object2.surname = RND.str(10);
+    object2.id = 234L;
+    producer.sending(object2).toTopic("test_topic2").go().awaitAndGet();
+
+    assertThat(controller.modelList).isEmpty();
+    assertThat(controller.model2List).isEmpty();
+
+    simulator.push(consumerDefinition -> false);
+
+    assertThat(controller.modelList).isEmpty();
+    assertThat(controller.model2List).isEmpty();
   }
 
 }

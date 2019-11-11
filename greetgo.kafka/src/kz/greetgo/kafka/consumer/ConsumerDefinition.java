@@ -70,7 +70,15 @@ public class ConsumerDefinition {
   }
 
   public Class<?> getControllerClass() {
-    return controller.getClass();
+    return getController().getClass();
+  }
+
+  public Object getController() {
+    return controller;
+  }
+
+  public Method getMethod() {
+    return method;
   }
 
   public Invoker getInvoker() {

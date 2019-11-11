@@ -10,6 +10,7 @@ import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import kz.greetgo.kafka.util.BoxUtil;
 import kz.greetgo.kafka.util.KeyUtil;
+import kz.greetgo.kafka.util.PushFilterOnControllerClasses;
 import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -102,23 +103,25 @@ public class KafkaSimulator extends KafkaReactorAbstract {
     return Cluster.empty();
   }
 
-  public void push() {
+  public void push(Class<?>... controllerClass) {
+    push(PushFilterOnControllerClasses.on(controllerClass));
+  }
 
+  public void push(PushFilter pushFilter) {
     for (MockProducerHolder producer : producers.values()) {
       producer.getProducer().flush();
       List<ProducerRecord<byte[], Box>> history = producer.getProducer().history();
       producer.getProducer().clear();
 
       for (ProducerRecord<byte[], Box> record : history) {
-        pushRecord(record, producer);
+        pushRecord(record, producer, pushFilter);
       }
     }
-
   }
 
   private final List<ConsumerRecord<byte[], Box>> pushedRecords = synchronizedList(new ArrayList<>());
 
-  private void pushRecord(ProducerRecord<byte[], Box> r, MockProducerHolder producer) {
+  private void pushRecord(ProducerRecord<byte[], Box> r, MockProducerHolder producer, PushFilter pushFilter) {
 
     TopicPartition topicPartition = producer.topicPartition(r);
 
@@ -137,6 +140,10 @@ public class KafkaSimulator extends KafkaReactorAbstract {
       ConsumerRecords<byte[], Box> singleList = new ConsumerRecords<>(map);
 
       for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {
+
+        if (!pushFilter.canPush(consumerDefinition)) {
+          continue;
+        }
 
         Invoker invoker = consumerDefinition.getInvoker();
         Set<String> usingProducerNames = invoker.getUsingProducerNames();
