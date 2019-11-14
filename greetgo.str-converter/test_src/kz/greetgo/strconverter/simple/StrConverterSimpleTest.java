@@ -31,6 +31,9 @@ public class StrConverterSimpleTest {
     converter.convertRegistry().register(ForTest.class, "ForTest");
     converter.convertRegistry().register(TestEnum.class, "TestEnum");
     converter.convertRegistry().register(TestEnumAbstract.class, "TestEnumAbstract");
+    converter.convertRegistry().register(ManyFieldClass.class, "ManyFieldClass");
+    converter.convertRegistry().register(OnlyFinalFieldsClass.class, "OnlyFinalFieldsClass");
+    converter.convertRegistry().register(WithFinalFieldsClass.class, "WithFinalFieldsClass");
   }
 
   @Test
@@ -672,7 +675,6 @@ public class StrConverterSimpleTest {
     public CustomField field1;
     public CustomField field2;
     public String hello;
-
   }
 
   @Test
@@ -707,4 +709,174 @@ public class StrConverterSimpleTest {
 
   }
 
+  public static class ManyFieldClass {
+    public String fieldStr;
+    public Date fieldDate;
+    public BigDecimal fieldBD;
+    public Boolean fieldBool1;
+    public Integer fieldInt1;
+    public Long fieldLong1;
+    public Byte fieldByte1;
+    public Short fieldShort1;
+    public Double fieldDouble1;
+    public Float fieldFloat1;
+    public boolean fieldBool2;
+    public int fieldInt2;
+    public long fieldLong2;
+    public byte fieldByte2;
+    public short fieldShort2;
+    public double fieldDouble2;
+    public float fieldFloat2;
+  }
+
+  @Test
+  public void test_ManyFieldClass__allNulls() {
+
+    ManyFieldClass object = new ManyFieldClass();
+
+    String s = converter.toStr(object);
+
+    System.out.println("54ghv26c :: s = " + s);
+
+    ManyFieldClass actual = converter.fromStr(s);
+
+    assertThat(actual.fieldStr).isNull();
+    assertThat(actual.fieldDate).isNull();
+    assertThat(actual.fieldBD).isNull();
+    assertThat(actual.fieldBool1).isNull();
+    assertThat(actual.fieldInt1).isNull();
+    assertThat(actual.fieldLong1).isNull();
+    assertThat(actual.fieldByte1).isNull();
+    assertThat(actual.fieldShort1).isNull();
+    assertThat(actual.fieldDouble1).isNull();
+    assertThat(actual.fieldFloat1).isNull();
+    assertThat(actual.fieldBool2).isFalse();
+    assertThat(actual.fieldInt2).isZero();
+    assertThat(actual.fieldLong2).isZero();
+    assertThat(actual.fieldByte2).isZero();
+    assertThat(actual.fieldShort2).isZero();
+    assertThat(actual.fieldDouble2).isZero();
+    assertThat(actual.fieldFloat2).isZero();
+
+  }
+
+  @Test
+  public void test_ManyFieldClass() {
+
+    ManyFieldClass object = new ManyFieldClass();
+    object.fieldStr = RND.str(10);
+    object.fieldDate = RND.dateDays(-100, 0);
+    object.fieldBD = RND.bd(1_000_000_000_000L, 7);
+
+    object.fieldBool1 = RND.bool();
+    object.fieldInt1 = RND.plusInt(1_000_000_000);
+    object.fieldLong1 = RND.plusLong(1_000_000_000_000L);
+    object.fieldByte1 = (byte) RND.plusInt(1_000);
+    object.fieldShort1 = (short) RND.plusInt(1_000_000_000);
+    object.fieldDouble1 = RND.plusDouble(2e7, 7) - 1e7;
+    object.fieldFloat1 = (float) (RND.plusDouble(2e7, 7) - 1e7);
+
+    object.fieldBool2 = RND.bool();
+    object.fieldInt2 = RND.plusInt(1_000_000_000);
+    object.fieldLong2 = RND.plusLong(1_000_000_000_000L);
+    object.fieldByte2 = (byte) RND.plusInt(1_000);
+    object.fieldShort2 = (short) RND.plusInt(1_000_000_000);
+    object.fieldDouble2 = RND.plusDouble(2e7, 7) - 1e7;
+    object.fieldFloat2 = (float) (RND.plusDouble(2e7, 7) - 1e7);
+
+    String s = converter.toStr(object);
+
+    System.out.println("54jv326vgh :: s = " + s);
+
+    ManyFieldClass actual = converter.fromStr(s);
+
+    assertThat(actual.fieldStr).isEqualTo(object.fieldStr);
+    assertThat(actual.fieldDate).isEqualTo(object.fieldDate);
+    assertThat(actual.fieldBD).isEqualTo(object.fieldBD);
+    assertThat(actual.fieldBool1).isEqualTo(object.fieldBool1);
+    assertThat(actual.fieldInt1).isEqualTo(object.fieldInt1);
+    assertThat(actual.fieldLong1).isEqualTo(object.fieldLong1);
+    assertThat(actual.fieldByte1).isEqualTo(object.fieldByte1);
+    assertThat(actual.fieldShort1).isEqualTo(object.fieldShort1);
+    assertThat(actual.fieldDouble1).isEqualTo(object.fieldDouble1);
+    assertThat(actual.fieldFloat1).isEqualTo(object.fieldFloat1);
+    assertThat(actual.fieldBool2).isEqualTo(object.fieldBool2);
+    assertThat(actual.fieldInt2).isEqualTo(object.fieldInt2);
+    assertThat(actual.fieldLong2).isEqualTo(object.fieldLong2);
+    assertThat(actual.fieldByte2).isEqualTo(object.fieldByte2);
+    assertThat(actual.fieldShort2).isEqualTo(object.fieldShort2);
+    assertThat(actual.fieldDouble2).isEqualTo(object.fieldDouble2);
+    assertThat(actual.fieldFloat2).isEqualTo(object.fieldFloat2);
+
+  }
+
+  public static class OnlyFinalFieldsClass {
+    public final String field1;
+    public final String field2;
+    public final String field3;
+
+    @java.beans.ConstructorProperties({"field1", "field2", "field3"})
+    public OnlyFinalFieldsClass(String field1, String field2, String field3) {
+      this.field1 = field1;
+      this.field2 = field2;
+      this.field3 = field3;
+    }
+  }
+
+  @Test
+  public void test_OnlyFinalFieldsClass() {
+
+    OnlyFinalFieldsClass object = new OnlyFinalFieldsClass(RND.str(10), RND.str(10), RND.str(10));
+
+    String s = converter.toStr(object);
+
+    System.out.println("54jv326vgh :: s = " + s);
+
+    OnlyFinalFieldsClass actual = converter.fromStr(s);
+
+    assertThat(actual).isNotNull();
+    assertThat(actual.field1).isEqualTo(object.field1);
+    assertThat(actual.field2).isEqualTo(object.field2);
+    assertThat(actual.field3).isEqualTo(object.field3);
+
+  }
+
+  public static class WithFinalFieldsClass {
+    public final String finalField1;
+    public final String finalField2;
+    public final String finalField3;
+
+    public String field4;
+    public String field5;
+    public String field6;
+
+    @java.beans.ConstructorProperties({"finalField1", "finalField2", "finalField3"})
+    public WithFinalFieldsClass(String finalField1, String finalField2, String finalField3) {
+      this.finalField1 = finalField1;
+      this.finalField2 = finalField2;
+      this.finalField3 = finalField3;
+    }
+  }
+
+  @Test
+  public void test_WithFinalFieldsClass() {
+    WithFinalFieldsClass object = new WithFinalFieldsClass(RND.str(10), RND.str(10), RND.str(10));
+    object.field4 = RND.str(10);
+    object.field5 = RND.str(10);
+    object.field6 = RND.str(10);
+
+    String s = converter.toStr(object);
+
+    System.out.println("6c54f72f7c :: s = " + s);
+
+    WithFinalFieldsClass actual = converter.fromStr(s);
+
+    assertThat(actual).isNotNull();
+    assertThat(actual.finalField1).isEqualTo(object.finalField1);
+    assertThat(actual.finalField2).isEqualTo(object.finalField2);
+    assertThat(actual.finalField3).isEqualTo(object.finalField3);
+    assertThat(actual.field4).isEqualTo(object.field4);
+    assertThat(actual.field5).isEqualTo(object.field5);
+    assertThat(actual.field6).isEqualTo(object.field6);
+  }
 }
