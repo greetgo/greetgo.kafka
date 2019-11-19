@@ -34,6 +34,7 @@ public class StrConverterSimpleTest {
     converter.convertRegistry().register(ManyFieldClass.class, "ManyFieldClass");
     converter.convertRegistry().register(OnlyFinalFieldsClass.class, "OnlyFinalFieldsClass");
     converter.convertRegistry().register(WithFinalFieldsClass.class, "WithFinalFieldsClass");
+    converter.convertRegistry().register(ClassWithBoolean.class, "ClassWithBoolean");
   }
 
   @Test
@@ -879,4 +880,26 @@ public class StrConverterSimpleTest {
     assertThat(actual.field5).isEqualTo(object.field5);
     assertThat(actual.field6).isEqualTo(object.field6);
   }
+
+  public static class ClassWithBoolean {
+    public String str;
+    public Boolean boolField;
+  }
+
+  @Test
+  public void classWithBoxedBoolean() {
+    ClassWithBoolean v = new ClassWithBoolean();
+    v.str = "jЮgАHдlЖws";
+    v.boolField = null;
+
+    String s = converter.toStr(v);
+
+    assertThat(s).isEqualTo("QClassWithBoolean{str=SjЮgАHдlЖws|}");
+
+    ClassWithBoolean actual = converter.fromStr(s);
+
+    assertThat(actual.str).isEqualTo(v.str);
+    assertThat(actual.boolField).isNull();
+  }
+
 }
