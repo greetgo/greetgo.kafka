@@ -319,7 +319,7 @@ public class InvokerBuilderTest {
     TestLoggerDestination testLoggerDestination = new TestLoggerDestination();
     Logger logger = new Logger();
     logger.setDestination(testLoggerDestination);
-    logger.setShowLogger(LOG_CONSUMER_ERROR_IN_METHOD, true);
+    logger.setShowLoggerTypes(singletonList(LOG_CONSUMER_ERROR_IN_METHOD));
 
     InvokerBuilder builder = new InvokerBuilder(c6, method, logger);
     Invoker invoker = builder.build();
@@ -375,7 +375,7 @@ public class InvokerBuilderTest {
     TestLoggerDestination testLoggerDestination = new TestLoggerDestination();
     Logger logger = new Logger();
     logger.setDestination(testLoggerDestination);
-    logger.setShowLogger(LOG_CONSUMER_ERROR_IN_METHOD, true);
+    logger.setShowLoggerTypes(singletonList(LOG_CONSUMER_ERROR_IN_METHOD));
 
     InvokerBuilder builder = new InvokerBuilder(c7, method, logger);
     Invoker invoker = builder.build();
@@ -628,6 +628,7 @@ public class InvokerBuilderTest {
 
   static class C12_Child_Child extends C12_Child {
     String author;
+
     @Override
     public void method1(Box box, String author) {
       this.author = author;

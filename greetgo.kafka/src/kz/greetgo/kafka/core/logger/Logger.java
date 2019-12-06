@@ -4,7 +4,8 @@ import kz.greetgo.kafka.consumer.ConsumerDefinition;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 public class Logger implements LoggerExternal {
 
@@ -24,11 +25,17 @@ public class Logger implements LoggerExternal {
     }
   }
 
-  private final ConcurrentHashMap<LoggerType, Boolean> showings = new ConcurrentHashMap<>();
+  private static final Predicate<LoggerType> SHOW_ALL = x -> true;
+
+  private final AtomicReference<Predicate<LoggerType>> loggerTypeFilter = new AtomicReference<>(SHOW_ALL);
 
   @Override
-  public void setShowLogger(LoggerType loggerType, boolean show) {
-    showings.put(loggerType, show);
+  public void setLoggerTypeFilter(Predicate<LoggerType> loggerTypeFilter) {
+    if (loggerTypeFilter == null) {
+      this.loggerTypeFilter.set(SHOW_ALL);
+    } else {
+      this.loggerTypeFilter.set(loggerTypeFilter);
+    }
   }
 
   public boolean isShow(LoggerType loggerType) {
@@ -36,8 +43,7 @@ public class Logger implements LoggerExternal {
       return false;
     }
     {
-      Boolean showing = showings.get(loggerType);
-      return showing == null ? false : showing;
+      return loggerTypeFilter.get().test(loggerType);
     }
   }
 

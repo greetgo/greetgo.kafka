@@ -240,7 +240,8 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                   if (logger.isShow(LOG_CONSUMER_POLL_EXCEPTION_HAPPENED)) {
                     logger.logConsumerPollExceptionHappened(exception, consumerDefinition);
                   }
-                  continue;
+                  working.set(false);
+                  continue OUT;
                 }
 
 //                long pollCalledAt = System.nanoTime();

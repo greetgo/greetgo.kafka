@@ -28,7 +28,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
 
 public class MassiveTestServer {
 
@@ -306,7 +306,7 @@ public class MassiveTestServer {
     List<String> lines = countMap
       .entrySet()
       .stream()
-      .sorted(Comparator.comparing(Map.Entry::getKey))
+      .sorted(Map.Entry.comparingByKey())
       .map(e -> e.getKey() + " " + e.getValue().get())
       .collect(Collectors.toList());
 
@@ -360,15 +360,18 @@ public class MassiveTestServer {
     reactor.consumerConfigDefaults = ccd;
 
     reactor.logger().setDestination(new SimplePrinter());
-    reactor.logger().setShowLogger(LoggerType.SHOW_CONSUMER_WORKER_CONFIG, false);
-    reactor.logger().setShowLogger(LoggerType.SHOW_PRODUCER_CONFIG, true);
-    reactor.logger().setShowLogger(LoggerType.LOG_CLOSE_PRODUCER, true);
-    reactor.logger().setShowLogger(LoggerType.LOG_CONSUMER_ERROR_IN_METHOD, true);
-    reactor.logger().setShowLogger(LoggerType.LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD, true);
-    reactor.logger().setShowLogger(LoggerType.LOG_CONSUMER_REACTOR_REFRESH, true);
-    reactor.logger().setShowLogger(LoggerType.LOG_CONSUMER_FINISH_WORKER, true);
-    reactor.logger().setShowLogger(LoggerType.LOG_CONSUMER_POLL_EXCEPTION_HAPPENED, true);
-    reactor.logger().setShowLogger(LoggerType.LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED, true);
+    Map<LoggerType, Boolean> showTypes = new HashMap<>();
+    showTypes.put(LoggerType.SHOW_CONSUMER_WORKER_CONFIG, false);
+    showTypes.put(LoggerType.SHOW_PRODUCER_CONFIG, true);
+    showTypes.put(LoggerType.LOG_CLOSE_PRODUCER, true);
+    showTypes.put(LoggerType.LOG_CONSUMER_ERROR_IN_METHOD, true);
+    showTypes.put(LoggerType.LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD, true);
+    showTypes.put(LoggerType.LOG_CONSUMER_REACTOR_REFRESH, true);
+    showTypes.put(LoggerType.LOG_CONSUMER_FINISH_WORKER, true);
+    showTypes.put(LoggerType.LOG_CONSUMER_POLL_EXCEPTION_HAPPENED, true);
+    showTypes.put(LoggerType.LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED, true);
+    reactor.logger().setShowLoggerTypes(showTypes.entrySet().stream()
+      .filter(Map.Entry::getValue).map(Map.Entry::getKey).collect(toSet()));
 
     ModelRegistrar.registrar(reactor);
 
