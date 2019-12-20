@@ -135,4 +135,10 @@ public class Logger implements LoggerExternal {
     }
   }
 
+  public void logProducerValidationError(Throwable error) {
+    LoggerDestination d = this.destination;
+    if (d != null) {
+      d.logProducerValidationError(error);
+    }
+  }
 }

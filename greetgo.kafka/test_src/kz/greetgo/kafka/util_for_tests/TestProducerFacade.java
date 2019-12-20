@@ -21,7 +21,7 @@ public class TestProducerFacade implements ProducerFacade {
   public int indexer = 1;
   public int lastResetIndex;
 
-  public class Sent {
+  public static class Sent {
     public final Object model;
 
     public String topic = null;
@@ -37,6 +37,17 @@ public class TestProducerFacade implements ProducerFacade {
 
     public Sent(Object model) {
       this.model = model;
+    }
+
+    public void validate() {
+      try {
+        Box.validateBody(model);
+      } catch (Throwable throwable) {
+        if (throwable instanceof RuntimeException) {
+          throw (RuntimeException) throwable;
+        }
+        throw new RuntimeException(throwable);
+      }
     }
   }
 
@@ -113,6 +124,7 @@ public class TestProducerFacade implements ProducerFacade {
       public KafkaFuture go() {
         sent.goIndex = indexer++;
         sentList.add(sent);
+        sent.validate();
         return new KafkaFuture(new Future<RecordMetadata>() {
           @Override
           public boolean cancel(boolean mayInterruptIfRunning) {

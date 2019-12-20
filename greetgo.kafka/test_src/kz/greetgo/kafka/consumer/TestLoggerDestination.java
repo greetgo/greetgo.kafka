@@ -52,4 +52,8 @@ public class TestLoggerDestination implements LoggerDestination {
 
   @Override
   public void logProducerCreated(String producerName) {}
+
+  @Override
+  public void logProducerValidationError(Throwable error) {}
+
 }

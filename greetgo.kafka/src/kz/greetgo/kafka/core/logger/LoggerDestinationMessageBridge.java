@@ -9,8 +9,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static java.util.Comparator.comparing;
-
 public class LoggerDestinationMessageBridge implements LoggerDestination {
 
   private final LogMessageAcceptor acceptor;
@@ -31,7 +29,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
       configMap
         .entrySet()
         .stream()
-        .sorted(comparing(Map.Entry::getKey))
+        .sorted(Map.Entry.comparingByKey())
         .forEachOrdered(e ->
           sb.append("\n    ").append(e.getKey()).append(" = `").append(e.getValue()).append("`")
         );
@@ -121,7 +119,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
     configMap
       .entrySet()
       .stream()
-      .sorted(comparing(Map.Entry::getKey))
+      .sorted(Map.Entry.comparingByKey())
       .forEachOrdered(e ->
         sb.append("\n    ").append(e.getKey()).append(" = `").append(e.getValue()).append("`")
       );
@@ -171,6 +169,18 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
       .append(":\n");
 
     appendStackTrace(sb, exception);
+
+    acceptor.error(sb.toString());
+
+  }
+
+  @Override
+  public void logProducerValidationError(Throwable error) {
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("Producer validation error:\n");
+
+    appendStackTrace(sb, error);
 
     acceptor.error(sb.toString());
 

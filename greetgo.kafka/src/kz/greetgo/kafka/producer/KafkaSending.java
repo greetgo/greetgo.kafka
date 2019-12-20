@@ -1,5 +1,6 @@
 package kz.greetgo.kafka.producer;
 
+@SuppressWarnings("UnusedReturnValue")
 public interface KafkaSending {
 
   KafkaSending toTopic(String topic);

@@ -73,4 +73,10 @@ public class TestLoggerDestinationInteractive implements LoggerDestination {
   public void logProducerCreated(String producerName) {
     System.out.println("********************* logProducerCreated");
   }
+
+  @Override
+  public void logProducerValidationError(Throwable error) {
+    System.out.println("********************* logProducerValidationError");
+  }
+
 }

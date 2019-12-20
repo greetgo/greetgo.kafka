@@ -160,6 +160,21 @@ public class ProducerFacadeBridge implements ProducerFacade {
         box.author = author;
         box.ignorableConsumers = ignorableConsumers.stream().sorted().collect(toList());
 
+        try {
+          box.validate();
+        } catch (Throwable throwable) {
+
+          if (source.logger().isShow(LoggerType.LOG_PRODUCER_VALIDATION_ERROR)) {
+            source.logger().logProducerValidationError(throwable);
+          }
+
+          if (throwable instanceof RuntimeException) {
+            throw (RuntimeException) throwable;
+          }
+          throw new RuntimeException(throwable);
+
+        }
+
         byte[] key = source.extractKey(body);
 
         return new KafkaFuture(
