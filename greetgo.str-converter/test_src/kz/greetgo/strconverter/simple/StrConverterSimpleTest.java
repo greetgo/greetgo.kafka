@@ -35,6 +35,7 @@ public class StrConverterSimpleTest {
     converter.convertRegistry().register(OnlyFinalFieldsClass.class, "OnlyFinalFieldsClass");
     converter.convertRegistry().register(WithFinalFieldsClass.class, "WithFinalFieldsClass");
     converter.convertRegistry().register(ClassWithBoolean.class, "ClassWithBoolean");
+    converter.convertRegistry().register(WithIgnoredFields.class, "WithIgnoredFields");
   }
 
   @Test
@@ -320,7 +321,7 @@ public class StrConverterSimpleTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void listOne() {
 
     List value = new ArrayList();
@@ -338,7 +339,7 @@ public class StrConverterSimpleTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void mapOne() {
 
     Map value = new HashMap();
@@ -356,7 +357,7 @@ public class StrConverterSimpleTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void setOne() {
 
     Set value = new HashSet();
@@ -529,7 +530,7 @@ public class StrConverterSimpleTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void listArray() {
     List[] value = new List[]{new ArrayList(), null, null, new ArrayList()};
     value[0].add(RND.str(10));
@@ -542,7 +543,7 @@ public class StrConverterSimpleTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void mapArray() {
     Map[] value = new Map[]{new HashMap(), null, null, new HashMap()};
     value[0].put(RND.str(10), RND.str(10));
@@ -555,7 +556,7 @@ public class StrConverterSimpleTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void setArray() {
     Set[] value = new Set[]{new HashSet(), null, null, new HashSet()};
     value[0].add(RND.str(10));
@@ -900,6 +901,33 @@ public class StrConverterSimpleTest {
 
     assertThat(actual.str).isEqualTo(v.str);
     assertThat(actual.boolField).isNull();
+  }
+
+  public static class WithIgnoredFields {
+    public String field1;
+    public int field2;
+
+    @SuppressWarnings("unused")
+    public String getField3() {
+      return "hello world";
+    }
+
+  }
+
+  @Test
+  public void ignoreFields() {
+    WithIgnoredFields v = new WithIgnoredFields();
+    v.field1 = "Kri soul in";
+    v.field2 = 654273;
+
+    String s = converter.toStr(v);
+
+    assertThat(s).isEqualTo("QWithIgnoredFields{field1=SKri soul in|,field2=I654273}");
+
+    WithIgnoredFields actual = converter.fromStr(s);
+
+    assertThat(actual.field1).isEqualTo(v.field1);
+    assertThat(actual.field2).isEqualTo(v.field2);
   }
 
 }
