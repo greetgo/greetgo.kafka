@@ -3,6 +3,7 @@ package kz.greetgo.kafka.core;
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 import kz.greetgo.kafka.consumer.Invoker;
 import kz.greetgo.kafka.core.logger.Logger;
+import kz.greetgo.kafka.errors.ConsumerInvocationException;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.model.BoxHolder;
 import kz.greetgo.kafka.producer.ProducerFacade;
@@ -155,9 +156,11 @@ public class KafkaSimulator extends KafkaReactorAbstract {
             invokeSession.putProducer(producerName, producerFacade);
           }
 
-          if (!invokeSession.invoke(singleList)) {
-            throw new RuntimeException("Cannot invoke consumer " + consumerDefinition.logDisplay()
-              + " of record " + r.value());
+          Invoker.InvokeResult invokeResult = invokeSession.invoke(singleList);
+          if (!invokeResult.needToCommit()) {
+            throw new ConsumerInvocationException("6x292NmZmS :: Cannot invoke consumer "
+              + consumerDefinition.logDisplay()
+              + " of record " + r.value(), invokeResult.exceptionInMethod());
           }
         }
       }

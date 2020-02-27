@@ -133,8 +133,9 @@ public class InvokerBuilder {
           }
 
           @Override
-          public boolean invoke(ConsumerRecords<byte[], Box> records) {
-            boolean invokedOk = true;
+          public InvokeResult invoke(ConsumerRecords<byte[], Box> records) {
+            boolean needToCommit = true;
+            Throwable lastInvokeError = null;
 
             List<KafkaFuture> kafkaFutures = new ArrayList<>();
 
@@ -152,8 +153,17 @@ public class InvokerBuilder {
                 parameters[i] = parameterValueReaders[i].read(record, context);
               }
 
-              if (!invokeMethod(parameters)) {
-                invokedOk = false;
+              InvokeResult invokeResult = invokeMethod(parameters);
+
+              if (!invokeResult.needToCommit()) {
+                needToCommit = false;
+              }
+
+              {
+                Throwable error = invokeResult.exceptionInMethod();
+                if (error != null) {
+                  lastInvokeError = error;
+                }
               }
 
               for (int i = 0; i < parametersCount; i++) {
@@ -166,18 +176,18 @@ public class InvokerBuilder {
 
             kafkaFutures.stream().filter(Objects::nonNull).forEach(KafkaFuture::awaitAndGet);
 
-            return invokedOk;
+            return newInvokeResult(needToCommit, lastInvokeError);
           }
 
-          private boolean invokeMethod(Object[] parameters) {
+          private InvokeResult invokeMethod(Object[] parameters) {
             try {
               method.invoke(controller, parameters);
-              return true;
+              return invokeResultOk();
             } catch (IllegalAccessException e) {
               if (logger.isShow(LOG_CONSUMER_ILLEGAL_ACCESS_EXCEPTION_INVOKING_METHOD)) {
                 logger.logConsumerIllegalAccessExceptionInvokingMethod(e, consumerName, controller, method);
               }
-              return false;
+              return newInvokeResult(false, e);
             } catch (InvocationTargetException e) {
               Throwable error = e.getTargetException();
               if (logger.isShow(LOG_CONSUMER_ERROR_IN_METHOD)) {
@@ -186,11 +196,11 @@ public class InvokerBuilder {
 
               for (Class<?> aClass : commitOn) {
                 if (aClass.isInstance(error)) {
-                  return true;
+                  return newInvokeResult(true, error);
                 }
               }
 
-              return false;
+              return newInvokeResult(false, error);
             }
           }
 
@@ -242,6 +252,24 @@ public class InvokerBuilder {
         return consumerName;
       }
     };
+  }
+
+  private Invoker.InvokeResult newInvokeResult(boolean needToCommit, Throwable exceptionInMethod) {
+    return new Invoker.InvokeResult() {
+      @Override
+      public boolean needToCommit() {
+        return needToCommit;
+      }
+
+      @Override
+      public Throwable exceptionInMethod() {
+        return exceptionInMethod;
+      }
+    };
+  }
+
+  private Invoker.InvokeResult invokeResultOk() {
+    return newInvokeResult(true, null);
   }
 
   private ParameterValueReader createParameterValueReader(Type parameterType,

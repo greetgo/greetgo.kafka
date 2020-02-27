@@ -246,7 +246,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
 
 //                long pollCalledAt = System.nanoTime();
 
-                if (!invokeSession.invoke(records)) {
+                if (!invokeSession.invoke(records).needToCommit()) {
                   continue OUT;
                 }
 

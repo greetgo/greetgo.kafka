@@ -74,7 +74,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -130,7 +130,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -173,7 +173,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -218,7 +218,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -279,7 +279,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -330,7 +330,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -386,7 +386,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -432,7 +432,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -477,7 +477,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -531,7 +531,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -598,7 +598,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -656,7 +656,7 @@ public class InvokerBuilderTest {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 

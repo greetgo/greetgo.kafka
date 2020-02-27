@@ -10,14 +10,17 @@ public interface Invoker {
 
   Set<String> getUsingProducerNames();
 
+  interface InvokeResult {
+    boolean needToCommit();
+
+    Throwable exceptionInMethod();
+  }
+
   interface InvokeSession extends AutoCloseable {
 
     void putProducer(String producerName, ProducerFacade producer);
 
-    /**
-     * @return needless to commit
-     */
-    boolean invoke(ConsumerRecords<byte[], Box> records);
+    InvokeResult invoke(ConsumerRecords<byte[], Box> records);
 
     @Override
     void close();

@@ -96,7 +96,7 @@ public class InvokerBuilderTest_InnerProducers {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -118,10 +118,10 @@ public class InvokerBuilderTest_InnerProducers {
       .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(1).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(2).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.lastResetIndex)
       .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
@@ -200,7 +200,7 @@ public class InvokerBuilderTest_InnerProducers {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -219,16 +219,16 @@ public class InvokerBuilderTest_InnerProducers {
     assertThat(testProducer.sentList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(1).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(2).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.lastResetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
+      .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
 
     assertThat(testProducer.sentList.get(0).topic).isEqualTo("super_topic");
     assertThat(testProducer.sentList.get(1).topic).isEqualTo("super_topic");
@@ -304,7 +304,7 @@ public class InvokerBuilderTest_InnerProducers {
 
       //
       //
-      toCommit = invokeSession.invoke(records);
+      toCommit = invokeSession.invoke(records).needToCommit();
       //
       //
 
@@ -323,16 +323,16 @@ public class InvokerBuilderTest_InnerProducers {
     assertThat(testProducer.sentList).hasSize(3);
 
     assertThat(testProducer.sentList.get(0).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(1).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.sentList.get(2).awaitAndGetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).goIndex);
+      .isGreaterThan(testProducer.sentList.get(2).goIndex);
 
     assertThat(testProducer.lastResetIndex)
-        .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
+      .isGreaterThan(testProducer.sentList.get(2).awaitAndGetIndex);
 
     assertThat(testProducer.sentList.get(0).topic).isEqualTo("outTest3");
     assertThat(testProducer.sentList.get(1).topic).isEqualTo("outTest3");
@@ -411,7 +411,7 @@ public class InvokerBuilderTest_InnerProducers {
     @Topic({"test1", "test2"})
     @SuppressWarnings("unused")
     public void consumerMethod(InputModel inputModel,
-                                   InnerProducer<OutputModel> producer
+                               InnerProducer<OutputModel> producer
     ) {
       inputModelList.add(inputModel);
       producer.send(outputModelList.removeFirst());
