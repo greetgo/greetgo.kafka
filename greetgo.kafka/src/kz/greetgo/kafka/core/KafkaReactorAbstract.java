@@ -6,7 +6,6 @@ import kz.greetgo.kafka.consumer.ConsumerReactor;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.core.logger.LoggerExternal;
-import kz.greetgo.kafka.errors.NotDefined;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.strconverter.StrConverter;
@@ -96,11 +95,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
     return createAutoResettableBridge(producerName, getProducerSource());
   }
 
-  protected void verifyControllerList() {
-    if (controllerList.isEmpty()) {
-      throw new NotDefined("controllerList in " + this.getClass().getSimpleName());
-    }
-  }
+  protected void verifyControllerList() {}
 
   protected List<ConsumerDefinition> accumulateConsumerDefinitionList() {
     List<ConsumerDefinition> consumerDefinitionList = new ArrayList<>();
@@ -111,10 +106,6 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
 
     for (Object controller : controllerList) {
       consumerDefinitionList.addAll(cde.extract(controller));
-    }
-
-    if (consumerDefinitionList.isEmpty()) {
-      throw new NotDefined("Consumers in " + KafkaReactor.class.getSimpleName() + ".start()");
     }
 
     return consumerDefinitionList;

@@ -32,6 +32,7 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
   @Override
   public void startConsumers() {
     verifyControllerList();
+
     List<ConsumerDefinition> consumerDefinitionList = accumulateConsumerDefinitionList();
 
     if (consumerConfigStorage == null) {
