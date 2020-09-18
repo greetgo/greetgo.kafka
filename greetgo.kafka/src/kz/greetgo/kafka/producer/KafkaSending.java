@@ -15,6 +15,10 @@ public interface KafkaSending {
 
   KafkaSending addHeader(String key, byte[] value);
 
+  KafkaSending withKey(String keyAsString);
+
+  KafkaSending withKey(byte[] keyAsBytes);
+
   KafkaFuture go();
 
 }

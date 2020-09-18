@@ -4,7 +4,7 @@ allprojects {
   apply plugin: 'maven'
   apply plugin: 'idea'
 
-  version = '1.5.18'
+  version = '1.5.19'
 
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
@@ -26,11 +26,13 @@ subprojects {
     ext.greetgoClassScannerVersion = '2.0.0'
 
     testCompile 'org.testng:testng:6.14.3'
+    //noinspection SpellCheckingInspection
     testCompile 'org.easytesting:fest-assert-core:2.0M10'
 
   }
 
   tasks.withType(Javadoc) {
+    //noinspection SpellCheckingInspection
     options.addStringOption('Xdoclint:none', '-quiet')
     options.addStringOption('encoding', 'UTF-8')
     options.addStringOption('charSet', 'UTF-8')
@@ -41,8 +43,8 @@ subprojects {
   idea.module.downloadSources = true
   idea.module.downloadJavadoc = true
   idea.module.inheritOutputDirs = false
-  idea.module.outputDir = file("$buildDir/classes/main/")
-  idea.module.testOutputDir = file("$buildDir/classes/test/")
+  idea.module.outputDir = file("$buildDir/idea_classes/main/")
+  idea.module.testOutputDir = file("$buildDir/idea_classes/test/")
 
   [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
   [compileJava, compileTestJava]*.options*.debugOptions*.debugLevel = "source,lines,vars"

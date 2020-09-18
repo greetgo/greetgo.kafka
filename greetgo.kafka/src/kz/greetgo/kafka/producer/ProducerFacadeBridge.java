@@ -8,6 +8,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -149,10 +150,24 @@ public class ProducerFacadeBridge implements ProducerFacade {
         return this;
       }
 
+      byte[] withKey = null;
+
+      @Override
+      public KafkaSending withKey(String keyAsString) {
+        withKey = keyAsString.getBytes(StandardCharsets.UTF_8);
+        return this;
+      }
+
+      @Override
+      public KafkaSending withKey(byte[] keyAsBytes) {
+        withKey = keyAsBytes;
+        return this;
+      }
+
       @Override
       public KafkaFuture go() {
         if (this.topic == null) {
-          throw new RuntimeException("topic == null");
+          throw new RuntimeException("Dz5Ov0f7s9 :: topic == null");
         }
 
         Box box = new Box();
@@ -175,7 +190,7 @@ public class ProducerFacadeBridge implements ProducerFacade {
 
         }
 
-        byte[] key = source.extractKey(body);
+        byte[] key = withKey != null ? withKey : source.extractKey(body);
 
         return new KafkaFuture(
           getNativeProducer().send(
