@@ -111,9 +111,9 @@ public class InvokerBuilderTest {
     C2_Model2 model2 = new C2_Model2();
 
     Box box1 = new Box();
-    box1.b = model1;
+    box1.body = model1;
     Box box2 = new Box();
-    box2.b = model2;
+    box2.body = model2;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -352,7 +352,7 @@ public class InvokerBuilderTest {
     @SuppressWarnings("unused")
     @KafkaCommitOn({Error1.class, Error2.class})
     public void method1(Box box) {
-      throw (RuntimeException) box.b;
+      throw (RuntimeException) box.body;
     }
 
   }
@@ -363,9 +363,9 @@ public class InvokerBuilderTest {
     Method method = findMethod(c7, "method1");
 
     Box box1 = new Box();
-    box1.b = new Error1();
+    box1.body = new Error1();
     Box box2 = new Box();
-    box2.b = new Error2();
+    box2.body = new Error2();
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -393,8 +393,8 @@ public class InvokerBuilderTest {
     }
 
     assertThat(testLoggerDestination.errorList).hasSize(2);
-    assertThat(testLoggerDestination.errorList.get(0)).isSameAs((Error1) box1.b);
-    assertThat(testLoggerDestination.errorList.get(1)).isSameAs((Error2) box2.b);
+    assertThat(testLoggerDestination.errorList.get(0)).isSameAs((Error1) box1.body);
+    assertThat(testLoggerDestination.errorList.get(1)).isSameAs((Error2) box2.body);
     assertThat(toCommit).isTrue();
   }
 
@@ -512,9 +512,9 @@ public class InvokerBuilderTest {
     C10_Model2 model2 = new C10_Model2();
 
     Box box1 = new Box();
-    box1.b = model1;
+    box1.body = model1;
     Box box2 = new Box();
-    box2.b = model2;
+    box2.body = model2;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -582,7 +582,7 @@ public class InvokerBuilderTest {
     C11_Model model1 = new C11_Model();
 
     Box box1 = new Box();
-    box1.b = model1;
+    box1.body = model1;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
 

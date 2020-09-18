@@ -18,11 +18,11 @@ public class Box {
   /**
    * Body of message
    */
-  public Object b;
+  public Object body;
 
   @Override
   public String toString() {
-    return "Box{a='" + a + '\'' + ", i=" + i + ", b=" + b + '}';
+    return "Box{a='" + a + '\'' + ", i=" + i + ", b=" + body + '}';
   }
 
   public static void validateBody(Object body) throws Throwable {
@@ -46,7 +46,7 @@ public class Box {
   }
 
   public void validate() throws Throwable {
-    validateBody(b);
+    validateBody(body);
   }
 
   private static void validateIt(Object object) throws Throwable {

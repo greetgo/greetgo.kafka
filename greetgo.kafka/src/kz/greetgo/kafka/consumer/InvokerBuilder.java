@@ -221,7 +221,7 @@ public class InvokerBuilder {
           if (gettingBodyClass == Box.class) {
             return true;
           }
-          if (!gettingBodyClass.isInstance(record.value().b)) {
+          if (!gettingBodyClass.isInstance(record.value().body)) {
             return false;
           }
         }
@@ -355,7 +355,7 @@ public class InvokerBuilder {
 
       @Override
       public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
-        return record.value().b;
+        return record.value().body;
       }
 
       @Override

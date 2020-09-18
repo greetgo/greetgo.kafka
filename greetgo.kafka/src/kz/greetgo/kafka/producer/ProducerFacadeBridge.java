@@ -171,7 +171,7 @@ public class ProducerFacadeBridge implements ProducerFacade {
         }
 
         Box box = new Box();
-        box.b = body;
+        box.body = body;
         box.a = author;
         box.i = ignorableConsumers.stream().sorted().collect(toList());
 

@@ -13,7 +13,7 @@ public class BoxUtil {
       return Optional.empty();
     }
 
-    if (aClass.isInstance(box.b)) {
+    if (aClass.isInstance(box.body)) {
       return Optional.of(new BoxHolder<T>() {
         @Override
         public String author() {
@@ -28,7 +28,7 @@ public class BoxUtil {
         @Override
         public T body() {
           //noinspection unchecked
-          return (T) box.b;
+          return (T) box.body;
         }
       });
     }

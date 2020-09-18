@@ -64,15 +64,15 @@ public class InvokerBuilderTest_InnerProducers {
 
     Box box1 = new Box();
     box1.a = RND.str(10);
-    box1.b = inputModel1;
+    box1.body = inputModel1;
 
     Box box2 = new Box();
     box2.a = RND.str(10);
-    box2.b = inputModel2;
+    box2.body = inputModel2;
 
     Box box3 = new Box();
     box3.a = RND.str(10);
-    box3.b = inputModel3;
+    box3.body = inputModel3;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -168,15 +168,15 @@ public class InvokerBuilderTest_InnerProducers {
 
     Box box1 = new Box();
     box1.a = RND.str(10);
-    box1.b = inputModel1;
+    box1.body = inputModel1;
 
     Box box2 = new Box();
     box2.a = RND.str(10);
-    box2.b = inputModel2;
+    box2.body = inputModel2;
 
     Box box3 = new Box();
     box3.a = RND.str(10);
-    box3.b = inputModel3;
+    box3.body = inputModel3;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -272,15 +272,15 @@ public class InvokerBuilderTest_InnerProducers {
 
     Box box1 = new Box();
     box1.a = RND.str(10);
-    box1.b = inputModel1;
+    box1.body = inputModel1;
 
     Box box2 = new Box();
     box2.a = RND.str(10);
-    box2.b = inputModel2;
+    box2.body = inputModel2;
 
     Box box3 = new Box();
     box3.a = RND.str(10);
-    box3.b = inputModel3;
+    box3.body = inputModel3;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
