@@ -5,17 +5,24 @@ import java.util.List;
 
 public class Box {
 
-  public String author;
-  public List<String> ignorableConsumers;
-  public Object body;
+  /**
+   * Author of record
+   */
+  public String a;
+
+  /**
+   * List of ignorable consumers
+   */
+  public List<String> i;
+
+  /**
+   * Body of message
+   */
+  public Object b;
 
   @Override
   public String toString() {
-    return "Box{" +
-      "author='" + author + '\'' +
-      ", ignorableConsumers=" + ignorableConsumers +
-      ", body=" + body +
-      '}';
+    return "Box{a='" + a + '\'' + ", i=" + i + ", b=" + b + '}';
   }
 
   public static void validateBody(Object body) throws Throwable {
@@ -39,7 +46,7 @@ public class Box {
   }
 
   public void validate() throws Throwable {
-    validateBody(body);
+    validateBody(b);
   }
 
   private static void validateIt(Object object) throws Throwable {

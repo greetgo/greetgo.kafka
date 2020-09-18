@@ -13,22 +13,22 @@ public class BoxUtil {
       return Optional.empty();
     }
 
-    if (aClass.isInstance(box.body)) {
+    if (aClass.isInstance(box.b)) {
       return Optional.of(new BoxHolder<T>() {
         @Override
         public String author() {
-          return box.author;
+          return box.a;
         }
 
         @Override
         public List<String> ignorableConsumers() {
-          return box.ignorableConsumers;
+          return box.i;
         }
 
         @Override
         public T body() {
           //noinspection unchecked
-          return (T) box.body;
+          return (T) box.b;
         }
       });
     }

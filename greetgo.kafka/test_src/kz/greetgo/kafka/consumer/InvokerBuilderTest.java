@@ -41,7 +41,7 @@ public class InvokerBuilderTest {
     @Topic({"test1", "test2"})
     @SuppressWarnings("unused")
     public void method1(Box box) {
-      authors.add(box.author);
+      authors.add(box.a);
     }
 
   }
@@ -52,11 +52,11 @@ public class InvokerBuilderTest {
     Method method = findMethod(c1, "method1");
 
     Box box1 = new Box();
-    box1.author = RND.str(10);
+    box1.a = RND.str(10);
     Box box2 = new Box();
-    box2.author = RND.str(10);
+    box2.a = RND.str(10);
     Box box3 = new Box();
-    box3.author = RND.str(10);
+    box3.a = RND.str(10);
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test2", new byte[0], box2);
@@ -80,8 +80,8 @@ public class InvokerBuilderTest {
 
     }
 
-    assertThat(c1.authors).contains(box1.author);
-    assertThat(c1.authors).contains(box2.author);
+    assertThat(c1.authors).contains(box1.a);
+    assertThat(c1.authors).contains(box2.a);
     assertThat(c1.authors).hasSize(2);
     assertThat(toCommit).isTrue();
   }
@@ -111,9 +111,9 @@ public class InvokerBuilderTest {
     C2_Model2 model2 = new C2_Model2();
 
     Box box1 = new Box();
-    box1.body = model1;
+    box1.b = model1;
     Box box2 = new Box();
-    box2.body = model2;
+    box2.b = model2;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -158,7 +158,7 @@ public class InvokerBuilderTest {
     Method method = findMethod(c3, "method1");
 
     Box box = new Box();
-    box.author = RND.str(10);
+    box.a = RND.str(10);
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box);
 
@@ -179,7 +179,7 @@ public class InvokerBuilderTest {
 
     }
 
-    assertThat(c3.author).isSameAs(box.author);
+    assertThat(c3.author).isSameAs(box.a);
     assertThat(toCommit).isTrue();
   }
 
@@ -237,7 +237,7 @@ public class InvokerBuilderTest {
     @SuppressWarnings("unused")
     @ConsumerName("coolConsumer")
     public void method1(Box box) {
-      authors.add(box.author);
+      authors.add(box.a);
     }
 
   }
@@ -248,20 +248,20 @@ public class InvokerBuilderTest {
     Method method = findMethod(c5, "method1");
 
     Box box1 = new Box();
-    box1.ignorableConsumers = asList("coolConsumer", "wow");
-    box1.author = RND.str(10);
+    box1.i = asList("coolConsumer", "wow");
+    box1.a = RND.str(10);
 
     Box box2 = new Box();
-    box2.ignorableConsumers = asList("asd1", "coolConsumer");
-    box2.author = RND.str(10);
+    box2.i = asList("asd1", "coolConsumer");
+    box2.a = RND.str(10);
 
     Box box3 = new Box();
-    box3.ignorableConsumers = asList("asd1", "asd2");
-    box3.author = RND.str(10);
+    box3.i = asList("asd1", "asd2");
+    box3.a = RND.str(10);
 
     Box box4 = new Box();
-    box4.ignorableConsumers = null;
-    box4.author = RND.str(10);
+    box4.i = null;
+    box4.a = RND.str(10);
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -285,8 +285,8 @@ public class InvokerBuilderTest {
 
     }
 
-    assertThat(c5.authors).contains(box3.author);
-    assertThat(c5.authors).contains(box4.author);
+    assertThat(c5.authors).contains(box3.a);
+    assertThat(c5.authors).contains(box4.a);
     assertThat(c5.authors).hasSize(2);
     assertThat(toCommit).isTrue();
 
@@ -352,7 +352,7 @@ public class InvokerBuilderTest {
     @SuppressWarnings("unused")
     @KafkaCommitOn({Error1.class, Error2.class})
     public void method1(Box box) {
-      throw (RuntimeException) box.body;
+      throw (RuntimeException) box.b;
     }
 
   }
@@ -363,9 +363,9 @@ public class InvokerBuilderTest {
     Method method = findMethod(c7, "method1");
 
     Box box1 = new Box();
-    box1.body = new Error1();
+    box1.b = new Error1();
     Box box2 = new Box();
-    box2.body = new Error2();
+    box2.b = new Error2();
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -393,8 +393,8 @@ public class InvokerBuilderTest {
     }
 
     assertThat(testLoggerDestination.errorList).hasSize(2);
-    assertThat(testLoggerDestination.errorList.get(0)).isSameAs((Error1) box1.body);
-    assertThat(testLoggerDestination.errorList.get(1)).isSameAs((Error2) box2.body);
+    assertThat(testLoggerDestination.errorList.get(0)).isSameAs((Error1) box1.b);
+    assertThat(testLoggerDestination.errorList.get(1)).isSameAs((Error2) box2.b);
     assertThat(toCommit).isTrue();
   }
 
@@ -512,9 +512,9 @@ public class InvokerBuilderTest {
     C10_Model2 model2 = new C10_Model2();
 
     Box box1 = new Box();
-    box1.body = model1;
+    box1.b = model1;
     Box box2 = new Box();
-    box2.body = model2;
+    box2.b = model2;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
     ConsumerRecord<byte[], Box> record2 = recordOf("test1", new byte[0], box2);
@@ -582,7 +582,7 @@ public class InvokerBuilderTest {
     C11_Model model1 = new C11_Model();
 
     Box box1 = new Box();
-    box1.body = model1;
+    box1.b = model1;
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box1);
 
@@ -641,7 +641,7 @@ public class InvokerBuilderTest {
     Method method = findMethod(controller, "method1");
 
     Box box = new Box();
-    box.author = RND.str(10);
+    box.a = RND.str(10);
 
     ConsumerRecord<byte[], Box> record1 = recordOf("test1", new byte[0], box);
 
@@ -662,7 +662,7 @@ public class InvokerBuilderTest {
 
     }
 
-    assertThat(controller.author).isSameAs(box.author);
+    assertThat(controller.author).isSameAs(box.a);
     assertThat(toCommit).isTrue();
   }
 }

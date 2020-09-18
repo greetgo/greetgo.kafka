@@ -221,7 +221,7 @@ public class InvokerBuilder {
           if (gettingBodyClass == Box.class) {
             return true;
           }
-          if (!gettingBodyClass.isInstance(record.value().body)) {
+          if (!gettingBodyClass.isInstance(record.value().b)) {
             return false;
           }
         }
@@ -232,7 +232,7 @@ public class InvokerBuilder {
         }
 
         {
-          List<String> ignorableConsumers = box.ignorableConsumers;
+          List<String> ignorableConsumers = box.i;
           //noinspection RedundantIfStatement
           if (ignorableConsumers != null && ignorableConsumers.contains(consumerName)) {
             return false;
@@ -315,7 +315,7 @@ public class InvokerBuilder {
           throw new IllegalParameterType("Parameter with @Author must be `String`");
         }
 
-        return (record, invokeSessionContext) -> record.value().author;
+        return (record, invokeSessionContext) -> record.value().a;
       }
 
       if (annotation instanceof InnerProducerName) {
@@ -355,7 +355,7 @@ public class InvokerBuilder {
 
       @Override
       public Object read(ConsumerRecord<byte[], Box> record, InvokeSessionContext invokeSessionContext) {
-        return record.value().body;
+        return record.value().b;
       }
 
       @Override
