@@ -2,9 +2,6 @@ package kz.greetgo.kafka.core.logger;
 
 import kz.greetgo.kafka.consumer.ConsumerDefinition;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -51,20 +48,6 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
     }
   }
 
-  private static void appendStackTrace(StringBuilder sb, Throwable throwable) {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    try {
-      PrintStream printStream = new PrintStream(outputStream, false, "UTF-8");
-      throwable.printStackTrace(printStream);
-      printStream.flush();
-
-      sb.append(outputStream.toString("UTF-8"));
-
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   @Override
   public void logConsumerStartWorker(ConsumerDefinition consumerDefinition, long workerId) {
     if (acceptor.isInfoEnabled()) {
@@ -89,6 +72,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
 
   @Override
   public void logConsumerErrorInMethod(Throwable throwable, String consumerName, Object controller, Method method) {
+    //noinspection StringBufferReplaceableByString
     StringBuilder sb = new StringBuilder();
     sb.append("Error in consumer `")
       .append(consumerName)
@@ -96,12 +80,9 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
       .append(controller.getClass().getName())
       .append("#")
       .append(method.getName())
-      .append("() ")
-      .append(":\n");
+      .append("() ");
 
-    appendStackTrace(sb, throwable);
-
-    acceptor.error(sb.toString());
+    acceptor.error(sb.toString(), throwable);
   }
 
   @Override
@@ -132,6 +113,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
   public void logConsumerIllegalAccessExceptionInvokingMethod(IllegalAccessException e, String consumerName,
                                                               Object controller, Method method) {
 
+    //noinspection StringBufferReplaceableByString
     StringBuilder sb = new StringBuilder();
     sb.append("IllegalAccessException invoking method in consumer `")
       .append(consumerName)
@@ -139,50 +121,29 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
       .append(controller.getClass().getName())
       .append("#")
       .append(method.getName())
-      .append("() :\n");
+      .append("()");
 
-    appendStackTrace(sb, e);
-
-    acceptor.error(sb.toString());
+    acceptor.error(sb.toString(), e);
   }
 
   @Override
   public void logConsumerPollExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("Poll exception in consumer ")
-      .append(consumerDefinition.logDisplay())
-      .append(":\n");
-
-    appendStackTrace(sb, exception);
-
-    acceptor.error(sb.toString());
+    acceptor.error("Poll exception in consumer " + consumerDefinition.logDisplay(), exception);
 
   }
 
   @Override
   public void logConsumerCommitSyncExceptionHappened(RuntimeException exception, ConsumerDefinition consumerDefinition) {
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("CommitSync exception in consumer ")
-      .append(consumerDefinition.logDisplay())
-      .append(":\n");
-
-    appendStackTrace(sb, exception);
-
-    acceptor.error(sb.toString());
+    acceptor.error("CommitSync exception in consumer " + consumerDefinition.logDisplay(), exception);
 
   }
 
   @Override
   public void logProducerValidationError(Throwable error) {
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("Producer validation error:\n");
-
-    appendStackTrace(sb, error);
-
-    acceptor.error(sb.toString());
+    acceptor.error("Producer validation error", error);
 
   }
 

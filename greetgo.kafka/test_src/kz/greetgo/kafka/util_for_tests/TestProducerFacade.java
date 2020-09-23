@@ -8,6 +8,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Header;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ public class TestProducerFacade implements ProducerFacade {
     public int sendingIndex = 0;
     public int goIndex = 0;
     public int awaitAndGetIndex = 0;
+    public byte[] keyAsBytes;
 
     public Sent(Object model) {
       this.model = model;
@@ -117,6 +119,18 @@ public class TestProducerFacade implements ProducerFacade {
             return value;
           }
         });
+        return this;
+      }
+
+      @Override
+      public KafkaSending withKey(String keyAsString) {
+        sent.keyAsBytes = keyAsString.getBytes(StandardCharsets.UTF_8);
+        return this;
+      }
+
+      @Override
+      public KafkaSending withKey(byte[] keyAsBytes) {
+        sent.keyAsBytes = keyAsBytes;
         return this;
       }
 

@@ -10,6 +10,6 @@ public interface LogMessageAcceptor {
 
   void debug(String message);
 
-  void error(String message);
+  void error(String message, Throwable throwable);
 
 }

@@ -24,7 +24,8 @@ public class SimplePrinter implements LogMessageAcceptor {
   }
 
   @Override
-  public void error(String message) {
+  public void error(String message, Throwable throwable) {
     System.out.println("ERROR " + message);
+    throwable.printStackTrace();
   }
 }
