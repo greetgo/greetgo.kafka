@@ -2,18 +2,12 @@ package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.consumer.annotations.Author;
 import kz.greetgo.kafka.consumer.annotations.ConsumerName;
-import kz.greetgo.kafka.consumer.annotations.InnerProducerName;
 import kz.greetgo.kafka.consumer.annotations.KafkaCommitOn;
 import kz.greetgo.kafka.consumer.annotations.Offset;
 import kz.greetgo.kafka.consumer.annotations.Partition;
 import kz.greetgo.kafka.consumer.annotations.Timestamp;
-import kz.greetgo.kafka.consumer.annotations.ToTopic;
 import kz.greetgo.kafka.consumer.annotations.Topic;
-import kz.greetgo.kafka.consumer.parameters.InnerProducerSenderValueReader;
-import kz.greetgo.kafka.consumer.parameters.InnerProducerValueReader;
-import kz.greetgo.kafka.core.KafkaReactor;
 import kz.greetgo.kafka.core.logger.Logger;
-import kz.greetgo.kafka.errors.AbsentAnnotationToTopicOverInnerProducer;
 import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.KafkaFuture;
@@ -33,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_ERROR_IN_METHOD;
@@ -79,11 +72,6 @@ public class InvokerBuilder {
     }
     final Class<?>[] commitOn = tmpCommitOn;
 
-    InnerProducerName parentProducerName = getAnnotation(method, InnerProducerName.class);
-    if (parentProducerName == null) {
-      parentProducerName = getAnnotation(controller.getClass(), InnerProducerName.class);
-    }
-
     final Set<String> topicSet = Arrays.stream(topic.value()).collect(Collectors.toSet());
 
     Type[] parameterTypes = method.getGenericParameterTypes();
@@ -95,7 +83,7 @@ public class InvokerBuilder {
     ParameterValueReader[] parameterValueReaders = new ParameterValueReader[parametersCount];
 
     for (int i = 0; i < parametersCount; i++) {
-      parameterValueReaders[i] = createParameterValueReader(parameterTypes[i], parameterAnnotations[i], parentProducerName);
+      parameterValueReaders[i] = createParameterValueReader(parameterTypes[i], parameterAnnotations[i]);
     }
 
     Class<?> tmpGettingBodyClass = null;
@@ -273,13 +261,7 @@ public class InvokerBuilder {
   }
 
   private ParameterValueReader createParameterValueReader(Type parameterType,
-                                                          Annotation[] parameterAnnotations,
-                                                          InnerProducerName parentProducerName) {
-
-    InnerProducerName producerName = parentProducerName;
-
-    ToTopic toTopic = null;
-    AtomicReference<String> finalProducerName = new AtomicReference<>(KafkaReactor.DEFAULT_INNER_PRODUCER_NAME);
+                                                          Annotation[] parameterAnnotations) {
 
     for (Annotation annotation : parameterAnnotations) {
 
@@ -318,37 +300,10 @@ public class InvokerBuilder {
         return (record, invokeSessionContext) -> record.value().a;
       }
 
-      if (annotation instanceof InnerProducerName) {
-        producerName = (InnerProducerName) annotation;
-      }
-
-      if (annotation instanceof ToTopic) {
-        toTopic = (ToTopic) annotation;
-      }
     }
 
     if (isOfClass(parameterType, Box.class)) {
       return (record, invokeSessionContext) -> record.value();
-    }
-
-    if (isOfClass(parameterType, InnerProducerSender.class)) {
-      if (producerName != null) {
-        finalProducerName.set(producerName.value());
-      }
-
-      return new InnerProducerSenderValueReader(finalProducerName.get());
-    }
-
-    if (isOfClass(parameterType, InnerProducer.class)) {
-      if (producerName != null) {
-        finalProducerName.set(producerName.value());
-      }
-
-      if (toTopic == null) {
-        throw new AbsentAnnotationToTopicOverInnerProducer();
-      }
-
-      return new InnerProducerValueReader(finalProducerName.get(), toTopic.value());
     }
 
     return new ParameterValueReader() {

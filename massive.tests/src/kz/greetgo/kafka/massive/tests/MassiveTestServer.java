@@ -1,10 +1,8 @@
 package kz.greetgo.kafka.massive.tests;
 
 import kz.greetgo.kafka.consumer.ConsumerConfigDefaults;
-import kz.greetgo.kafka.consumer.InnerProducer;
 import kz.greetgo.kafka.consumer.annotations.ConsumerName;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
-import kz.greetgo.kafka.consumer.annotations.ToTopic;
 import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.KafkaReactorImpl;
 import kz.greetgo.kafka.core.config.EventConfigStorageZooKeeper;
@@ -41,6 +39,8 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
 public class MassiveTestServer {
+  public static final String TOPIC_CLIENT = "CLIENT1";
+  public static final String TOPIC_CLIENT_OUT = "CLIENT-OUT1";
 
   private static final HitCounter hitCounter = new HitCounter();
 
@@ -82,16 +82,16 @@ public class MassiveTestServer {
 
         liquibaseDir.toFile().mkdirs();
 
-        Path clientExistsFile = liquibaseDir.resolve("CLIENT");
+        Path clientExistsFile = liquibaseDir.resolve(TOPIC_CLIENT);
         if (!clientExistsFile.toFile().exists() && "1".hashCode() == 1/*indicode!*/) {
-          NewTopic newTopic = new NewTopic("CLIENT", 480, (short) 2);
+          NewTopic newTopic = new NewTopic(TOPIC_CLIENT, 480, (short) 2);
           adminClient.createTopics(singletonList(newTopic)).all();
           clientExistsFile.toFile().createNewFile();
         }
 
-        Path clientOutExistsFile = liquibaseDir.resolve("CLIENT-OUT");
+        Path clientOutExistsFile = liquibaseDir.resolve("" + TOPIC_CLIENT_OUT);
         if (!clientOutExistsFile.toFile().exists() && "1".hashCode() == 1/*indicode!*/) {
-          NewTopic newTopic = new NewTopic("CLIENT-OUT", 480, (short) 2);
+          NewTopic newTopic = new NewTopic(TOPIC_CLIENT_OUT, 480, (short) 2);
           adminClient.createTopics(singletonList(newTopic)).all();
           clientOutExistsFile.toFile().createNewFile();
         }
@@ -102,6 +102,9 @@ public class MassiveTestServer {
 
     KafkaReactorImpl reactor = createReactor(kafkaServers, zookeeperServers);
 
+    ProducerFacade mainProducer = reactor.createProducer("main");
+    consumers.mainProducer = mainProducer;
+
     reactor.addController(consumers);
 
     System.out.println("Before start consumers");
@@ -111,7 +114,6 @@ public class MassiveTestServer {
 
       System.out.println("Started consumers");
 
-      ProducerFacade mainProducer = reactor.createProducer("main");
 
       System.out.println("Start waiting process");
 
@@ -224,13 +226,12 @@ public class MassiveTestServer {
   public static class Consumers {
 
     private final ConcurrentHashMap<String, String> errors = new ConcurrentHashMap<>();
+    ProducerFacade mainProducer;
 
-    @GroupId("asd-3")
-    @Topic("CLIENT")
+    @GroupId("asd-1")
+    @Topic(TOPIC_CLIENT)
     @ConsumerName("CLIENT")
-    public void readClient(Client client,
-                           @ToTopic("CLIENT-OUT")
-                             InnerProducer<Client> clientProducer) {
+    public void readClient(Client client) {
 
       hitCounter.hit("CLIENT");
 
@@ -238,13 +239,13 @@ public class MassiveTestServer {
 
       if ("ok".equals(client.name)) {
         client.name = RND.str(10);
-        clientProducer.send(client);
+        mainProducer.sending(client).toTopic(TOPIC_CLIENT_OUT).go().awaitAndGet();
         return;
       }
 
       if (!generateErrors.get() || errors.containsKey(client.id)) {
         client.name = RND.str(10);
-        clientProducer.send(client);
+        mainProducer.sending(client).toTopic(TOPIC_CLIENT_OUT).go().awaitAndGet();
         return;
       }
 
@@ -259,18 +260,18 @@ public class MassiveTestServer {
     final AtomicLong sleepClientOut = new AtomicLong(0);
     final AtomicLong sleepClientOut2 = new AtomicLong(0);
 
-    @Topic("CLIENT-OUT")
-    @ConsumerName("CLIENT-OUT")
+    @Topic(TOPIC_CLIENT_OUT)
+    @ConsumerName(TOPIC_CLIENT_OUT)
     @GroupId("asd-out")
     public void readClientOut(Client client) throws Exception {
       increment(readClientOutRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
-      insertClient("CLIENT-OUT", client, "client_id");
+      insertClient(TOPIC_CLIENT_OUT, client, "client_id");
       if (sleepClientOut.get() > 0) {
         Thread.sleep(sleepClientOut.get());
       }
     }
 
-    @Topic("CLIENT-OUT")
+    @Topic(TOPIC_CLIENT_OUT)
     @ConsumerName("CLIENT-OUT-2")
     @GroupId("asd-out-2")
     public void readClientOut2(Client client) throws Exception {

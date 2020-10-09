@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static kz.greetgo.kafka.massive.tests.MassiveTestServer.TOPIC_CLIENT;
 import static kz.greetgo.kafka.massive.tests.TimeUtil.nanosRead;
 
 public class ClientPortionInserting {
@@ -68,7 +69,7 @@ public class ClientPortionInserting {
 
           futures.add(mainProducer
             .sending(client)
-            .toTopic("CLIENT")
+            .toTopic(TOPIC_CLIENT)
             .go());
 
           clientTotalCount++;
@@ -98,7 +99,7 @@ public class ClientPortionInserting {
 
           mainProducer
             .sending(client)
-            .toTopic("CLIENT")
+            .toTopic(TOPIC_CLIENT)
             .go()
             .awaitAndGet();
 

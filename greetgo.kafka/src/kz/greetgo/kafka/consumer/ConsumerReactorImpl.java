@@ -11,7 +11,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -233,7 +235,9 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                   records = consumer.poll(consumerConfigWorker.pollDuration());
 
                   if (records.count() > 0) {
-                    System.out.println("24zy45BL1F :: kafka poll count = " + records.count());
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+                    System.out.println("24zy45BL1F :: kafka poll count = " + records.count()
+                      + ", now " + sdf.format(new Date()));
                   }
 
                   if (records.count() == 0) {

@@ -11,8 +11,6 @@ import java.util.function.Supplier;
 
 public interface KafkaReactor {
 
-  String DEFAULT_INNER_PRODUCER_NAME = "default_inner_producer";
-
   LoggerExternal logger();
 
   void setConsumerConfigStorage(EventConfigStorage configStorage);
