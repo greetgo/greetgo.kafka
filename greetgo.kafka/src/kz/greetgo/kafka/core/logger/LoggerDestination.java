@@ -35,4 +35,6 @@ public interface LoggerDestination {
   void logProducerCreated(String producerName);
 
   void logProducerValidationError(Throwable error);
+
+  void logProducerAwaitAndGetError(String errorCode, Exception exception);
 }

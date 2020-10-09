@@ -1,41 +1,43 @@
 package kz.greetgo.kafka.producer;
 
+import kz.greetgo.kafka.core.ProducerSynchronizer;
 import kz.greetgo.kafka.core.logger.LoggerType;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static java.util.stream.Collectors.toList;
 
 public class ProducerFacadeBridge implements ProducerFacade {
 
   private final ProducerSource source;
   private final String producerName;
   private final boolean autoResettable;
+  private final ProducerSynchronizer producerSynchronizer;
 
-  private ProducerFacadeBridge(String producerName, ProducerSource source, boolean autoResettable) {
+  private ProducerFacadeBridge(String producerName, ProducerSource source,
+                               boolean autoResettable, ProducerSynchronizer producerSynchronizer) {
     this.source = source;
     this.producerName = producerName;
     this.autoResettable = autoResettable;
+    this.producerSynchronizer = producerSynchronizer;
   }
 
-  public static ProducerFacadeBridge createAutoResettableBridge(String producerName, ProducerSource source) {
-    return new ProducerFacadeBridge(producerName, source, true);
+  public static ProducerFacadeBridge createAutoResettableBridge(String producerName,
+                                                                ProducerSource source,
+                                                                ProducerSynchronizer producerSynchronizer) {
+
+    return new ProducerFacadeBridge(producerName, source, true, producerSynchronizer);
   }
 
-  public static ProducerFacadeBridge createPermanentBridge(String producerName, ProducerSource source) {
-    return new ProducerFacadeBridge(producerName, source, false);
+  public static ProducerFacadeBridge createPermanentBridge(String producerName,
+                                                           ProducerSource source,
+                                                           ProducerSynchronizer producerSynchronizer) {
+
+    return new ProducerFacadeBridge(producerName, source, false, producerSynchronizer);
   }
 
   private final AtomicReference<Producer<byte[], Box>> producer = new AtomicReference<>(null);
@@ -69,7 +71,6 @@ public class ProducerFacadeBridge implements ProducerFacade {
     }
 
     return producer.updateAndGet(current -> current != null ? current : createProducer());
-
   }
 
   public Map<String, Object> getConfigData() {
@@ -89,119 +90,125 @@ public class ProducerFacadeBridge implements ProducerFacade {
     return ret;
   }
 
+  @Override
   public KafkaSending sending(Object body) {
+    final KafkaSendWorker sendWorker = new KafkaSendWorker(body, this::getNativeProducer, source);
     return new KafkaSending() {
-
-      String topic = null;
 
       @Override
       public KafkaSending toTopic(String topic) {
-        this.topic = topic;
+        sendWorker.toTopic(topic);
         return this;
       }
-
-      Integer partition = null;
 
       @Override
       public KafkaSending toPartition(int partition) {
-        this.partition = partition;
+        sendWorker.toPartition(partition);
         return this;
       }
-
-      Long timestamp = null;
 
       @Override
       public KafkaSending setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
+        sendWorker.setTimestamp(timestamp);
         return this;
       }
-
-      final ArrayList<Header> headers = new ArrayList<>();
 
       @Override
       public KafkaSending addHeader(String key, byte[] value) {
-        headers.add(new Header() {
-          @Override
-          public String key() {
-            return key;
-          }
-
-          @Override
-          public byte[] value() {
-            return value;
-          }
-        });
+        sendWorker.addHeader(key, value);
         return this;
       }
-
-      final Set<String> ignorableConsumers = new HashSet<>();
 
       @Override
       public KafkaSending addConsumerToIgnore(String consumerName) {
-        ignorableConsumers.add(consumerName);
+        sendWorker.addConsumerToIgnore(consumerName);
         return this;
       }
-
-      String author = source.author();
 
       @Override
       public KafkaSending setAuthor(String author) {
-        this.author = author;
+        sendWorker.setAuthor(author);
         return this;
       }
 
-      byte[] withKey = null;
-
       @Override
       public KafkaSending withKey(String keyAsString) {
-        withKey = keyAsString.getBytes(StandardCharsets.UTF_8);
+        sendWorker.withKey(keyAsString);
         return this;
       }
 
       @Override
       public KafkaSending withKey(byte[] keyAsBytes) {
-        withKey = keyAsBytes;
+        sendWorker.withKey(keyAsBytes);
         return this;
       }
 
       @Override
       public KafkaFuture go() {
-        if (this.topic == null) {
-          throw new RuntimeException("Dz5Ov0f7s9 :: topic == null");
-        }
-
-        Box box = new Box();
-        box.body = body;
-        box.a = author;
-        box.i = ignorableConsumers.stream().sorted().collect(toList());
-
-        try {
-          box.validate();
-        } catch (Throwable throwable) {
-
-          if (source.logger().isShow(LoggerType.LOG_PRODUCER_VALIDATION_ERROR)) {
-            source.logger().logProducerValidationError(throwable);
-          }
-
-          if (throwable instanceof RuntimeException) {
-            throw (RuntimeException) throwable;
-          }
-          throw new RuntimeException(throwable);
-
-        }
-
-        byte[] key = withKey != null ? withKey : source.extractKey(body);
-
-        return new KafkaFuture(
-          getNativeProducer().send(
-            new ProducerRecord<>(topic, partition, timestamp, key, box, headers)
-          )
-        );
-
+        return sendWorker.go();
       }
 
     };
-
   }
 
+  @Override
+  public KafkaPortionSending portionSending(Object body) {
+    final KafkaSendWorker sendWorker = new KafkaSendWorker(body, this::getNativeProducer, source);
+    return new KafkaPortionSending() {
+
+      @Override
+      public KafkaPortionSending toTopic(String topic) {
+        sendWorker.toTopic(topic);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending toPartition(int partition) {
+        sendWorker.toPartition(partition);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending setTimestamp(Long timestamp) {
+        sendWorker.setTimestamp(timestamp);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending addHeader(String key, byte[] value) {
+        sendWorker.addHeader(key, value);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending addConsumerToIgnore(String consumerName) {
+        sendWorker.addConsumerToIgnore(consumerName);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending setAuthor(String author) {
+        sendWorker.setAuthor(author);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending withKey(String keyAsString) {
+        sendWorker.withKey(keyAsString);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending withKey(byte[] keyAsBytes) {
+        sendWorker.withKey(keyAsBytes);
+        return this;
+      }
+
+      @Override
+      public void go() {
+        producerSynchronizer.acceptKafkaFuture(sendWorker.go());
+      }
+
+    };
+  }
 }

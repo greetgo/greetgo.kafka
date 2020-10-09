@@ -26,6 +26,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
   protected Supplier<String> bootstrapServers;
 
   protected final Logger logger = new Logger();
+  protected final ProducerSynchronizer producerSynchronizer = new ProducerSynchronizer(logger);
 
   @Override
   public void setConsumerConfigStorage(EventConfigStorage consumerConfigStorage) {
@@ -92,7 +93,7 @@ public abstract class KafkaReactorAbstract implements KafkaReactor {
 
   @Override
   public ProducerFacade createProducer(String producerName) {
-    return createAutoResettableBridge(producerName, getProducerSource());
+    return createAutoResettableBridge(producerName, getProducerSource(), producerSynchronizer);
   }
 
   protected void verifyControllerList() {}

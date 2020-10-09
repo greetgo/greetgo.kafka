@@ -1,9 +1,10 @@
 package kz.greetgo.kafka.consumer;
 
+import kz.greetgo.kafka.core.ConsumerPortionInvoking;
+import kz.greetgo.kafka.core.ProducerSynchronizer;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
-import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxDeserializer;
 import kz.greetgo.strconverter.StrConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -35,13 +36,13 @@ public class ConsumerReactorImpl implements ConsumerReactor {
   //
 
   public Logger logger;
+  public ProducerSynchronizer producerSynchronizer;
   public Supplier<StrConverter> strConverterSupplier;
   public ConsumerDefinition consumerDefinition;
   public EventConfigStorage configStorage;
   public Supplier<String> bootstrapServers;
   public String hostId;
   public Supplier<ConsumerConfigDefaults> consumerConfigDefaults;
-  public ProducerSource producerSource;
 
   /**
    * Start reactor
@@ -231,8 +232,10 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                   continue OUT;
                 }
 
-                if (!invokeSession.invoke(records).needToCommit()) {
-                  continue OUT;
+                try (ConsumerPortionInvoking ignore = producerSynchronizer.startConsumerPortionInvoking()) {
+                  if (!invokeSession.invoke(records).needToCommit()) {
+                    continue OUT;
+                  }
                 }
 
                 try {

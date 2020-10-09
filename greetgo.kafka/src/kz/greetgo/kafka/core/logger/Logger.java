@@ -141,4 +141,11 @@ public class Logger implements LoggerExternal {
       d.logProducerValidationError(error);
     }
   }
+
+  public void logProducerAwaitAndGetError(String errorCode, Exception exception) {
+    LoggerDestination d = this.destination;
+    if (d != null) {
+      d.logProducerAwaitAndGetError(errorCode, exception);
+    }
+  }
 }

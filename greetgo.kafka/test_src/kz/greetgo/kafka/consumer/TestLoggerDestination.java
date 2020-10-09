@@ -56,4 +56,6 @@ public class TestLoggerDestination implements LoggerDestination {
   @Override
   public void logProducerValidationError(Throwable error) {}
 
+  @Override
+  public void logProducerAwaitAndGetError(String errorCode, Exception exception) {}
 }

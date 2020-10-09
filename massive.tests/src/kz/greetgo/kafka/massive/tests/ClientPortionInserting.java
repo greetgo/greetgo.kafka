@@ -82,8 +82,9 @@ public class ClientPortionInserting {
 
         long end = System.nanoTime();
 
-        System.out.println("5hb4326gv :: Inserted " + count + " clients for " + nanosRead(end - started)
-          + " : middle for " + nanosRead(middle - started) + " in thread " + Thread.currentThread().getName());
+        System.out.println("5hb4326gv :: №" + (u + 1) + " Inserted " + count
+          + " clients for " + nanosRead(end - started) + " : middle for " + nanosRead(middle - started)
+          + " in thread " + Thread.currentThread().getName());
 
       } else {
 

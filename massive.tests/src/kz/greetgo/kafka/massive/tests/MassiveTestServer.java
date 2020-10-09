@@ -39,8 +39,8 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
 public class MassiveTestServer {
-  public static final String TOPIC_CLIENT = "CLIENT1";
-  public static final String TOPIC_CLIENT_OUT = "CLIENT-OUT1";
+  public static final String TOPIC_CLIENT = "CLIENT";
+  public static final String TOPIC_CLIENT_OUT = "CLIENT-OUT";
 
   private static final HitCounter hitCounter = new HitCounter();
 
@@ -239,13 +239,13 @@ public class MassiveTestServer {
 
       if ("ok".equals(client.name)) {
         client.name = RND.str(10);
-        mainProducer.sending(client).toTopic(TOPIC_CLIENT_OUT).go().awaitAndGet();
+        mainProducer.portionSending(client).toTopic(TOPIC_CLIENT_OUT).go();
         return;
       }
 
       if (!generateErrors.get() || errors.containsKey(client.id)) {
         client.name = RND.str(10);
-        mainProducer.sending(client).toTopic(TOPIC_CLIENT_OUT).go().awaitAndGet();
+        mainProducer.portionSending(client).toTopic(TOPIC_CLIENT_OUT).go();
         return;
       }
 
@@ -418,4 +418,5 @@ public class MassiveTestServer {
   private static void increment(ConcurrentHashMap<String, AtomicLong> countMap, String key) {
     countMap.computeIfAbsent(key, x -> new AtomicLong(0)).incrementAndGet();
   }
+
 }

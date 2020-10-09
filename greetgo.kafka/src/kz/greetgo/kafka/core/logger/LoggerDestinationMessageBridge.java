@@ -142,9 +142,12 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
 
   @Override
   public void logProducerValidationError(Throwable error) {
-
     acceptor.error("Producer validation error", error);
+  }
 
+  @Override
+  public void logProducerAwaitAndGetError(String errorCode, Exception exception) {
+    acceptor.error(errorCode + " :: Producer AwaitAndGet Error", exception);
   }
 
   @Override

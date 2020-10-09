@@ -42,16 +42,15 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
       throw new NotDefined("bootstrapServers in " + getClass().getSimpleName() + ".startConsumers()");
     }
 
-
     for (ConsumerDefinition consumerDefinition : consumerDefinitionList) {
       ConsumerReactorImpl consumerReactor = new ConsumerReactorImpl();
       consumerReactorList.add(consumerReactor);
       consumerReactor.logger = logger;
+      consumerReactor.producerSynchronizer = producerSynchronizer;
       consumerReactor.strConverterSupplier = strConverterSupplier();
       consumerReactor.bootstrapServers = bootstrapServers;
       consumerReactor.configStorage = consumerConfigStorage;
       consumerReactor.consumerDefinition = consumerDefinition;
-      consumerReactor.producerSource = getProducerSource();
       consumerReactor.hostId = hostId;
       consumerReactor.consumerConfigDefaults = () -> consumerConfigDefaults;
       consumerReactor.start();
@@ -70,11 +69,8 @@ public class KafkaReactorImpl extends KafkaReactorAbstract {
 
   @Override
   public void stopConsumers() {
-
     consumerReactorList.forEach(ConsumerReactorImpl::stop);
-
     producerConfigWorker.close();
-
   }
 
   public void joinToConsumers() {

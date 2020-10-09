@@ -79,4 +79,9 @@ public class TestLoggerDestinationInteractive implements LoggerDestination {
     System.out.println("********************* logProducerValidationError");
   }
 
+  @Override
+  public void logProducerAwaitAndGetError(String errorCode, Exception exception) {
+    System.out.println("********************* logProducerAwaitAndGetError");
+  }
+
 }

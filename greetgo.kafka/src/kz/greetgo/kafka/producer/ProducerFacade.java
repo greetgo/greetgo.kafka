@@ -15,4 +15,6 @@ public interface ProducerFacade {
 
   KafkaSending sending(Object body);
 
+  KafkaPortionSending portionSending(Object body);
+
 }

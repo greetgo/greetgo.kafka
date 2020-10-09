@@ -2,6 +2,7 @@ package kz.greetgo.kafka.util_for_tests;
 
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.KafkaFuture;
+import kz.greetgo.kafka.producer.KafkaPortionSending;
 import kz.greetgo.kafka.producer.KafkaSending;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import org.apache.kafka.clients.producer.Producer;
@@ -166,6 +167,79 @@ public class TestProducerFacade implements ProducerFacade {
             throw new RuntimeException("Not working");
           }
         });
+      }
+    };
+  }
+
+  @Override
+  public KafkaPortionSending portionSending(Object body) {
+    final Sent sent = new Sent(body);
+    sent.sendingIndex = indexer++;
+    return new KafkaPortionSending() {
+      @Override
+      public KafkaPortionSending toTopic(String topic) {
+        sent.topic = topic;
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending toPartition(int partition) {
+        sent.partition = partition;
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending setTimestamp(Long timestamp) {
+        sent.timestamp = timestamp;
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending addConsumerToIgnore(String consumerName) {
+        sent.ignoredConsumerNames.add(consumerName);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending setAuthor(String author) {
+        sent.author = author;
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending addHeader(String key, byte[] value) {
+        sent.headers.add(new Header() {
+          @Override
+          public String key() {
+            return key;
+          }
+
+          @Override
+          public byte[] value() {
+            return value;
+          }
+        });
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending withKey(String keyAsString) {
+        sent.keyAsBytes = keyAsString.getBytes(StandardCharsets.UTF_8);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending withKey(byte[] keyAsBytes) {
+        sent.keyAsBytes = keyAsBytes;
+        return this;
+      }
+
+      @Override
+      public void go() {
+        sent.goIndex = indexer++;
+        sentList.add(sent);
+        sent.validate();
+        sent.awaitAndGetIndex = indexer++;
       }
     };
   }
