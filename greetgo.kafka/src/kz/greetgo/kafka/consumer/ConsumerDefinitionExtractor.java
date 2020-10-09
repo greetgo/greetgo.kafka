@@ -2,7 +2,6 @@ package kz.greetgo.kafka.consumer;
 
 import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.logger.Logger;
-import kz.greetgo.kafka.util.AnnotationUtil;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

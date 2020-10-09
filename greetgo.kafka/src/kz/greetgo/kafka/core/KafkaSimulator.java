@@ -6,7 +6,6 @@ import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.errors.ConsumerInvocationException;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.model.BoxHolder;
-import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxSerializer;
 import kz.greetgo.kafka.util.BoxUtil;
@@ -27,14 +26,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
-import static kz.greetgo.kafka.producer.ProducerFacadeBridge.createPermanentBridge;
 import static kz.greetgo.kafka.util.GenericUtil.longNullAsZero;
 
 public class KafkaSimulator extends KafkaReactorAbstract {
@@ -147,14 +144,8 @@ public class KafkaSimulator extends KafkaReactorAbstract {
         }
 
         Invoker invoker = consumerDefinition.getInvoker();
-        Set<String> usingProducerNames = invoker.getUsingProducerNames();
 
         try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
-
-          for (String producerName : usingProducerNames) {
-            ProducerFacade producerFacade = createPermanentBridge(producerName, producerSource);
-            invokeSession.putProducer(producerName, producerFacade);
-          }
 
           Invoker.InvokeResult invokeResult = invokeSession.invoke(singleList);
           if (!invokeResult.needToCommit()) {

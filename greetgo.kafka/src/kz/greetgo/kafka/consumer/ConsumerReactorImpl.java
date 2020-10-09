@@ -3,7 +3,6 @@ package kz.greetgo.kafka.consumer;
 import kz.greetgo.kafka.core.config.EventConfigStorage;
 import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.model.Box;
-import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.producer.ProducerSource;
 import kz.greetgo.kafka.serializer.BoxDeserializer;
 import kz.greetgo.strconverter.StrConverter;
@@ -11,9 +10,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -30,7 +27,6 @@ import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_POLL_EXCEPTIO
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_CONSUMER_REACTOR_REFRESH;
 import static kz.greetgo.kafka.core.logger.LoggerType.LOG_START_CONSUMER_WORKER;
 import static kz.greetgo.kafka.core.logger.LoggerType.SHOW_CONSUMER_WORKER_CONFIG;
-import static kz.greetgo.kafka.producer.ProducerFacadeBridge.createPermanentBridge;
 
 public class ConsumerReactorImpl implements ConsumerReactor {
 
@@ -208,16 +204,7 @@ public class ConsumerReactorImpl implements ConsumerReactor {
 
         Invoker invoker = consumerDefinition.getInvoker();
 
-        Set<String> usingProducerNames = invoker.getUsingProducerNames();
-
         try (Invoker.InvokeSession invokeSession = invoker.createSession()) {
-
-          for (String producerName : usingProducerNames) {
-            ProducerFacade producer = createPermanentBridge(producerName, producerSource);
-            invokeSession.putProducer(producerName, producer);
-          }
-
-//          long min = 1000000000000000000L, max = 0;
 
           OUT:
           while (working.get() && workers.containsKey(id)) {
@@ -229,16 +216,8 @@ public class ConsumerReactorImpl implements ConsumerReactor {
 
                 final ConsumerRecords<byte[], Box> records;
 
-//                long startedAt = System.nanoTime();
-
                 try {
                   records = consumer.poll(consumerConfigWorker.pollDuration());
-
-                  if (records.count() > 0) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-                    System.out.println("24zy45BL1F :: kafka poll count = " + records.count()
-                      + ", now " + sdf.format(new Date()));
-                  }
 
                   if (records.count() == 0) {
                     continue INNER;
@@ -252,41 +231,12 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                   continue OUT;
                 }
 
-//                long pollCalledAt = System.nanoTime();
-
                 if (!invokeSession.invoke(records).needToCommit()) {
                   continue OUT;
                 }
 
-//                long invokedAt = System.nanoTime();
-
                 try {
                   consumer.commitSync();
-
-//                  long committedAt = System.nanoTime();
-//
-//                  long totalDelay = committedAt - startedAt;
-//                  if (min > totalDelay) {
-//                    min = totalDelay;
-//                  }
-//                  if (max < totalDelay) {
-//                    max = totalDelay;
-//                  }
-
-//                  long pollDelay = pollCalledAt - startedAt;
-//                  long invokeDelay = invokedAt - pollCalledAt;
-//                  long commitDelay = committedAt - invokedAt;
-
-//                  if (records.count() > 0) {
-//                    System.out.println("54jb326b6 :: perform " + records.count()
-//                      + " records : poll " + ((double) pollDelay / 1e9)
-//                      + " + invoke " + ((double) invokeDelay / 1e9)
-//                      + " + commit " + ((double) commitDelay / 1e9)
-//                      + " = " + ((double) totalDelay / 1e9)
-//                      + " : totalDelay min…max = " + ((double) min / 1e9) + "…" + ((double) max / 1e9)
-//                      + " : in " + Thread.currentThread().getName());
-//                  }
-
                 } catch (RuntimeException exception) {
                   if (logger.isShow(LOG_CONSUMER_COMMIT_SYNC_EXCEPTION_HAPPENED)) {
                     logger.logConsumerCommitSyncExceptionHappened(exception, consumerDefinition);

@@ -11,7 +11,6 @@ import kz.greetgo.kafka.core.logger.Logger;
 import kz.greetgo.kafka.errors.IllegalParameterType;
 import kz.greetgo.kafka.model.Box;
 import kz.greetgo.kafka.producer.KafkaFuture;
-import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.kafka.util.AnnotationUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -23,7 +22,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -96,29 +94,13 @@ public class InvokerBuilder {
 
     final Class<?> gettingBodyClass = tmpGettingBodyClass;
 
-    final Set<String> usingProducerNames = new HashSet<>();
-
-    for (ParameterValueReader parameterValueReader : parameterValueReaders) {
-      usingProducerNames.addAll(parameterValueReader.getProducerNames());
-    }
-
     return new Invoker() {
-
-      @Override
-      public Set<String> getUsingProducerNames() {
-        return usingProducerNames;
-      }
 
       @Override
       public InvokeSession createSession() {
         return new InvokeSession() {
 
           private final InvokeSessionContext context = new InvokeSessionContext();
-
-          @Override
-          public void putProducer(String producerName, ProducerFacade producer) {
-            context.putProducer(producerName, producer);
-          }
 
           @Override
           public InvokeResult invoke(ConsumerRecords<byte[], Box> records) {
