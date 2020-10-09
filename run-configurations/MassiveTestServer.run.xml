@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MassiveTestServer" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="kz.greetgo.kafka.massive.tests.MassiveTestServer" />
+    <module name="greetgo.kafka.massive.tests.main" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="kz.greetgo.kafka.massive.tests.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

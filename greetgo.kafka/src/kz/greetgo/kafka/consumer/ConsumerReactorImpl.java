@@ -232,6 +232,10 @@ public class ConsumerReactorImpl implements ConsumerReactor {
                 try {
                   records = consumer.poll(consumerConfigWorker.pollDuration());
 
+                  if (records.count() > 0) {
+                    System.out.println("24zy45BL1F :: kafka poll count = " + records.count());
+                  }
+
                   if (records.count() == 0) {
                     continue INNER;
                   }

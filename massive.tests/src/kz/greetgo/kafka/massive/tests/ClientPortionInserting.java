@@ -5,6 +5,7 @@ import kz.greetgo.kafka.producer.KafkaFuture;
 import kz.greetgo.kafka.producer.ProducerFacade;
 import kz.greetgo.util.RND;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -19,22 +20,27 @@ public class ClientPortionInserting {
   private final BoolParameter parallel;
   private final Path workingFile;
   private final Command insertClientPortion;
+  private final File stopFile;
 
   public ClientPortionInserting(LongParameter portion,
                                 LongParameter portionCount,
                                 ProducerFacade mainProducer,
                                 BoolParameter parallel,
                                 Path workingFile,
-                                Command insertClientPortion) {
+                                Command insertClientPortion, File stopFile) {
     this.portion = portion;
     this.portionCount = portionCount;
     this.mainProducer = mainProducer;
     this.parallel = parallel;
     this.workingFile = workingFile;
     this.insertClientPortion = insertClientPortion;
+    this.stopFile = stopFile;
   }
 
   public void execute() throws IOException {
+    stopFile.getParentFile().mkdirs();
+    stopFile.createNewFile();
+
     boolean parallel = this.parallel.value();
 
     int portionCount = this.portionCount.getAsInt();
@@ -44,7 +50,7 @@ public class ClientPortionInserting {
 
     int insertedPortions = 0;
 
-    for (int u = 0; u < portionCount && workingFile.toFile().exists(); u++) {
+    for (int u = 0; u < portionCount && workingFile.toFile().exists() && stopFile.exists(); u++) {
 
       if (parallel) {
 
@@ -76,7 +82,7 @@ public class ClientPortionInserting {
         long end = System.nanoTime();
 
         System.out.println("5hb4326gv :: Inserted " + count + " clients for " + nanosRead(end - started)
-          + " : middle for " + nanosRead(middle - started));
+          + " : middle for " + nanosRead(middle - started) + " in thread " + Thread.currentThread().getName());
 
       } else {
 
@@ -101,7 +107,8 @@ public class ClientPortionInserting {
         }
 
         System.out.println("g5v43gh2v5 :: Inserted " + count
-          + " clients for " + nanosRead(System.nanoTime() - started));
+          + " clients for " + nanosRead(System.nanoTime() - started)
+          + " in thread " + Thread.currentThread().getName());
       }
 
       insertedPortions++;

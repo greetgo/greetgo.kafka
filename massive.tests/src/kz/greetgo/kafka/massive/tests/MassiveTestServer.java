@@ -42,6 +42,8 @@ import static java.util.stream.Collectors.toSet;
 
 public class MassiveTestServer {
 
+  private static final HitCounter hitCounter = new HitCounter();
+
   public static void main(String[] args) throws IOException, InterruptedException {
 
     Path pwd = new File(".").getAbsoluteFile().toPath().normalize();
@@ -52,7 +54,7 @@ public class MassiveTestServer {
 
     Files.createDirectories(workingDir);
 
-    Path workingFile = workingDir.resolve("working.file");
+    Path workingFile = workingDir.resolve("working--delete-it-to-shutdown-application");
 
     workingFile.toFile().createNewFile();
 
@@ -81,14 +83,14 @@ public class MassiveTestServer {
         liquibaseDir.toFile().mkdirs();
 
         Path clientExistsFile = liquibaseDir.resolve("CLIENT");
-        if (!clientExistsFile.toFile().exists()) {
+        if (!clientExistsFile.toFile().exists() && "1".hashCode() == 1/*indicode!*/) {
           NewTopic newTopic = new NewTopic("CLIENT", 480, (short) 2);
           adminClient.createTopics(singletonList(newTopic)).all();
           clientExistsFile.toFile().createNewFile();
         }
 
         Path clientOutExistsFile = liquibaseDir.resolve("CLIENT-OUT");
-        if (!clientOutExistsFile.toFile().exists()) {
+        if (!clientOutExistsFile.toFile().exists() && "1".hashCode() == 1/*indicode!*/) {
           NewTopic newTopic = new NewTopic("CLIENT-OUT", 480, (short) 2);
           adminClient.createTopics(singletonList(newTopic)).all();
           clientOutExistsFile.toFile().createNewFile();
@@ -124,8 +126,14 @@ public class MassiveTestServer {
       BoolParameter insertClientPortionParallel = new BoolParameter(workingDir, "insertClientPortionParallel", true);
       Command insertClientPortion = new Command(workingDir, "insertClientPortion");
 
+      Path hitCounterDir = workingDir.resolve("hitCounter");
+      Command hitCounter__show = new Command(hitCounterDir, "0-show");
+      Command hitCounter__clear = new Command(hitCounterDir, "1-clear");
+
+      File stopFile = workingDir.resolve("inserting-clients--delete-to-stop").toFile();
+
       ClientPortionInserting clientPortionInserting = new ClientPortionInserting(
-        portion, portionCount, mainProducer, insertClientPortionParallel, workingFile, insertClientPortion
+        portion, portionCount, mainProducer, insertClientPortionParallel, workingFile, insertClientPortion, stopFile
       );
 
       Command reportsShow = new Command(workingDir, "reportsShow");
@@ -152,6 +160,14 @@ public class MassiveTestServer {
           System.out.println("Reports cleared");
         }
 
+        if (hitCounter__clear.run()) {
+          MassiveTestServer.hitCounter.clear();
+        }
+        if (hitCounter__show.run()) {
+          MassiveTestServer.hitCounter.show(hitCounterDir);
+        }
+
+        //noinspection BusyWait
         Thread.sleep(700);
 
       }
@@ -182,9 +198,9 @@ public class MassiveTestServer {
     return aValue;
   }
 
-  private static ConcurrentHashMap<String, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
-  private static ConcurrentHashMap<String, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
-  private static ConcurrentHashMap<String, AtomicLong> readClientOut2Runs = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, AtomicLong> readClientRuns = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, AtomicLong> readClientOutRuns = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, AtomicLong> readClientOut2Runs = new ConcurrentHashMap<>();
 
   private static final AtomicBoolean printClientToStdout = new AtomicBoolean(false);
   private static final AtomicBoolean generateErrors = new AtomicBoolean(false);
@@ -204,16 +220,19 @@ public class MassiveTestServer {
     dataSource = pool;
   }
 
+
   public static class Consumers {
 
     private final ConcurrentHashMap<String, String> errors = new ConcurrentHashMap<>();
 
-    @GroupId("asd-1")
+    @GroupId("asd-3")
     @Topic("CLIENT")
     @ConsumerName("CLIENT")
     public void readClient(Client client,
                            @ToTopic("CLIENT-OUT")
                              InnerProducer<Client> clientProducer) {
+
+      hitCounter.hit("CLIENT");
 
       increment(readClientRuns, new SimpleDateFormat("HH:mm:ss").format(new Date()));
 
@@ -299,7 +318,7 @@ public class MassiveTestServer {
       printReportTo(readClientOutRuns, reportsFile);
     }
 
-    System.out.println("Reports printed");
+    System.out.println("wwq57q2281 :: Reports printed");
   }
 
   private static void printReportTo(ConcurrentHashMap<String, AtomicLong> countMap, Path reportsFile) throws IOException {

@@ -3,6 +3,7 @@ services:
 
   zookeeper-1:
     image: confluentinc/cp-zookeeper:5.2.2
+    restart: always
     volumes:
       - "./volumes/zookeeper-1/data:/var/lib/zookeeper/data"
       - "./volumes/zookeeper-1/log:/var/lib/zookeeper/log"
@@ -18,6 +19,7 @@ services:
 
   zookeeper-2:
     image: confluentinc/cp-zookeeper:5.2.2
+    restart: always
     volumes:
       - "./volumes/zookeeper-2/data:/var/lib/zookeeper/data"
       - "./volumes/zookeeper-2/log:/var/lib/zookeeper/log"
@@ -33,6 +35,7 @@ services:
 
   zookeeper-3:
     image: confluentinc/cp-zookeeper:5.2.2
+    restart: always
     volumes:
       - "./volumes/zookeeper-3/data:/var/lib/zookeeper/data"
       - "./volumes/zookeeper-3/log:/var/lib/zookeeper/log"
@@ -48,13 +51,15 @@ services:
 
   zoo-navigator-api:
     image: elkozmon/zoonavigator-api:0.6.0
+    restart: always
     environment:
       API_HTTP_PORT: "9082"
 
   zoo-navigator-web:
     image: elkozmon/zoonavigator-web:0.6.0
+    restart: always
     ports:
-      - "9001:9001"
+      - "9001:9001"                                                                     # http://localhost:9001/
     environment:
       WEB_HTTP_PORT: "9001"
       API_HOST: "zoo-navigator-api"
@@ -66,11 +71,9 @@ services:
       - zookeeper-2
       - zookeeper-3
 
-  utools:
-    image: utools:0.0.1
-
   kafka-1:
-    image: wurstmeister/kafka:2.12-2.2.1
+    image: wurstmeister/kafka:2.12-2.4.1
+    restart: always
     cpu_percent: 10
     volumes:
       - "./volumes/kafka-1:/kafka"
@@ -81,7 +84,6 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
-    restart: always
     environment:
       KAFKA_BROKER_ID: "1"
       HOSTNAME_COMMAND: "hostname -i"
@@ -91,15 +93,17 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
       KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
+      KAFKA_NUM_PARTITIONS: 480
 
   kafka-2:
-    image: wurstmeister/kafka:2.12-2.2.1
+    image: wurstmeister/kafka:2.12-2.4.1
+    restart: always
     cpu_percent: 10
     volumes:
       - "./volumes/kafka-2:/kafka"
@@ -110,7 +114,6 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
-    restart: always
     environment:
       KAFKA_BROKER_ID: "2"
       HOSTNAME_COMMAND: "hostname -i"
@@ -120,15 +123,17 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
       KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
+      KAFKA_NUM_PARTITIONS: 480
 
   kafka-3:
-    image: wurstmeister/kafka:2.12-2.2.1
+    image: wurstmeister/kafka:2.12-2.4.1
+    restart: always
     cpu_percent: 10
     volumes:
       - "./volumes/kafka-3:/kafka"
@@ -139,7 +144,6 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
-    restart: always
     environment:
       KAFKA_BROKER_ID: "3"
       HOSTNAME_COMMAND: "hostname -i"
@@ -149,15 +153,17 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
       KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
+      KAFKA_NUM_PARTITIONS: 480
 
   kafka-4:
-    image: wurstmeister/kafka:2.12-2.2.1
+    image: wurstmeister/kafka:2.12-2.4.1
+    restart: always
     cpu_percent: 10
     volumes:
       - "./volumes/kafka-4:/kafka"
@@ -168,7 +174,6 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
-    restart: always
     environment:
       KAFKA_BROKER_ID: "4"
       HOSTNAME_COMMAND: "hostname -i"
@@ -178,30 +183,45 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
       KAFKA_DEFAULT_REPLICATION_FACTOR: "2"
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      #KAFKA_HEAP_OPTS: "-Xmx720M -Xms720M"
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
       #      KAFKA_OPTS: "-javaagent:/configs/kafka/jmx_prometheus_javaagent.jar=7071:/configs/kafka/prom-jmx-agent-config.yml"
       KAFKA_OPTS: "-javaagent:/configs/kafka-2/jmx_prometheus_javaagent-0.6.jar=7071:/configs/kafka-2/javaagent-kafka-0-8-2.yml"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "2"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "15000"
       KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS: "1000"
       KAFKA_GROUP_MAX_SESSION_TIMEOUT_MS: "30000"
+      KAFKA_NUM_PARTITIONS: 480
 
   kafka-manager:
     image: sheepkiller/kafka-manager
+    restart: always
     ports:
-      - 9077:9000
+      - 9077:9000                                                       # http://localhost:9077/
     environment:
       ZK_HOSTS: "zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183"
       APPLICATION_SECRET: "letmein"
+
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:3.28.0-SNAPSHOT
     restart: always
+    mem_limit: 750M
+    ports:
+      - "9078:9000"                                              # KAFDROP   http://localhost:9078/
+    environment:
+      KAFKA_BROKERCONNECT: "kafka-1:9091,kafka-2:9092,kafka-3:9093,kafka-4:9094"
+      SERVER_PORT: "9000"
+      JVM_OPTS: "-Xms32M -Xmx164M"
+      SERVER_SERVLET_CONTEXTPATH: "/"
+
 
   prometheus:
     image: prom/prometheus:v2.10.0
+    restart: always
     volumes:
       - "./persistent/prometheus:/prometheus"
       - "./configs/etc_prometheus:/etc/prometheus"
     user: root
-    restart: always
 
   kafka-exporter:
     image: danielqsj/kafka-exporter

@@ -153,7 +153,7 @@ public class LoggerDestinationMessageBridge implements LoggerDestination {
       return;
     }
 
-    acceptor.info("Refresh consumer : currentCount = "
-      + currentCount + ", newCount = " + workerCount + "; " + consumerDefinition.logDisplay());
+    acceptor.info("Refresh consumer count = "
+      + currentCount + " --> " + workerCount + "; " + consumerDefinition.logDisplay());
   }
 }
