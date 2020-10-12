@@ -69,6 +69,7 @@ public class ClientPortionInserting {
 
           futures.add(mainProducer
             .sending(client)
+            .setAuthor("manager-" + RND.plusInt(10))
             .toTopic(TOPIC_CLIENT)
             .go());
 

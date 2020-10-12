@@ -10,6 +10,8 @@ public class Client implements HasStrKafkaKey {
   public String name;
   public String patronymic;
 
+  public String author;
+
   @Override
   public String toString() {
     return "Client{" +

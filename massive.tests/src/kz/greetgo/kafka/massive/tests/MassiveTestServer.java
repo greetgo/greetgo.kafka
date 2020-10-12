@@ -1,6 +1,7 @@
 package kz.greetgo.kafka.massive.tests;
 
 import kz.greetgo.kafka.consumer.ConsumerConfigDefaults;
+import kz.greetgo.kafka.consumer.annotations.Author;
 import kz.greetgo.kafka.consumer.annotations.ConsumerName;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
 import kz.greetgo.kafka.consumer.annotations.Topic;
@@ -222,7 +223,6 @@ public class MassiveTestServer {
     dataSource = pool;
   }
 
-
   public static class Consumers {
 
     private final ConcurrentHashMap<String, String> errors = new ConcurrentHashMap<>();
@@ -231,7 +231,9 @@ public class MassiveTestServer {
     @GroupId("asd-1")
     @Topic(TOPIC_CLIENT)
     @ConsumerName("CLIENT")
-    public void readClient(Client client) {
+    public void readClient(Client client, @Author String author) {
+
+      client.author = author;
 
       hitCounter.hit("CLIENT");
 

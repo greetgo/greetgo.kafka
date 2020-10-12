@@ -33,6 +33,7 @@ public class KafkaSendWorker {
     this.body = body;
     this.nativeProducerSupplier = nativeProducerSupplier;
     this.source = producerSource;
+    author = producerSource.author();
   }
 
   public void toTopic(String topic) {
