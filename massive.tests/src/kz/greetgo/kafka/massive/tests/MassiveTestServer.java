@@ -4,6 +4,7 @@ import kz.greetgo.kafka.consumer.ConsumerConfigDefaults;
 import kz.greetgo.kafka.consumer.annotations.Author;
 import kz.greetgo.kafka.consumer.annotations.ConsumerName;
 import kz.greetgo.kafka.consumer.annotations.GroupId;
+import kz.greetgo.kafka.consumer.annotations.KafkaId;
 import kz.greetgo.kafka.consumer.annotations.Topic;
 import kz.greetgo.kafka.core.KafkaReactorImpl;
 import kz.greetgo.kafka.core.config.EventConfigStorageZooKeeper;
@@ -231,9 +232,10 @@ public class MassiveTestServer {
     @GroupId("asd-1")
     @Topic(TOPIC_CLIENT)
     @ConsumerName("CLIENT")
-    public void readClient(Client client, @Author String author) {
+    public void readClient(Client client, @Author String author, @KafkaId String kafkaId) {
 
       client.author = author;
+      client.kafkaId = kafkaId;
 
       hitCounter.hit("CLIENT");
 

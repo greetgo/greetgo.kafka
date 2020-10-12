@@ -70,6 +70,7 @@ public class ClientPortionInserting {
           futures.add(mainProducer
             .sending(client)
             .setAuthor("manager-" + RND.plusInt(10))
+            .kafkaId("k-id-" + RND.str(5))
             .toTopic(TOPIC_CLIENT)
             .go());
 
@@ -102,6 +103,8 @@ public class ClientPortionInserting {
           mainProducer
             .sending(client)
             .toTopic(TOPIC_CLIENT)
+            .setAuthor("manager-" + RND.plusInt(10))
+            .kafkaId("k-id-" + RND.str(5))
             .go()
             .awaitAndGet();
 

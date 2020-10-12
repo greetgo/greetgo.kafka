@@ -11,6 +11,7 @@ public class Client implements HasStrKafkaKey {
   public String patronymic;
 
   public String author;
+  public String kafkaId;
 
   @Override
   public String toString() {
