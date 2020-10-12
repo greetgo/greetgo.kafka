@@ -25,6 +25,7 @@ public class KafkaSendWorker {
   private final ArrayList<Header> headers = new ArrayList<>();
   private final Set<String> ignorableConsumers = new HashSet<>();
   private String author;
+  private String kafkaId;
 
   private byte[] withKey = null;
 
@@ -78,6 +79,10 @@ public class KafkaSendWorker {
     withKey = keyAsBytes;
   }
 
+  public void kafkaId(String kafkaId) {
+    this.kafkaId = kafkaId;
+  }
+
   public KafkaFuture go() {
     if (this.topic == null) {
       throw new RuntimeException("0Is7vLrG4Q :: topic == null");
@@ -86,6 +91,7 @@ public class KafkaSendWorker {
     Box box = new Box();
     box.body = body;
     box.a = author;
+    box.id = kafkaId;
     box.i = ignorableConsumers.stream().sorted().collect(toList());
 
     try {

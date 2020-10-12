@@ -99,6 +99,7 @@ public class Writer {
     }
 
     if (List.class.isAssignableFrom(objectClass)) {
+      //noinspection rawtypes
       List list = (List) object;
       res.append("P[");
       for (Object o : list) {

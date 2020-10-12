@@ -18,6 +18,8 @@ public interface KafkaPortionSending {
 
   KafkaPortionSending withKey(byte[] keyAsBytes);
 
+  KafkaPortionSending kafkaId(String kafkaId);
+
   void go();
 
 }

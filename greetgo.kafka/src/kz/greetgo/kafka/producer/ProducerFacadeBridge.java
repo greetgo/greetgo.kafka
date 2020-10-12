@@ -144,6 +144,12 @@ public class ProducerFacadeBridge implements ProducerFacade {
       }
 
       @Override
+      public KafkaSending kafkaId(String kafkaId) {
+        sendWorker.kafkaId(kafkaId);
+        return this;
+      }
+
+      @Override
       public KafkaFuture go() {
         return sendWorker.go();
       }
@@ -201,6 +207,12 @@ public class ProducerFacadeBridge implements ProducerFacade {
       @Override
       public KafkaPortionSending withKey(byte[] keyAsBytes) {
         sendWorker.withKey(keyAsBytes);
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending kafkaId(String kafkaId) {
+        sendWorker.kafkaId(kafkaId);
         return this;
       }
 

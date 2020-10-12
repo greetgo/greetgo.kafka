@@ -16,13 +16,31 @@ public class Box {
   public List<String> i;
 
   /**
+   * Kafka id
+   */
+  public String id;
+
+  /**
    * Body of message
    */
   public Object body;
 
   @Override
   public String toString() {
-    return "Box{a='" + a + '\'' + ", i=" + i + ", b=" + body + '}';
+    StringBuilder ret = new StringBuilder();
+    ret.append("Box{");
+    if (a != null) {
+      ret.append("a=").append(a);
+    }
+    if (id != null) {
+      ret.append("id=").append(id);
+    }
+    if (i != null) {
+      ret.append("i=").append(i);
+    }
+    ret.append("body=").append(body);
+    ret.append('}');
+    return ret.toString();
   }
 
   public static void validateBody(Object body) throws Throwable {

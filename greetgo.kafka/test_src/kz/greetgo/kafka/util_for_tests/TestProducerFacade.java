@@ -37,6 +37,7 @@ public class TestProducerFacade implements ProducerFacade {
     public int goIndex = 0;
     public int awaitAndGetIndex = 0;
     public byte[] keyAsBytes;
+    public String kafkaId;
 
     public Sent(Object model) {
       this.model = model;
@@ -136,6 +137,12 @@ public class TestProducerFacade implements ProducerFacade {
       }
 
       @Override
+      public KafkaSending kafkaId(String kafkaId) {
+        sent.kafkaId = kafkaId;
+        return this;
+      }
+
+      @Override
       public KafkaFuture go() {
         sent.goIndex = indexer++;
         sentList.add(sent);
@@ -231,6 +238,12 @@ public class TestProducerFacade implements ProducerFacade {
       @Override
       public KafkaPortionSending withKey(byte[] keyAsBytes) {
         sent.keyAsBytes = keyAsBytes;
+        return this;
+      }
+
+      @Override
+      public KafkaPortionSending kafkaId(String kafkaId) {
+        sent.kafkaId = kafkaId;
         return this;
       }
 

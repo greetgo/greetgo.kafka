@@ -18,6 +18,8 @@ public interface KafkaSending {
 
   KafkaSending withKey(byte[] keyAsBytes);
 
+  KafkaSending kafkaId(String kafkaId);
+
   KafkaFuture go();
 
 }

@@ -3,6 +3,7 @@ package kz.greetgo.kafka.consumer;
 import kz.greetgo.kafka.consumer.annotations.Author;
 import kz.greetgo.kafka.consumer.annotations.ConsumerName;
 import kz.greetgo.kafka.consumer.annotations.KafkaCommitOn;
+import kz.greetgo.kafka.consumer.annotations.KafkaId;
 import kz.greetgo.kafka.consumer.annotations.Offset;
 import kz.greetgo.kafka.consumer.annotations.Partition;
 import kz.greetgo.kafka.consumer.annotations.Timestamp;
@@ -276,10 +277,18 @@ public class InvokerBuilder {
 
       if (annotation instanceof Author) {
         if (!isOfClass(parameterType, String.class)) {
-          throw new IllegalParameterType("Parameter with @Author must be `String`");
+          throw new IllegalParameterType("Parameter with @" + Author.class.getSimpleName() + " must be `String`");
         }
 
         return (record, invokeSessionContext) -> record.value().a;
+      }
+
+      if (annotation instanceof KafkaId) {
+        if (!isOfClass(parameterType, String.class)) {
+          throw new IllegalParameterType("Parameter with @" + KafkaId.class.getSimpleName() + " must be `String`");
+        }
+
+        return (record, invokeSessionContext) -> record.value().id;
       }
 
     }
